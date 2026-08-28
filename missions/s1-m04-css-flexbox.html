@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.4: CSS Flexbox Layout — Arranging the Bridge | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Flexbox Playground ---------- */
+  .playground-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 760px) {
+    .playground-grid { grid-template-columns: 1fr; }
+  }
+  .control-panel {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .control-group { margin-bottom: 18px; }
+  .control-group:last-child { margin-bottom: 0; }
+  .control-group label.group-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 11.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pill-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+
+  .preview-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  #flexStage {
+    display: flex;
+    min-height: 260px;
+    padding: 16px;
+    gap: 10px;
+    transition: all 0.2s ease;
+  }
+  .flex-box {
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(78,225,255,0.15);
+  }
+  #cssOutput {
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--bg-panel-alt);
+    border-top: 1px solid var(--border-glow);
+    font-family: var(--font-code);
+    font-size: 13px;
+    color: var(--accent-cyan);
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.4: CSS FLEXBOX LAYOUT</h1>
+    <div class="subtitle">Arranging the Bridge — Styling and Positioning Every Station</div>
+    <p class="briefing-line">HTML built the hull and decided what exists. CSS is the control panel that decides how everything looks and where it sits. Colors, spacing, fonts, and — most importantly for real layouts — Flexbox, the system that lets you arrange elements in rows and columns that adapt to any screen size. This is the mission where your pages stop looking like a stack of index cards and start looking like something you'd actually ship.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>CSS stands for <strong>Cascading Style Sheets</strong>. "Cascading" means rules can stack, override, and inherit from each other — and when two rules conflict, CSS has a precise, learnable system (called <strong>specificity</strong>) for deciding which one wins. You write rules as <strong>selectors</strong> (which elements to target) paired with <strong>declarations</strong> (what to change about them).</p>
+      <p>Every element on a page is secretly a rectangle, and every rectangle follows the same anatomy: content in the middle, surrounded by padding (breathing room inside the box), a border (the box's edge), and margin (space pushing other boxes away). This is called the <strong>box model</strong>, and understanding it explains 90% of "why is this spaced weirdly" bugs.</p>
+      <p>Once you can style individual boxes, the real question becomes: how do you arrange many boxes together? That's <strong>Flexbox</strong> — a layout mode where you tell a parent container "line your children up in a row" or "in a column," and then fine-tune how they're spaced, aligned, and resized. It's the single most useful layout tool in modern CSS.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <!-- margin -->
+          <rect x="10" y="10" width="620" height="200" rx="8" fill="none" stroke="#ff9d4d" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="18" y="26" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="11">margin</text>
+          <!-- border -->
+          <rect x="60" y="46" width="520" height="140" rx="6" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="68" y="62" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11">border</text>
+          <!-- padding -->
+          <rect x="100" y="78" width="440" height="76" rx="4" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <text x="108" y="94" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11">padding</text>
+          <!-- content -->
+          <rect x="150" y="104" width="340" height="30" rx="3" fill="#4dffb4" opacity="0.25" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="320" y="123" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">content</text>
+        </svg>
+        <div class="diagram-caption">The box model: content sits inside padding, padding sits inside the border, and margin pushes neighboring boxes away.</div>
+      </div>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <rect x="20" y="20" width="600" height="160" rx="8" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5"/>
+          <!-- main axis arrow -->
+          <line x1="40" y1="45" x2="580" y2="45" stroke="#4ee1ff" stroke-width="2" marker-end="url(#arrowend)"/>
+          <text x="300" y="35" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">main axis — flex-direction: row (justify-content controls this)</text>
+          <!-- cross axis arrow -->
+          <line x1="40" y1="55" x2="40" y2="165" stroke="#ff6ec7" stroke-width="2" marker-end="url(#arrowend2)"/>
+          <text x="55" y="120" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12">cross axis (align-items controls this)</text>
+
+          <defs>
+            <marker id="arrowend" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#4ee1ff"/>
+            </marker>
+            <marker id="arrowend2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#ff6ec7"/>
+            </marker>
+          </defs>
+
+          <!-- flex boxes -->
+          <rect x="90" y="90" width="60" height="60" rx="6" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="180" y="70" width="60" height="100" rx="6" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="270" y="100" width="60" height="50" rx="6" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="360" y="80" width="60" height="80" rx="6" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="120" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">1</text>
+          <text x="210" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">2</text>
+          <text x="300" y="129" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">3</text>
+          <text x="390" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">4</text>
+        </svg>
+        <div class="diagram-caption">In a flex row, the main axis runs horizontally and the cross axis runs vertically — two different properties control each direction.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Selectors & The Cascade</h3>
+        <p>A CSS rule is a selector followed by declarations in curly braces. You can target elements by tag name, by class (reusable, prefixed with a dot), or by ID (unique, prefixed with a hash).</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="p {&#10;  color: #a8b3d1;&#10;}&#10;&#10;.status-card {&#10;  background: #1b2540;&#10;  border-radius: 8px;&#10;}&#10;&#10;#launch-button {&#10;  font-weight: bold;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">p</span> {
+  <span class="prop">color</span>: <span class="val">#a8b3d1</span>;
+}
+
+<span class="sel">.status-card</span> {
+  <span class="prop">background</span>: <span class="val">#1b2540</span>;
+  <span class="prop">border-radius</span>: <span class="val">8px</span>;
+}
+
+<span class="sel">#launch-button</span> {
+  <span class="prop">font-weight</span>: <span class="val">bold</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>p</code> targets every paragraph. <code>.status-card</code> targets every element with <code>class="status-card"</code> — classes are meant to be reused across many elements. <code>#launch-button</code> targets the one element with <code>id="launch-button"</code> — IDs should appear exactly once per page.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Specificity — who wins when rules conflict?</summary>
+          <p>If two rules target the same element with different values, CSS uses a scoring system: ID selectors beat class selectors, which beat tag selectors. An inline <code>style="..."</code> attribute beats all of them. When you're fighting a style that "won't apply," it's almost always a specificity fight — something more specific is overriding you.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Colors & Typography</h3>
+        <p>Colors can be named (<code>red</code>), hex codes (<code>#ff6ec7</code>), or functions like <code>rgb()</code>. Typography properties control how text looks and reads.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="h1 {&#10;  font-family: 'Orbitron', sans-serif;&#10;  font-size: 32px;&#10;  color: #4ee1ff;&#10;  letter-spacing: 0.05em;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">h1</span> {
+  <span class="prop">font-family</span>: <span class="val">'Orbitron', sans-serif</span>;
+  <span class="prop">font-size</span>: <span class="val">32px</span>;
+  <span class="prop">color</span>: <span class="val">#4ee1ff</span>;
+  <span class="prop">letter-spacing</span>: <span class="val">0.05em</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The font list is a fallback chain — the browser tries <code>Orbitron</code> first, then falls back to any generic sans-serif font if it isn't available. <code>em</code> is a relative unit (relative to the element's font size); <code>px</code> is an absolute unit. Both are legitimate — the choice depends on whether you want something to scale with text size.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexbox — Turning It On</h3>
+        <p>Flexbox is activated on a <strong>parent</strong> element with one line, and it instantly changes how its direct children behave.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".control-panel {&#10;  display: flex;&#10;  flex-direction: row;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.control-panel</span> {
+  <span class="prop">display</span>: <span class="val">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="val">row</span>; <span class="comment">/* or: column */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>display: flex</code> turns <code>.control-panel</code> into a flex container. Every direct child immediately lines up in a row (the default) instead of stacking on top of each other like normal block elements. <code>flex-direction: column</code> flips that to a vertical stack.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexbox — Alignment on Both Axes</h3>
+        <p>Once flex is on, two properties do most of the work: <code>justify-content</code> controls spacing along the main axis, <code>align-items</code> controls positioning along the cross axis.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".control-panel {&#10;  display: flex;&#10;  justify-content: space-between;&#10;  align-items: center;&#10;  flex-wrap: wrap;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.control-panel</span> {
+  <span class="prop">display</span>: <span class="val">flex</span>;
+  <span class="prop">justify-content</span>: <span class="val">space-between</span>; <span class="comment">/* main axis spacing */</span>
+  <span class="prop">align-items</span>: <span class="val">center</span>;         <span class="comment">/* cross axis alignment */</span>
+  <span class="prop">flex-wrap</span>: <span class="val">wrap</span>;             <span class="comment">/* allow overflow to drop to a new line */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>space-between</code> pushes the first item to the start and the last to the end, distributing the rest evenly — a classic navbar pattern. <code>align-items: center</code> vertically centers everything regardless of height. Without <code>flex-wrap: wrap</code>, items would default to squeezing onto one line no matter how narrow the screen gets.
+        </div>
+        <p>Play with all of these live in the Command Console below before moving on — this is a topic you learn by breaking it, not by reading about it.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexbox — Sizing Individual Items</h3>
+        <p>You can also control how individual children grow, shrink, or take up space, rather than just how the group is arranged.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".sidebar {&#10;  flex: 0 0 200px; /* don't grow, don't shrink, base width 200px */&#10;}&#10;&#10;.main-content {&#10;  flex: 1; /* grow to fill remaining space */&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.sidebar</span> {
+  <span class="prop">flex</span>: <span class="val">0 0 200px</span>; <span class="comment">/* grow shrink basis */</span>
+}
+
+<span class="sel">.main-content</span> {
+  <span class="prop">flex</span>: <span class="val">1</span>; <span class="comment">/* grow to fill remaining space */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>flex</code> is shorthand for three values: grow, shrink, and basis (starting size). A fixed sidebar plus a <code>flex: 1</code> main content area is one of the most common real-world layout patterns you'll build — it's how dashboards, docs sites, and admin panels are structured.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The Flexbox Playground. Click any control to change the container's CSS live — watch the boxes rearrange and the generated code update at the bottom.</p>
+
+      <div class="playground-grid">
+        <div class="control-panel">
+          <div class="control-group">
+            <label class="group-label">FLEX-DIRECTION</label>
+            <div class="pill-row" data-prop="flex-direction">
+              <button class="pill-btn active" data-value="row">row</button>
+              <button class="pill-btn" data-value="row-reverse">row-reverse</button>
+              <button class="pill-btn" data-value="column">column</button>
+              <button class="pill-btn" data-value="column-reverse">column-reverse</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">JUSTIFY-CONTENT (main axis)</label>
+            <div class="pill-row" data-prop="justify-content">
+              <button class="pill-btn active" data-value="flex-start">flex-start</button>
+              <button class="pill-btn" data-value="center">center</button>
+              <button class="pill-btn" data-value="flex-end">flex-end</button>
+              <button class="pill-btn" data-value="space-between">space-between</button>
+              <button class="pill-btn" data-value="space-around">space-around</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">ALIGN-ITEMS (cross axis)</label>
+            <div class="pill-row" data-prop="align-items">
+              <button class="pill-btn active" data-value="stretch">stretch</button>
+              <button class="pill-btn" data-value="flex-start">flex-start</button>
+              <button class="pill-btn" data-value="center">center</button>
+              <button class="pill-btn" data-value="flex-end">flex-end</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">FLEX-WRAP</label>
+            <div class="pill-row" data-prop="flex-wrap">
+              <button class="pill-btn active" data-value="nowrap">nowrap</button>
+              <button class="pill-btn" data-value="wrap">wrap</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">GAP</label>
+            <div class="pill-row" data-prop="gap">
+              <button class="pill-btn" data-value="0px">0px</button>
+              <button class="pill-btn active" data-value="10px">10px</button>
+              <button class="pill-btn" data-value="24px">24px</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">BOX COUNT</label>
+            <div class="pill-row" data-prop="boxcount">
+              <button class="pill-btn" data-value="3">3</button>
+              <button class="pill-btn active" data-value="5">5</button>
+              <button class="pill-btn" data-value="8">8</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-stage">
+          <div class="stage-header"><span>LIVE STAGE</span><span>●</span></div>
+          <div id="flexStage"></div>
+          <pre id="cssOutput"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a responsive navigation bar using Flexbox, in a real HTML + CSS file (or reuse the live editor from Mission 02 if you saved it).</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a <code>&lt;nav&gt;</code> containing a logo/title and three links
+          <span class="sub">The links can go to <code>#</code> for now</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Set the nav to <code>display: flex</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>justify-content: space-between</code> so the logo sits left and links sit right
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Use <code>align-items: center</code> so everything lines up vertically even if font sizes differ
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Wrap the three links in their own flex container with a <code>gap</code> between them
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Add <code>flex-wrap: wrap</code> to the nav and shrink your browser window to confirm it doesn't break
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your links aren't spacing out from the logo, double check that <code>display: flex</code> is on the <code>&lt;nav&gt;</code> itself, not on one of its children. Flexbox only affects the direct children of the element it's applied to.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Build a row of 3 "mission cards" (each with a title and a short description) using Flexbox, where each card uses <code>flex: 1</code> so they always split the available width equally, no matter how many you add.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>display: flex</code><span>Turns a container into a flex parent</span></div>
+        <div class="cheat-card"><code>flex-direction</code><span>row / column — sets the main axis</span></div>
+        <div class="cheat-card"><code>justify-content</code><span>Spacing along the main axis</span></div>
+        <div class="cheat-card"><code>align-items</code><span>Alignment along the cross axis</span></div>
+        <div class="cheat-card"><code>flex-wrap</code><span>Allow items to drop to new lines</span></div>
+        <div class="cheat-card"><code>gap</code><span>Space between items, no margin hacks needed</span></div>
+        <div class="cheat-card"><code>flex: 1</code><span>Grow to fill available space equally</span></div>
+        <div class="cheat-card"><code>padding</code><span>Space inside an element's border</span></div>
+        <div class="cheat-card"><code>margin</code><span>Space outside an element's border</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Setting <code>display: flex</code> on the wrong element — remember, it only affects direct children.</li>
+          <li>Confusing <code>justify-content</code> and <code>align-items</code> — one is main axis, one is cross axis, and they swap meaning when you flip <code>flex-direction</code>.</li>
+          <li>Using margins to space out flex items instead of the simpler, more consistent <code>gap</code> property.</li>
+          <li>Forgetting <code>flex-wrap: wrap</code> and wondering why items get squeezed into oblivion on small screens.</li>
+          <li>Fighting specificity instead of checking whether a more specific selector is overriding your rule.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — if <code>flex-direction: column</code> is set, which property now controls vertical spacing between items?</p>
+        <button class="quiz-btn" data-correct="false">align-items</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — flip the direction and justify-content follows it.">justify-content</button>
+        <button class="quiz-btn" data-correct="false">flex-wrap</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Flexbox Playground ---------------- */
+  const flexStage = document.getElementById('flexStage');
+  const cssOutput = document.getElementById('cssOutput');
+
+  const state = {
+    'flex-direction': 'row',
+    'justify-content': 'flex-start',
+    'align-items': 'stretch',
+    'flex-wrap': 'nowrap',
+    'gap': '10px',
+    'boxcount': '5'
+  };
+
+  const labels = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'];
+
+  function renderStage() {
+    flexStage.style.flexDirection = state['flex-direction'];
+    flexStage.style.justifyContent = state['justify-content'];
+    flexStage.style.alignItems = state['align-items'];
+    flexStage.style.flexWrap = state['flex-wrap'];
+    flexStage.style.gap = state['gap'];
+
+    const count = parseInt(state['boxcount'], 10);
+    flexStage.innerHTML = '';
+    const sizes = [70, 90, 60, 100, 75, 55, 95, 65];
+    for (let i = 0; i < count; i++) {
+      const box = document.createElement('div');
+      box.className = 'flex-box';
+      const dim = sizes[i % sizes.length];
+      box.style.width = (state['flex-direction'].startsWith('row') ? dim : 80) + 'px';
+      box.style.height = (state['flex-direction'].startsWith('column') ? dim : 60) + 'px';
+      box.textContent = labels[i];
+      flexStage.appendChild(box);
+    }
+
+    cssOutput.textContent =
+`.flex-container {
+  display: flex;
+  flex-direction: ${state['flex-direction']};
+  justify-content: ${state['justify-content']};
+  align-items: ${state['align-items']};
+  flex-wrap: ${state['flex-wrap']};
+  gap: ${state['gap']};
+}`;
+  }
+
+  document.querySelectorAll('.pill-row').forEach(row => {
+    const prop = row.getAttribute('data-prop');
+    row.querySelectorAll('.pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        row.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state[prop] = btn.getAttribute('data-value');
+        renderStage();
+      });
+    });
+  });
+
+  renderStage();
+
+})();
+</script>
+
+</body>
+</html>

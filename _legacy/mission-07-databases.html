@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 07: Databases — The Ship's Memory Banks | Mission Control Code Academy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rubik:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap');
+
+  :root {
+    --bg-void: #0a0e1a;
+    --bg-panel: #131a2e;
+    --bg-panel-alt: #1b2540;
+    --border-glow: #2e3d63;
+
+    --text-primary: #e8ecfb;
+    --text-secondary: #a8b3d1;
+    --text-muted: #6b7699;
+
+    --accent-cyan: #4ee1ff;
+    --accent-purple: #b083ff;
+    --accent-orange: #ff9d4d;
+    --accent-green: #4dffb4;    /* Databases: Supabase/Firebase — our topic color */
+    --accent-pink: #ff6ec7;
+    --accent-yellow: #ffe66d;
+
+    --accent: var(--accent-green);
+
+    --success: #4dffb4;
+    --warning: #ffcf4d;
+    --danger: #ff6b6b;
+
+    --font-display: 'Orbitron', 'Segoe UI', sans-serif;
+    --font-body: 'Rubik', 'Segoe UI', sans-serif;
+    --font-code: 'Fira Code', 'Consolas', monospace;
+
+    --radius: 14px;
+    --glow-shadow: 0 0 24px rgba(77, 255, 180, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #10162b, var(--bg-void) 60%);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    background-attachment: fixed;
+    line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5; }
+
+  .content-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.02em; color: var(--text-primary); }
+  a { color: var(--accent); }
+  code { font-family: var(--font-code); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 64px 0 40px; text-align: center; border-bottom: 1px solid var(--border-glow); margin-bottom: 48px; }
+
+  .mission-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    background: rgba(77, 255, 180, 0.1);
+    border: 1px solid rgba(77, 255, 180, 0.4);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 16px; text-shadow: var(--glow-shadow); }
+  .hero .subtitle { color: var(--accent); font-family: var(--font-display); font-size: clamp(15px, 2.4vw, 20px); margin-bottom: 20px; }
+  .briefing-line { max-width: 680px; margin: 0 auto 28px; color: var(--text-secondary); font-size: 17px; }
+  .hero-meta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+  }
+  .badge.difficulty-cadet { color: var(--success); border-color: rgba(77,255,180,0.4); }
+  .badge.difficulty-officer { color: var(--warning); border-color: rgba(255,207,77,0.4); }
+  .badge.difficulty-commander { color: var(--danger); border-color: rgba(255,107,107,0.4); }
+
+  /* ---------- Section shell ---------- */
+  section.panel { margin-bottom: 56px; }
+  .section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .section-label .num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--bg-void);
+    background: var(--accent);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-label h2 { font-size: 22px; margin: 0; text-transform: uppercase; }
+
+  .card { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 28px; }
+
+  .diagram-box { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 20px; margin: 20px 0; text-align: center; }
+  .diagram-caption { margin-top: 12px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  /* ---------- Sub-sections ---------- */
+  .subsection { margin-bottom: 34px; padding-bottom: 34px; border-bottom: 1px dashed var(--border-glow); }
+  .subsection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .subsection h3 { font-size: 18px; color: var(--accent); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .subsection h3::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); flex-shrink: 0; }
+
+  /* ---------- Code blocks ---------- */
+  .code-block { position: relative; background: var(--bg-panel-alt); border-left: 3px solid var(--accent); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .code-tab { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(0,0,0,0.25); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); }
+  .copy-btn { background: transparent; border: 1px solid var(--border-glow); color: var(--text-secondary); font-family: var(--font-body); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { color: var(--success); border-color: var(--success); }
+  pre { margin: 0; padding: 16px; overflow-x: auto; }
+  pre code { font-family: var(--font-code); font-size: 13.5px; color: var(--text-primary); white-space: pre; }
+  .comment { color: var(--text-muted); }
+  .kw { color: var(--accent-green); }
+  .str { color: var(--accent-yellow); }
+  .col { color: var(--accent-cyan); }
+  .fn { color: var(--accent-pink); }
+
+  .whatjusthappened {
+    background: rgba(77, 255, 180, 0.06);
+    border: 1px solid rgba(77, 255, 180, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .whatjusthappened strong { color: var(--accent); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  details { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
+  details summary { cursor: pointer; font-family: var(--font-display); font-size: 13px; color: var(--accent); letter-spacing: 0.03em; }
+  details[open] summary { margin-bottom: 10px; }
+  details p, details ul { color: var(--text-secondary); font-size: 14px; }
+
+  /* ---------- Table anatomy diagram helper ---------- */
+  table.sample-table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+  }
+  table.sample-table th, table.sample-table td {
+    border: 1px solid var(--border-glow);
+    padding: 8px 14px;
+    text-align: left;
+  }
+  table.sample-table th { background: var(--bg-panel-alt); color: var(--accent); }
+  table.sample-table td { color: var(--text-secondary); }
+  table.sample-table td.pk-cell, table.sample-table th.pk-th { color: var(--accent-yellow); }
+
+  /* ---------- SQL Sandbox Console ---------- */
+  .sandbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .sandbox-grid { grid-template-columns: 1fr; }
+  }
+  .sandbox-pane {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--glow-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .run-btn {
+    background: var(--accent);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  #sqlEditor {
+    width: 100%;
+    min-height: 260px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    padding: 14px;
+    line-height: 1.5;
+    flex: 1;
+  }
+  #sqlOutput {
+    min-height: 260px;
+    max-height: 340px;
+    overflow: auto;
+    padding: 14px;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  #sqlOutput table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+  #sqlOutput th, #sqlOutput td { border: 1px solid var(--border-glow); padding: 5px 9px; text-align: left; white-space: nowrap; }
+  #sqlOutput th { background: var(--bg-panel-alt); color: var(--accent); }
+  .out-status { color: var(--text-muted); font-style: italic; }
+  .out-error { color: var(--danger); }
+  .out-success { color: var(--success); }
+  .console-controls { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .console-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .console-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Challenge checklist ---------- */
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-glow); }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] {
+    appearance: none; width: 20px; height: 20px; border: 2px solid var(--border-glow);
+    border-radius: 5px; margin-top: 2px; cursor: pointer; flex-shrink: 0; position: relative; transition: all 0.15s ease;
+  }
+  .checklist input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  .checklist input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; top: -3px; left: 3px; color: var(--bg-void); font-size: 14px; font-weight: bold;
+  }
+  .checklist label { color: var(--text-primary); font-size: 15px; }
+  .checklist .sub { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+  .bonus-box { margin-top: 20px; background: rgba(176, 131, 255, 0.08); border: 1px solid rgba(176, 131, 255, 0.35); border-radius: 10px; padding: 16px 18px; }
+  .bonus-box strong { color: var(--accent-purple); font-family: var(--font-display); font-size: 13px; }
+
+  /* ---------- Cheat sheet ---------- */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .cheat-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 14px 16px; }
+  .cheat-card code { display: block; color: var(--accent); font-size: 13.5px; margin-bottom: 6px; }
+  .cheat-card span { color: var(--text-secondary); font-size: 13px; }
+
+  .mistakes-box { margin-top: 24px; background: rgba(255, 107, 107, 0.07); border: 1px solid rgba(255, 107, 107, 0.35); border-radius: 10px; padding: 18px 20px; }
+  .mistakes-box h4 { color: var(--danger); font-size: 14px; margin: 0 0 10px; letter-spacing: 0.04em; }
+  .mistakes-box ul { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 14px; }
+  .mistakes-box li { margin-bottom: 6px; }
+
+  .quiz-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary);
+    padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 14px;
+    margin: 4px 6px 4px 0; transition: all 0.15s ease;
+  }
+  .quiz-btn:hover { border-color: var(--accent); }
+  .quiz-btn.correct { border-color: var(--success); color: var(--success); }
+  .quiz-btn.wrong { border-color: var(--danger); color: var(--danger); }
+  .quiz-feedback { margin-top: 10px; font-size: 14px; min-height: 20px; }
+
+  /* ---------- Footer ---------- */
+  .mission-footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border-glow); }
+  .stamp {
+    display: inline-block; font-family: var(--font-display); font-size: 15px; letter-spacing: 0.15em;
+    color: var(--success); border: 2px solid var(--success); padding: 14px 28px; border-radius: 10px;
+    transform: rotate(-3deg); box-shadow: 0 0 20px rgba(77, 255, 180, 0.25); margin-bottom: 28px;
+  }
+  .nav-links { display: flex; justify-content: center; gap: 20px; font-family: var(--font-display); font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { text-decoration: none; color: var(--text-secondary); border: 1px solid var(--border-glow); padding: 10px 18px; border-radius: 8px; transition: all 0.15s ease; }
+  .nav-links a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 600px) { .card, .diagram-box { padding: 18px; } }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>MISSION 07: DATABASES</h1>
+    <div class="subtitle">The Ship's Memory Banks — Data That Survives the Reboot</div>
+    <p class="briefing-line">Every variable you've written so far has been fragile — refresh the page and it's gone, close the terminal and it's forgotten. Real applications need memory that survives: a crew roster that's still there tomorrow, a chat message a second person can actually read, a login that remembers you. That's a database — permanent, structured, searchable storage that lives on a server, separate from any one browser tab or script.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~60 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture the ship's records vault: instead of loose notes, everything is organized into labeled manifest sheets. Each sheet is a <strong>table</strong> — say, a table of crew members. Each row on that sheet is one specific record — one crew member. Each column is a specific piece of information every record has — name, rank, station. This simple grid is the foundation of almost every database on Earth.</p>
+      <p>Every row needs a way to be uniquely identified, even if two crew members happen to share a name. That's the job of a <strong>primary key</strong> — usually a simple auto-incrementing number (id 1, id 2, id 3...) that's guaranteed never to repeat. Once rows have unique identities, tables can reference each other: a <code>missions</code> table can say "this mission was led by crew member id 3" instead of copying that crew member's entire record into every mission they've ever led. That link between tables is called a <strong>foreign key</strong>, and it's what makes databases genuinely powerful instead of just structured spreadsheets.</p>
+
+      <div class="diagram-box">
+        <table class="sample-table">
+          <tr><th class="pk-th">id (PK)</th><th>name</th><th>rank</th><th>station</th></tr>
+          <tr><td class="pk-cell">1</td><td>Nova</td><td>Captain</td><td>Bridge</td></tr>
+          <tr><td class="pk-cell">2</td><td>Kip</td><td>Engineer</td><td>Engine Room</td></tr>
+          <tr><td class="pk-cell">3</td><td>Zed</td><td>Navigator</td><td>Bridge</td></tr>
+        </table>
+        <div class="diagram-caption">A table called "crew" — each row is one record, each column is one field, and the id column is the primary key.</div>
+      </div>
+
+      <p>Real applications don't have your code reach directly into the database file — that would be like letting any visitor climb straight into the records vault unsupervised. Instead, requests go through an <strong>API</strong> (application programming interface): a controlled front desk that checks permissions and translates requests into database operations.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <defs>
+            <marker id="dbarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4dffb4"/>
+            </marker>
+          </defs>
+          <rect x="20" y="65" width="160" height="70" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="100" y="94" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Client</text>
+          <text x="100" y="112" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">(your website)</text>
+
+          <rect x="270" y="65" width="160" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="350" y="94" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">API</text>
+          <text x="350" y="112" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">checks permissions</text>
+
+          <rect x="520" y="30" width="160" height="60" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5"/>
+          <text x="600" y="58" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Database</text>
+          <text x="600" y="74" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">tables of data</text>
+
+          <rect x="520" y="110" width="160" height="60" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="600" y="138" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Auth</text>
+          <text x="600" y="154" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">who is this user?</text>
+
+          <path d="M180,100 L270,100" stroke="#4dffb4" stroke-width="2" marker-end="url(#dbarrow)"/>
+          <path d="M430,90 L520,65" stroke="#4dffb4" stroke-width="2" marker-end="url(#dbarrow)"/>
+          <path d="M430,110 L520,135" stroke="#4dffb4" stroke-width="2" marker-end="url(#dbarrow)"/>
+        </svg>
+        <div class="diagram-caption">Your website never touches the database directly — every request passes through an API that checks who's asking and what they're allowed to do.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Tables, Rows, Columns & Keys</h3>
+        <p>Before writing a single query, you design the shape of your data. That means deciding what tables you need and what columns each one has — this is called a <strong>schema</strong>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="CREATE TABLE crew (&#10;  id INTEGER PRIMARY KEY,&#10;  name TEXT NOT NULL,&#10;  rank TEXT,&#10;  station TEXT&#10;);">COPY</button></div>
+          <pre><code><span class="kw">CREATE TABLE</span> crew (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  name <span class="kw">TEXT NOT NULL</span>,
+  rank <span class="kw">TEXT</span>,
+  station <span class="kw">TEXT</span>
+);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This defines the crew table's shape before any data exists in it. <code>PRIMARY KEY</code> tells the database to guarantee every <code>id</code> is unique. <code>NOT NULL</code> means that column can never be left empty — the database will reject any row that tries.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CRUD — The Four Things You Do to Data</h3>
+        <p>Nearly every database operation in existence falls into one of four categories: <strong>C</strong>reate, <strong>R</strong>ead, <strong>U</strong>pdate, <strong>D</strong>elete. In SQL, that's <code>INSERT</code>, <code>SELECT</code>, <code>UPDATE</code>, and <code>DELETE</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="-- Create&#10;INSERT INTO crew (name, rank, station) VALUES ('Nova', 'Captain', 'Bridge');&#10;&#10;-- Read&#10;SELECT * FROM crew WHERE station = 'Bridge';&#10;&#10;-- Update&#10;UPDATE crew SET rank = 'Commander' WHERE name = 'Nova';&#10;&#10;-- Delete&#10;DELETE FROM crew WHERE name = 'Nova';">COPY</button></div>
+          <pre><code><span class="comment">-- Create</span>
+<span class="kw">INSERT INTO</span> crew (name, rank, station) <span class="kw">VALUES</span> (<span class="str">'Nova'</span>, <span class="str">'Captain'</span>, <span class="str">'Bridge'</span>);
+
+<span class="comment">-- Read</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> crew <span class="kw">WHERE</span> station = <span class="str">'Bridge'</span>;
+
+<span class="comment">-- Update</span>
+<span class="kw">UPDATE</span> crew <span class="kw">SET</span> rank = <span class="str">'Commander'</span> <span class="kw">WHERE</span> name = <span class="str">'Nova'</span>;
+
+<span class="comment">-- Delete</span>
+<span class="kw">DELETE FROM</span> crew <span class="kw">WHERE</span> name = <span class="str">'Nova'</span>;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>SELECT *</code> means "give me every column." The <code>WHERE</code> clause filters which rows are affected — it's used identically across <code>SELECT</code>, <code>UPDATE</code>, and <code>DELETE</code>. This is worth memorizing cold: <code>UPDATE</code> or <code>DELETE</code> without a <code>WHERE</code> clause applies to <em>every single row in the table</em>, which has ended real careers. Always double check your <code>WHERE</code> clause before running either one.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Relationships — Linking Tables Together</h3>
+        <p>A <strong>foreign key</strong> is a column in one table that stores the primary key of a row in another table, creating a link between them.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="CREATE TABLE missions (&#10;  id INTEGER PRIMARY KEY,&#10;  title TEXT,&#10;  leader_id INTEGER REFERENCES crew(id)&#10;);&#10;&#10;SELECT missions.title, crew.name&#10;FROM missions&#10;JOIN crew ON missions.leader_id = crew.id;">COPY</button></div>
+          <pre><code><span class="kw">CREATE TABLE</span> missions (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  title <span class="kw">TEXT</span>,
+  leader_id <span class="kw">INTEGER REFERENCES</span> crew(id)
+);
+
+<span class="kw">SELECT</span> missions.title, crew.name
+<span class="kw">FROM</span> missions
+<span class="kw">JOIN</span> crew <span class="kw">ON</span> missions.leader_id = crew.id;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>leader_id</code> stores a crew member's <code>id</code> rather than duplicating their whole record. The <code>JOIN</code> then stitches the two tables together for a query, matching each mission to its leader's actual name. This is the single most powerful idea in relational databases — data lives in exactly one place, and everything else just points to it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Introducing Supabase</h3>
+        <p>Writing raw SQL directly against a production database from a public website is risky and complicated. <strong>Supabase</strong> is a service that gives you a real, full <strong>Postgres</strong> database (a serious, industry-standard SQL database), plus an instant, secure API in front of it, plus built-in <strong>authentication</strong> (sign up / log in) — all without you having to build or manage a server yourself.</p>
+        <div class="whatjusthappened">
+          <strong>WHAT SUPABASE ACTUALLY GIVES YOU</strong>
+          When you create a new project in the Supabase dashboard, you land on a page with a left sidebar. The <strong>Table Editor</strong> tab lets you create tables visually — click "New table," add columns with a type dropdown, exactly like the schema you just wrote in SQL, but point-and-click. The <strong>SQL Editor</strong> tab lets you run raw SQL directly, exactly like the queries above. The <strong>Authentication</strong> tab manages user sign-ups automatically, without you writing any password-handling code yourself — which is important, because handwritten password systems are a common source of serious security bugs.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Connecting Your Website to Supabase</h3>
+        <p>Once a table exists, your JavaScript talks to it using the <code>supabase-js</code> client library instead of writing raw SQL from the browser.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="import { createClient } from '@supabase/supabase-js';&#10;&#10;const supabase = createClient(&#10;  'https://yourproject.supabase.co',&#10;  'your-public-anon-key'&#10;);&#10;&#10;const { data, error } = await supabase&#10;  .from('crew')&#10;  .select('*')&#10;  .eq('station', 'Bridge');">COPY</button></div>
+          <pre><code><span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="str">'@supabase/supabase-js'</span>;
+
+<span class="kw">const</span> supabase = createClient(
+  <span class="str">'https://yourproject.supabase.co'</span>,
+  <span class="str">'your-public-anon-key'</span>
+);
+
+<span class="kw">const</span> { data, error } = <span class="kw">await</span> supabase
+  .<span class="fn">from</span>(<span class="str">'crew'</span>)
+  .<span class="fn">select</span>(<span class="str">'*'</span>)
+  .<span class="fn">eq</span>(<span class="str">'station'</span>, <span class="str">'Bridge'</span>);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This JavaScript is doing exactly the same thing as <code>SELECT * FROM crew WHERE station = 'Bridge';</code> — the <code>supabase-js</code> library translates method calls like <code>.from()</code>, <code>.select()</code>, and <code>.eq()</code> into real SQL behind the scenes and sends it through Supabase's API. The <code>anon key</code> is a public, restricted key — it only allows the specific actions you configure permissions for, so it's safe to include in front-end code.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real SQL database, running in this page. It's pre-loaded with a <code>crew</code> table and a <code>missions</code> table. Write real SQL on the left and hit Run — the results table on the right is genuine query output, not a simulation.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>QUERY.SQL</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="sqlEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>RESULTS</span><span>●</span></div>
+          <div id="sqlOutput"><div class="out-status">Loading database engine…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter query</button>
+        <button class="console-btn" id="btnJoin">try: JOIN missions to crew</button>
+        <button class="console-btn" id="btnInsert">try: insert a new crew member</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Use the Command Console above to design and query a new table from scratch. If you have a Supabase account, try rebuilding the same table in a real project's Table Editor afterward.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Write a <code>CREATE TABLE ship_log</code> statement with columns: <code>id</code> (primary key), <code>entry_date</code>, <code>author</code>, and <code>message</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Insert at least 4 rows into <code>ship_log</code> with different authors
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Write a <code>SELECT</code> query that returns only entries from one specific author
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Write a <code>SELECT</code> query using <code>ORDER BY entry_date</code> to sort the log chronologically
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Write an <code>UPDATE</code> statement that corrects one entry's message — with a <code>WHERE</code> clause narrow enough to hit exactly one row
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your <code>UPDATE</code> or <code>DELETE</code> changed more rows than you expected, run the equivalent <code>SELECT ... WHERE ...</code> first to preview exactly which rows match — this habit alone prevents most real-world database disasters.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Create a second table, <code>authors</code>, with an <code>id</code> and a <code>role</code> column. Add an <code>author_id</code> foreign key to <code>ship_log</code> referencing it, then write a <code>JOIN</code> query that shows each log entry alongside that author's role.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>CREATE TABLE</code><span>Define a new table's shape</span></div>
+        <div class="cheat-card"><code>PRIMARY KEY</code><span>Guarantees a unique row identifier</span></div>
+        <div class="cheat-card"><code>REFERENCES</code><span>Creates a foreign key link</span></div>
+        <div class="cheat-card"><code>INSERT INTO</code><span>Add a new row</span></div>
+        <div class="cheat-card"><code>SELECT ... WHERE</code><span>Read rows matching a condition</span></div>
+        <div class="cheat-card"><code>UPDATE ... SET ... WHERE</code><span>Modify matching rows</span></div>
+        <div class="cheat-card"><code>DELETE FROM ... WHERE</code><span>Remove matching rows</span></div>
+        <div class="cheat-card"><code>JOIN ... ON</code><span>Combine rows from two tables</span></div>
+        <div class="cheat-card"><code>ORDER BY</code><span>Sort results</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Running <code>UPDATE</code> or <code>DELETE</code> without a <code>WHERE</code> clause — this affects every row in the table, permanently.</li>
+          <li>Forgetting quotes around text values (<code>'Nova'</code>) while numbers need none (<code>84</code>).</li>
+          <li>Designing a table with no primary key, making individual rows impossible to reliably reference later.</li>
+          <li>Duplicating data across tables instead of using a foreign key — leads to entries that quietly go out of sync.</li>
+          <li>Putting a real database's secret admin key in public front-end code — only ever expose a properly restricted public key.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the danger of running <code>DELETE FROM crew;</code> with no <code>WHERE</code> clause?</p>
+        <button class="quiz-btn" data-correct="false">It deletes only the first row</button>
+        <button class="quiz-btn" data-correct="true">It deletes every row in the table</button>
+        <button class="quiz-btn" data-correct="false">It asks for confirmation automatically</button>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <div class="stamp">✓ MISSION COMPLETE</div>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links">
+      <a href="mission-06-deployment.html">◂ MISSION 06: DEPLOYMENT</a>
+      <a href="#">MISSION INDEX</a>
+      <a href="#">NEXT MISSION ▸</a>
+    </div>
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Starfield ---------------- */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = document.documentElement.scrollHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 9000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.015 + 0.005
+      });
+    }
+  }
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(s.phase + t * s.speed));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232, 236, 251, ${twinkle * 0.6})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+
+  resizeCanvas();
+  initStars();
+  requestAnimationFrame(drawStars);
+  window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+
+  /* ---------------- Copy buttons ---------------- */
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1400);
+      });
+    });
+  });
+
+  /* ---------------- Quiz ---------------- */
+  const quizButtons = document.querySelectorAll('.quiz-btn');
+  const quizFeedback = document.getElementById('quizFeedback');
+  quizButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const correct = btn.getAttribute('data-correct') === 'true';
+      quizButtons.forEach(b => b.classList.remove('correct', 'wrong'));
+      if (correct) {
+        btn.classList.add('correct');
+        quizFeedback.textContent = 'Correct — no WHERE clause means no filter at all.';
+        quizFeedback.style.color = 'var(--success)';
+      } else {
+        btn.classList.add('wrong');
+        quizFeedback.textContent = 'Not quite. Try another option.';
+        quizFeedback.style.color = 'var(--danger)';
+      }
+    });
+  });
+
+  /* ---------------- SQL Sandbox (sql.js) ---------------- */
+  const sqlEditor = document.getElementById('sqlEditor');
+  const sqlOutput = document.getElementById('sqlOutput');
+  const runBtn = document.getElementById('runBtn');
+
+  const SEED_SQL = `
+    CREATE TABLE crew (id INTEGER PRIMARY KEY, name TEXT NOT NULL, rank TEXT, station TEXT);
+    INSERT INTO crew (id, name, rank, station) VALUES
+      (1, 'Nova', 'Captain', 'Bridge'),
+      (2, 'Kip', 'Engineer', 'Engine Room'),
+      (3, 'Zed', 'Navigator', 'Bridge'),
+      (4, 'Rell', 'Medic', 'Sick Bay');
+
+    CREATE TABLE missions (id INTEGER PRIMARY KEY, title TEXT, leader_id INTEGER REFERENCES crew(id));
+    INSERT INTO missions (id, title, leader_id) VALUES
+      (1, 'Survey Kepler Station', 1),
+      (2, 'Repair Outer Hull', 2),
+      (3, 'Chart Deep Range Relay', 3);
+  `;
+
+  const STARTER = `SELECT * FROM crew WHERE station = 'Bridge';`;
+  const EXAMPLE_JOIN = `SELECT missions.title, crew.name AS leader
+FROM missions
+JOIN crew ON missions.leader_id = crew.id;`;
+  const EXAMPLE_INSERT = `INSERT INTO crew (id, name, rank, station)
+VALUES (5, 'Juno', 'Comms Officer', 'Bridge');
+
+SELECT * FROM crew;`;
+
+  let db = null;
+
+  function renderResults(results) {
+    sqlOutput.innerHTML = '';
+    if (!results || results.length === 0) {
+      sqlOutput.innerHTML = '<div class="out-status">Query ran successfully — no rows returned.</div>';
+      return;
+    }
+    results.forEach(res => {
+      const table = document.createElement('table');
+      const thead = document.createElement('tr');
+      res.columns.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = c;
+        thead.appendChild(th);
+      });
+      table.appendChild(thead);
+      res.values.forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val === null ? 'NULL' : val;
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+      sqlOutput.appendChild(table);
+    });
+    const note = document.createElement('div');
+    note.className = 'out-success';
+    note.textContent = `${results.reduce((sum, r) => sum + r.values.length, 0)} row(s) returned.`;
+    sqlOutput.appendChild(note);
+  }
+
+  function runQuery() {
+    if (!db) {
+      sqlOutput.innerHTML = '<div class="out-status">Database still loading, try again in a moment…</div>';
+      return;
+    }
+    try {
+      const results = db.exec(sqlEditor.value);
+      renderResults(results);
+    } catch (err) {
+      sqlOutput.innerHTML = `<div class="out-error">⚠ ${err.message}</div>`;
+    }
+  }
+
+  runBtn.addEventListener('click', runQuery);
+  document.getElementById('btnReset').addEventListener('click', () => { sqlEditor.value = STARTER; runQuery(); });
+  document.getElementById('btnJoin').addEventListener('click', () => { sqlEditor.value = EXAMPLE_JOIN; runQuery(); });
+  document.getElementById('btnInsert').addEventListener('click', () => { sqlEditor.value = EXAMPLE_INSERT; runQuery(); });
+
+  sqlEditor.value = STARTER;
+
+  if (typeof initSqlJs === 'function') {
+    initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` })
+      .then(SQL => {
+        db = new SQL.Database();
+        db.run(SEED_SQL);
+        sqlOutput.innerHTML = '<div class="out-status">Database ready. Hit RUN.</div>';
+        runQuery();
+      })
+      .catch(err => {
+        sqlOutput.innerHTML = `<div class="out-error">⚠ Could not load the database engine (needs an internet connection on first load). ${err.message || ''}</div>`;
+      });
+  } else {
+    sqlOutput.innerHTML = '<div class="out-error">⚠ Database engine failed to load — check your internet connection and refresh.</div>';
+  }
+
+})();
+</script>
+
+</body>
+</html>

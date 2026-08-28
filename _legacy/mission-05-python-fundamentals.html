@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 05: Python — Second Language, Same Universe | Mission Control Code Academy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rubik:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap');
+
+  :root {
+    --bg-void: #0a0e1a;
+    --bg-panel: #131a2e;
+    --bg-panel-alt: #1b2540;
+    --border-glow: #2e3d63;
+
+    --text-primary: #e8ecfb;
+    --text-secondary: #a8b3d1;
+    --text-muted: #6b7699;
+
+    --accent-cyan: #4ee1ff;
+    --accent-purple: #b083ff;   /* Python — our topic color */
+    --accent-orange: #ff9d4d;
+    --accent-green: #4dffb4;
+    --accent-pink: #ff6ec7;
+    --accent-yellow: #ffe66d;
+
+    --accent: var(--accent-purple);
+
+    --success: #4dffb4;
+    --warning: #ffcf4d;
+    --danger: #ff6b6b;
+
+    --font-display: 'Orbitron', 'Segoe UI', sans-serif;
+    --font-body: 'Rubik', 'Segoe UI', sans-serif;
+    --font-code: 'Fira Code', 'Consolas', monospace;
+
+    --radius: 14px;
+    --glow-shadow: 0 0 24px rgba(176, 131, 255, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #10162b, var(--bg-void) 60%);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    background-attachment: fixed;
+    line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5; }
+
+  .content-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.02em; color: var(--text-primary); }
+  a { color: var(--accent); }
+  code { font-family: var(--font-code); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 64px 0 40px; text-align: center; border-bottom: 1px solid var(--border-glow); margin-bottom: 48px; }
+
+  .mission-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    background: rgba(176, 131, 255, 0.1);
+    border: 1px solid rgba(176, 131, 255, 0.4);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 16px; text-shadow: var(--glow-shadow); }
+  .hero .subtitle { color: var(--accent); font-family: var(--font-display); font-size: clamp(15px, 2.4vw, 20px); margin-bottom: 20px; }
+  .briefing-line { max-width: 680px; margin: 0 auto 28px; color: var(--text-secondary); font-size: 17px; }
+  .hero-meta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+  }
+  .badge.difficulty-cadet { color: var(--success); border-color: rgba(77,255,180,0.4); }
+  .badge.difficulty-officer { color: var(--warning); border-color: rgba(255,207,77,0.4); }
+  .badge.difficulty-commander { color: var(--danger); border-color: rgba(255,107,107,0.4); }
+
+  /* ---------- Section shell ---------- */
+  section.panel { margin-bottom: 56px; }
+  .section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .section-label .num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--bg-void);
+    background: var(--accent);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-label h2 { font-size: 22px; margin: 0; text-transform: uppercase; }
+
+  .card { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 28px; }
+
+  .diagram-box { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 20px; margin: 20px 0; text-align: center; }
+  .diagram-caption { margin-top: 12px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  /* ---------- Sub-sections ---------- */
+  .subsection { margin-bottom: 34px; padding-bottom: 34px; border-bottom: 1px dashed var(--border-glow); }
+  .subsection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .subsection h3 { font-size: 18px; color: var(--accent); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .subsection h3::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); flex-shrink: 0; }
+
+  /* ---------- Code blocks ---------- */
+  .code-block { position: relative; background: var(--bg-panel-alt); border-left: 3px solid var(--accent); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .code-tab { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(0,0,0,0.25); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); }
+  .copy-btn { background: transparent; border: 1px solid var(--border-glow); color: var(--text-secondary); font-family: var(--font-body); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { color: var(--success); border-color: var(--success); }
+  pre { margin: 0; padding: 16px; overflow-x: auto; }
+  pre code { font-family: var(--font-code); font-size: 13.5px; color: var(--text-primary); white-space: pre; }
+  .comment { color: var(--text-muted); }
+  .kw { color: var(--accent-purple); }
+  .str { color: var(--accent-green); }
+  .num { color: var(--accent-yellow); }
+  .fn { color: var(--accent-pink); }
+
+  .whatjusthappened {
+    background: rgba(176, 131, 255, 0.06);
+    border: 1px solid rgba(176, 131, 255, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .whatjusthappened strong { color: var(--accent); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  /* ---------- Terminal callout (Python-specific) ---------- */
+  .terminal-callout {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-left: 3px solid var(--accent-green);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-family: var(--font-code);
+    font-size: 13px;
+  }
+  .terminal-callout .tc-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent-green);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .terminal-callout .tc-line { color: var(--text-secondary); margin-bottom: 3px; }
+  .terminal-callout .tc-prompt { color: var(--accent-green); }
+
+  details { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
+  details summary { cursor: pointer; font-family: var(--font-display); font-size: 13px; color: var(--accent); letter-spacing: 0.03em; }
+  details[open] summary { margin-bottom: 10px; }
+  details p, details ul { color: var(--text-secondary); font-size: 14px; }
+
+  /* ---------- Python REPL Console ---------- */
+  .sandbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .sandbox-grid { grid-template-columns: 1fr; }
+  }
+  .sandbox-pane {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--glow-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .run-btn {
+    background: var(--accent);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  #pyEditor {
+    width: 100%;
+    min-height: 320px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    padding: 14px;
+    line-height: 1.5;
+    flex: 1;
+    tab-size: 4;
+  }
+  #pyOutput {
+    min-height: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 14px;
+    font-family: var(--font-code);
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+  }
+  #pyOutput .out-line { color: var(--text-secondary); }
+  #pyOutput .out-error { color: var(--danger); }
+  #pyOutput .out-status { color: var(--text-muted); font-style: italic; }
+  .console-controls { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .console-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .console-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Challenge checklist ---------- */
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-glow); }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] {
+    appearance: none; width: 20px; height: 20px; border: 2px solid var(--border-glow);
+    border-radius: 5px; margin-top: 2px; cursor: pointer; flex-shrink: 0; position: relative; transition: all 0.15s ease;
+  }
+  .checklist input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  .checklist input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; top: -3px; left: 3px; color: var(--bg-void); font-size: 14px; font-weight: bold;
+  }
+  .checklist label { color: var(--text-primary); font-size: 15px; }
+  .checklist .sub { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+  .bonus-box { margin-top: 20px; background: rgba(78, 225, 255, 0.08); border: 1px solid rgba(78, 225, 255, 0.35); border-radius: 10px; padding: 16px 18px; }
+  .bonus-box strong { color: var(--accent-cyan); font-family: var(--font-display); font-size: 13px; }
+
+  /* ---------- Cheat sheet ---------- */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .cheat-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 14px 16px; }
+  .cheat-card code { display: block; color: var(--accent); font-size: 13.5px; margin-bottom: 6px; }
+  .cheat-card span { color: var(--text-secondary); font-size: 13px; }
+
+  .mistakes-box { margin-top: 24px; background: rgba(255, 107, 107, 0.07); border: 1px solid rgba(255, 107, 107, 0.35); border-radius: 10px; padding: 18px 20px; }
+  .mistakes-box h4 { color: var(--danger); font-size: 14px; margin: 0 0 10px; letter-spacing: 0.04em; }
+  .mistakes-box ul { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 14px; }
+  .mistakes-box li { margin-bottom: 6px; }
+
+  .quiz-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary);
+    padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 14px;
+    margin: 4px 6px 4px 0; transition: all 0.15s ease;
+  }
+  .quiz-btn:hover { border-color: var(--accent); }
+  .quiz-btn.correct { border-color: var(--success); color: var(--success); }
+  .quiz-btn.wrong { border-color: var(--danger); color: var(--danger); }
+  .quiz-feedback { margin-top: 10px; font-size: 14px; min-height: 20px; }
+
+  /* ---------- Footer ---------- */
+  .mission-footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border-glow); }
+  .stamp {
+    display: inline-block; font-family: var(--font-display); font-size: 15px; letter-spacing: 0.15em;
+    color: var(--success); border: 2px solid var(--success); padding: 14px 28px; border-radius: 10px;
+    transform: rotate(-3deg); box-shadow: 0 0 20px rgba(77, 255, 180, 0.25); margin-bottom: 28px;
+  }
+  .nav-links { display: flex; justify-content: center; gap: 20px; font-family: var(--font-display); font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { text-decoration: none; color: var(--text-secondary); border: 1px solid var(--border-glow); padding: 10px 18px; border-radius: 8px; transition: all 0.15s ease; }
+  .nav-links a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 600px) { .card, .diagram-box { padding: 18px; } }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>MISSION 05: PYTHON</h1>
+    <div class="subtitle">Second Language, Same Universe — Ground Control's Language of Choice</div>
+    <p class="briefing-line">Everything you've built so far ran inside a browser, speaking JavaScript. But most of the software running the world — automation scripts, data pipelines, AI systems, the backend logic behind almost every app — runs somewhere else, and a huge share of it speaks Python. The good news: you already know the core concepts. Variables, functions, conditionals, loops — same ideas, new dialect. Python just says them differently, and in some ways more cleanly.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~60 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of JavaScript and Python as two starships from the same fleet, built to the same command structure but manufactured by different shipyards. Both understand variables, functions, conditionals, and loops. Both can talk to files, networks, and data. But the syntax — the exact wording of the commands — is different, and Python has one rule that surprises almost everyone at first: <strong>indentation is not just style, it's structure.</strong></p>
+      <p>In JavaScript, curly braces <code>{ }</code> mark where a block of code starts and ends. In Python, there are no braces — the code block is defined purely by how far it's indented. Get the indentation wrong and your program doesn't just look messy, it breaks or does something different than you intended. This forces genuinely readable code as a side effect, which is part of why Python is so popular for large projects.</p>
+      <p>Python is also famous for reading almost like plain English — <code>if x in list:</code> instead of a symbol-heavy equivalent — which is exactly why it's the default choice for data science, automation, backend web frameworks, and a huge share of today's AI tooling.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <!-- JS column -->
+          <rect x="20" y="20" width="320" height="220" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="180" y="46" fill="#4ee1ff" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">JAVASCRIPT</text>
+          <text x="38" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">function checkFuel(f) {</text>
+          <text x="52" y="102" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  if (f &lt; 10) {</text>
+          <text x="66" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">    return "LOW";</text>
+          <text x="52" y="146" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  }</text>
+          <text x="38" y="168" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">}</text>
+          <text x="38" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">Blocks marked with { }</text>
+
+          <!-- Python column -->
+          <rect x="360" y="20" width="320" height="220" rx="10" fill="#1b2540" stroke="#b083ff" stroke-width="2"/>
+          <text x="520" y="46" fill="#b083ff" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">PYTHON</text>
+          <text x="378" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">def check_fuel(f):</text>
+          <text x="392" y="102" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  if f &lt; 10:</text>
+          <text x="406" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">    return "LOW"</text>
+          <text x="378" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">Blocks marked by indentation</text>
+        </svg>
+        <div class="diagram-caption">Same logic, two dialects — Python drops the braces and semicolons entirely, relying on consistent indentation instead.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Printing & Indentation</h3>
+        <p><code>print()</code> is Python's equivalent of <code>console.log()</code> — it outputs text. There's no <code>{ }</code> for blocks; instead, everything at the same indentation level belongs to the same block. The standard is 4 spaces per level.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="print(&quot;Systems check initiated&quot;)&#10;&#10;fuel = 8&#10;if fuel &lt; 10:&#10;    print(&quot;WARNING: fuel critical&quot;)&#10;    print(&quot;Recommend immediate refuel&quot;)&#10;print(&quot;Check complete&quot;)">COPY</button></div>
+          <pre><code><span class="fn">print</span>(<span class="str">"Systems check initiated"</span>)
+
+fuel = <span class="num">8</span>
+<span class="kw">if</span> fuel &lt; <span class="num">10</span>:
+    <span class="fn">print</span>(<span class="str">"WARNING: fuel critical"</span>)
+    <span class="fn">print</span>(<span class="str">"Recommend immediate refuel"</span>)
+<span class="fn">print</span>(<span class="str">"Check complete"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The two indented <code>print</code> lines belong to the <code>if</code> block and only run when <code>fuel &lt; 10</code>. The final <code>print("Check complete")</code> is back at the outer indentation level, so it always runs regardless of the condition. Notice: no semicolons, no curly braces — just the colon (<code>:</code>) that opens a block and consistent indentation that defines it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Variables, Types & f-strings</h3>
+        <p>Python variables need no <code>let</code> or <code>const</code> — you just assign directly. Types are still there (string, int, float, bool, list, dict), Python just doesn't make you declare them upfront.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="ship_name = &quot;Voyager-9&quot;&#10;thrust_power = 78&#10;shields_up = True&#10;&#10;print(f&quot;{ship_name} is running at {thrust_power}% thrust&quot;)">COPY</button></div>
+          <pre><code>ship_name = <span class="str">"Voyager-9"</span>
+thrust_power = <span class="num">78</span>
+shields_up = <span class="kw">True</span>
+
+<span class="fn">print</span>(<span class="str">f"{ship_name} is running at {thrust_power}% thrust"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          An <strong>f-string</strong> (the <code>f</code> right before the opening quote) lets you drop variables directly into text using <code>{curly braces}</code> — Python's equivalent of JavaScript's backtick template strings. Booleans are capitalized in Python: <code>True</code> and <code>False</code>, not lowercase like JavaScript.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Lists & Dictionaries</h3>
+        <p>Python's <strong>list</strong> is the equivalent of a JavaScript array. Python's <strong>dictionary</strong> is the equivalent of a JavaScript object — labeled key/value pairs.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;]&#10;print(crew[0])  # Nova&#10;crew.append(&quot;Rell&quot;)&#10;&#10;ship = {&#10;    &quot;name&quot;: &quot;Voyager-9&quot;,&#10;    &quot;fuel&quot;: 84,&#10;    &quot;online&quot;: True&#10;}&#10;print(ship[&quot;fuel&quot;])  # 84">COPY</button></div>
+          <pre><code>crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>]
+<span class="fn">print</span>(crew[<span class="num">0</span>])  <span class="comment"># Nova</span>
+crew.append(<span class="str">"Rell"</span>)
+
+ship = {
+    <span class="str">"name"</span>: <span class="str">"Voyager-9"</span>,
+    <span class="str">"fuel"</span>: <span class="num">84</span>,
+    <span class="str">"online"</span>: <span class="kw">True</span>
+}
+<span class="fn">print</span>(ship[<span class="str">"fuel"</span>])  <span class="comment"># 84</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Lists index from 0, same as JavaScript arrays. <code>.append()</code> adds an item to the end. Dictionaries use square-bracket key access just like JavaScript objects with bracket notation (<code>ship["fuel"]</code>) — Python dictionaries don't support the dot notation (<code>ship.fuel</code>) that JavaScript objects allow.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Functions with def</h3>
+        <p>Python functions are defined with <code>def</code> instead of <code>function</code>, and don't require a <code>return</code> type declaration — Python figures that out at runtime.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="def calculate_fuel_needed(distance_light_years):&#10;    fuel_per_light_year = 12&#10;    return distance_light_years * fuel_per_light_year&#10;&#10;fuel = calculate_fuel_needed(5)&#10;print(fuel)  # 60">COPY</button></div>
+          <pre><code><span class="kw">def</span> <span class="fn">calculate_fuel_needed</span>(distance_light_years):
+    fuel_per_light_year = <span class="num">12</span>
+    <span class="kw">return</span> distance_light_years * fuel_per_light_year
+
+fuel = calculate_fuel_needed(<span class="num">5</span>)
+<span class="fn">print</span>(fuel)  <span class="comment"># 60</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice the naming convention: Python functions and variables traditionally use <code>snake_case</code> (underscores), while JavaScript prefers <code>camelCase</code>. Neither is more "correct" — they're just the accepted style in each language's community, and following the convention makes your code instantly readable to other engineers.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Default parameters</summary>
+          <p>You can give a parameter a fallback value: <code>def greet(name="Cadet"):</code> — if no argument is passed, <code>name</code> becomes <code>"Cadet"</code> automatically. This is handy for optional settings without forcing every caller to specify everything.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Conditionals & For Loops</h3>
+        <p>Python's <code>for</code> loop is built to iterate directly over items in a list — no manual index counting required, though you can still access an index with <code>enumerate()</code> when you need it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;]&#10;&#10;for member in crew:&#10;    if member == &quot;Kip&quot;:&#10;        print(f&quot;{member} is piloting today&quot;)&#10;    else:&#10;        print(f&quot;{member} is on standby&quot;)">COPY</button></div>
+          <pre><code>crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>]
+
+<span class="kw">for</span> member <span class="kw">in</span> crew:
+    <span class="kw">if</span> member == <span class="str">"Kip"</span>:
+        <span class="fn">print</span>(<span class="str">f"{member} is piloting today"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"{member} is on standby"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>for member in crew:</code> reads almost like English — "for each member in crew." This runs the indented block once per item in the list, with <code>member</code> holding a different value each pass. Python's <code>==</code> works exactly like JavaScript's <code>===</code> — there's no separate loose-equality operator to worry about.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real Python interpreter, running right in this page. Write actual Python on the left, hit Run, and see genuine output on the right — this is the same language you'd run on a real computer, just loaded here for instant practice.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: crew roster loop</button>
+        <button class="console-btn" id="btnExample2">try: fuel calculator function</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a crew roster tool using the Command Console above, or write it as a real <code>.py</code> file and run it on your own computer.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a list called <code>crew</code> with at least 4 names
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Write a function <code>greet_crew_member(name)</code> that returns a personalized greeting string using an f-string
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use a <code>for</code> loop to call that function on every name in <code>crew</code> and print the result
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Add a dictionary called <code>ship_status</code> with at least 3 keys (e.g. fuel, shields, crew_count)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Add an <code>if</code>/<code>else</code> check on one of those values that prints a warning if it's below some threshold
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your indentation error message mentions "unexpected indent" or "expected an indented block," count your spaces carefully — mixing tabs and spaces, or indenting a line that shouldn't be indented, is the single most common Python bug for anyone new to the language.</p>
+      </details>
+
+      <div class="terminal-callout">
+        <span class="tc-label">RUN IT FOR REAL — IN YOUR TERMINAL</span>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 --version</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> cd path/to/your/folder</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 crew_roster.py</div>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:-4px;">Save your script as <code>crew_roster.py</code> in a folder, open a terminal in that folder, and run the third command. If <code>python3</code> isn't recognized, try plain <code>python</code> instead — the command name varies slightly by operating system.</p>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Turn <code>ship_status</code> into a list of dictionaries — one per crew member, each with a <code>name</code> and a <code>role</code> key — then loop through it and print a formatted line for each person, like a real mission roster printout.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>print()</code><span>Output text to the console</span></div>
+        <div class="cheat-card"><code>f"{var}"</code><span>Insert a variable into a string</span></div>
+        <div class="cheat-card"><code>def name():</code><span>Define a function</span></div>
+        <div class="cheat-card"><code>if / elif / else:</code><span>Branch based on a condition</span></div>
+        <div class="cheat-card"><code>for x in list:</code><span>Loop over each item</span></div>
+        <div class="cheat-card"><code>[ ]</code><span>A list (like a JS array)</span></div>
+        <div class="cheat-card"><code>{ }</code><span>A dictionary (like a JS object)</span></div>
+        <div class="cheat-card"><code>list.append(x)</code><span>Add an item to a list</span></div>
+        <div class="cheat-card"><code>True / False</code><span>Booleans — always capitalized</span></div>
+        <div class="cheat-card"><code># comment</code><span>Single-line comment</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Inconsistent indentation — mixing tabs and spaces, or indenting a line by accident.</li>
+          <li>Forgetting the colon (<code>:</code>) at the end of an <code>if</code>, <code>for</code>, or <code>def</code> line.</li>
+          <li>Using lowercase <code>true</code>/<code>false</code> instead of Python's capitalized <code>True</code>/<code>False</code>.</li>
+          <li>Trying to access a dictionary with dot notation (<code>ship.fuel</code>) instead of bracket notation (<code>ship["fuel"]</code>).</li>
+          <li>Forgetting that Python is case-sensitive: <code>Crew</code> and <code>crew</code> are two different variables.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what actually defines a block of code in Python?</p>
+        <button class="quiz-btn" data-correct="false">curly braces { }</button>
+        <button class="quiz-btn" data-correct="true">consistent indentation</button>
+        <button class="quiz-btn" data-correct="false">semicolons</button>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <div class="stamp">✓ MISSION COMPLETE</div>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links">
+      <a href="mission-04-javascript-interactivity.html">◂ MISSION 04: JAVASCRIPT</a>
+      <a href="#">MISSION INDEX</a>
+      <a href="#">NEXT MISSION ▸</a>
+    </div>
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Starfield ---------------- */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = document.documentElement.scrollHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 9000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.015 + 0.005
+      });
+    }
+  }
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(s.phase + t * s.speed));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232, 236, 251, ${twinkle * 0.6})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+
+  resizeCanvas();
+  initStars();
+  requestAnimationFrame(drawStars);
+  window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+
+  /* ---------------- Copy buttons ---------------- */
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1400);
+      });
+    });
+  });
+
+  /* ---------------- Quiz ---------------- */
+  const quizButtons = document.querySelectorAll('.quiz-btn');
+  const quizFeedback = document.getElementById('quizFeedback');
+  quizButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const correct = btn.getAttribute('data-correct') === 'true';
+      quizButtons.forEach(b => b.classList.remove('correct', 'wrong'));
+      if (correct) {
+        btn.classList.add('correct');
+        quizFeedback.textContent = 'Correct — no braces, no semicolons, just consistent spacing.';
+        quizFeedback.style.color = 'var(--success)';
+      } else {
+        btn.classList.add('wrong');
+        quizFeedback.textContent = 'Not quite. Try another option.';
+        quizFeedback.style.color = 'var(--danger)';
+      }
+    });
+  });
+
+  /* ---------------- Python REPL (Skulpt) ---------------- */
+  const pyEditor = document.getElementById('pyEditor');
+  const pyOutput = document.getElementById('pyOutput');
+  const runBtn = document.getElementById('runBtn');
+
+  const STARTER = `# Try me — then hit RUN
+ship_name = "Voyager-9"
+fuel = 62
+
+print(f"{ship_name} systems check")
+if fuel < 70:
+    print("Fuel below optimal — recommend refuel before next jump")
+else:
+    print("Fuel nominal")`;
+
+  const EXAMPLE_ROSTER = `crew = ["Nova", "Kip", "Zed", "Rell"]
+
+def greet_crew_member(name):
+    return f"Welcome aboard, {name}."
+
+for member in crew:
+    print(greet_crew_member(member))`;
+
+  const EXAMPLE_FUEL = `def calculate_fuel_needed(distance_light_years):
+    fuel_per_light_year = 12
+    return distance_light_years * fuel_per_light_year
+
+destinations = {"Kepler Station": 5, "Outpost Theta": 2, "Deep Range Relay": 9}
+
+for name in destinations:
+    distance = destinations[name]
+    fuel = calculate_fuel_needed(distance)
+    print(f"{name}: {distance} ly away, needs {fuel} fuel units")`;
+
+  let skulptReady = false;
+
+  function checkSkulpt() {
+    if (window.Sk) {
+      skulptReady = true;
+      pyOutput.innerHTML = '<div class="out-status">Interpreter ready. Hit RUN.</div>';
+      runCode();
+    } else {
+      setTimeout(checkSkulpt, 200);
+    }
+  }
+
+  function outf(text) {
+    const line = document.createElement('div');
+    line.className = 'out-line';
+    line.textContent = text;
+    pyOutput.appendChild(line);
+    pyOutput.scrollTop = pyOutput.scrollHeight;
+  }
+
+  function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+      throw "File not found: '" + x + "'";
+    }
+    return Sk.builtinFiles["files"][x];
+  }
+
+  function runCode() {
+    if (!skulptReady) {
+      pyOutput.innerHTML = '<div class="out-status">Interpreter still loading, try again in a moment…</div>';
+      return;
+    }
+    pyOutput.innerHTML = '';
+    Sk.pre = "pyOutput";
+    Sk.configure({ output: outf, read: builtinRead, __future__: Sk.python3 });
+
+    Sk.misceval.asyncToPromise(function() {
+      return Sk.importMainWithBody("<stdin>", false, pyEditor.value, true);
+    }).then(
+      function() {
+        if (pyOutput.children.length === 0) {
+          pyOutput.innerHTML = '<div class="out-status">Ran with no output — try adding a print() statement.</div>';
+        }
+      },
+      function(err) {
+        const line = document.createElement('div');
+        line.className = 'out-error';
+        line.textContent = err.toString();
+        pyOutput.appendChild(line);
+      }
+    );
+  }
+
+  runBtn.addEventListener('click', runCode);
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    pyEditor.value = STARTER;
+    runCode();
+  });
+  document.getElementById('btnExample1').addEventListener('click', () => {
+    pyEditor.value = EXAMPLE_ROSTER;
+    runCode();
+  });
+  document.getElementById('btnExample2').addEventListener('click', () => {
+    pyEditor.value = EXAMPLE_FUEL;
+    runCode();
+  });
+
+  pyEditor.value = STARTER;
+  checkSkulpt();
+
+})();
+</script>
+
+</body>
+</html>

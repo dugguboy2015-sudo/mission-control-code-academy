@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.1: HTML Structure & Semantics — Building the Hull | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s1-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.1: HTML STRUCTURE & SEMANTICS</h1>
+    <div class="subtitle">Building the Hull — Structure for Everything You'll Ever Ship</div>
+    <p class="briefing-line">Before a ship can fly, it needs a hull — a physical structure that holds every system in place. HTML is that hull for anything that runs in a browser. It doesn't make things pretty and it doesn't make things interactive; it defines what exists and how it's organized. Every website, every web app, every dashboard you'll ever build starts here.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of a webpage as a spacecraft cutaway diagram. The outer hull is the <code>&lt;html&gt;</code> element — everything lives inside it. Inside the hull there are two main compartments: the <code>&lt;head&gt;</code>, which holds systems the crew never sees directly (page title, metadata, links to stylesheets), and the <code>&lt;body&gt;</code>, which holds everything the crew — your visitors — actually see and interact with.</p>
+      <p>Inside the body, elements <strong>nest inside each other</strong> like compartments inside compartments: a navigation bar might contain a list, which contains list items, which contain links. This nested structure is called the <strong>DOM</strong> — the Document Object Model — and it's not just a visual idea. It's a real tree data structure that JavaScript can read and modify, and that CSS uses to decide what to style.</p>
+      <p>HTML elements are written as <strong>tags</strong>: an opening tag, some content, and a closing tag — <code>&lt;p&gt;content&lt;/p&gt;</code>. Some elements, like images, are self-closing because they have no inner content: <code>&lt;img src="photo.jpg"&gt;</code>. Getting the nesting right is non-negotiable — a browser will often try to guess what you meant if you get it wrong, and guessing is never a strategy you want your ship relying on.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <rect x="20" y="20" width="660" height="280" rx="10" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="34" y="42" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13">&lt;html&gt;</text>
+
+          <rect x="44" y="56" width="612" height="60" rx="8" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5"/>
+          <text x="58" y="76" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12">&lt;head&gt;</text>
+          <text x="70" y="98" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">&lt;title&gt;, &lt;meta&gt;, &lt;link rel="stylesheet"&gt;</text>
+
+          <rect x="44" y="130" width="612" height="150" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="58" y="152" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12">&lt;body&gt;</text>
+
+          <rect x="66" y="164" width="230" height="46" rx="6" fill="#131a2e" stroke="#2e3d63" stroke-width="1.2"/>
+          <text x="78" y="182" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11">&lt;nav&gt;</text>
+          <text x="90" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="10">&lt;ul&gt;&lt;li&gt;&lt;a&gt;...&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</text>
+
+          <rect x="312" y="164" width="322" height="100" rx="6" fill="#131a2e" stroke="#2e3d63" stroke-width="1.2"/>
+          <text x="324" y="182" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11">&lt;main&gt;</text>
+          <rect x="330" y="192" width="290" height="30" rx="5" fill="#0f1526" stroke="#2e3d63" stroke-width="1"/>
+          <text x="340" y="211" fill="#6b7699" font-family="Fira Code, monospace" font-size="10">&lt;h1&gt;Mission Log&lt;/h1&gt;</text>
+          <rect x="330" y="228" width="290" height="26" rx="5" fill="#0f1526" stroke="#2e3d63" stroke-width="1"/>
+          <text x="340" y="245" fill="#6b7699" font-family="Fira Code, monospace" font-size="10">&lt;p&gt;Status: nominal&lt;/p&gt;</text>
+
+          <rect x="66" y="222" width="230" height="42" rx="6" fill="#131a2e" stroke="#2e3d63" stroke-width="1.2"/>
+          <text x="78" y="242" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11">&lt;footer&gt;</text>
+          <text x="90" y="256" fill="#6b7699" font-family="Fira Code, monospace" font-size="10">&lt;p&gt;© Mission Control&lt;/p&gt;</text>
+        </svg>
+        <div class="diagram-caption">Every element nests inside a parent — html contains head and body, body contains nav, main, and footer, and so on.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The Document Skeleton</h3>
+        <p>Every HTML file starts with the same boilerplate. This tells the browser what version of HTML you're using and sets up the two main compartments.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML</span><button class="copy-btn" data-copy="&lt;!DOCTYPE html&gt;&#10;&lt;html lang=&quot;en&quot;&gt;&#10;&lt;head&gt;&#10;  &lt;meta charset=&quot;UTF-8&quot;&gt;&#10;  &lt;title&gt;Mission Log&lt;/title&gt;&#10;&lt;/head&gt;&#10;&lt;body&gt;&#10;  &lt;h1&gt;Status: Nominal&lt;/h1&gt;&#10;&lt;/body&gt;&#10;&lt;/html&gt;">COPY</button></div>
+          <pre><code><span class="comment">&lt;!-- Tells the browser: this is modern HTML --&gt;</span>
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Mission Log&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Status: Nominal&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>&lt;!DOCTYPE html&gt;</code> isn't a tag — it's an instruction to the browser about which rules to follow. <code>lang="en"</code> tells screen readers and search engines what language the page is in. <code>&lt;title&gt;</code> sets the text shown in the browser tab, not anything visible on the page itself.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Text Elements — Headings & Paragraphs</h3>
+        <p>Headings (<code>h1</code> through <code>h6</code>) create a hierarchy of importance — <code>h1</code> is the most important heading on the page, and there should generally only be one. Paragraphs hold body text.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML</span><button class="copy-btn" data-copy="&lt;h1&gt;Mission Control Code Academy&lt;/h1&gt;&#10;&lt;h2&gt;Cadet Roster&lt;/h2&gt;&#10;&lt;p&gt;Training begins at 0800 hours. Bring your own terminal.&lt;/p&gt;">COPY</button></div>
+          <pre><code>&lt;h1&gt;Mission Control Code Academy&lt;/h1&gt;
+&lt;h2&gt;Cadet Roster&lt;/h2&gt;
+&lt;p&gt;Training begins at 0800 hours. Bring your own terminal.&lt;/p&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The browser automatically renders <code>h1</code> largest, <code>h2</code> smaller, and so on down to <code>h6</code>. This isn't just styling — screen readers use heading levels to build a navigable outline of your page, so skipping levels (going from <code>h1</code> straight to <code>h4</code>) actually breaks accessibility.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Links, Images & Attributes</h3>
+        <p>Most tags accept <strong>attributes</strong> — extra information written inside the opening tag as <code>name="value"</code> pairs. Links and images depend entirely on attributes to function.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML</span><button class="copy-btn" data-copy="&lt;a href=&quot;https://nasa.gov&quot; target=&quot;_blank&quot;&gt;Visit NASA&lt;/a&gt;&#10;&#10;&lt;img src=&quot;rover.jpg&quot; alt=&quot;Mars rover on the surface&quot; width=&quot;300&quot;&gt;">COPY</button></div>
+          <pre><code><span class="comment">&lt;!-- href: where the link goes. target="_blank": open in new tab --&gt;</span>
+&lt;a href="https://nasa.gov" target="_blank"&gt;Visit NASA&lt;/a&gt;
+
+<span class="comment">&lt;!-- src: image file location. alt: description for screen readers --&gt;</span>
+&lt;img src="rover.jpg" alt="Mars rover on the surface" width="300"&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>&lt;img&gt;</code> has no closing tag or inner content — it's a "void element." The <code>alt</code> attribute isn't optional decoration: it's what screen readers announce, and it's what shows if the image fails to load. Never ship an image without one.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Relative vs. absolute paths</summary>
+          <p><code>src="rover.jpg"</code> is a <strong>relative</strong> path — it looks for the file next to your HTML file. <code>src="https://example.com/rover.jpg"</code> is an <strong>absolute</strong> URL pointing anywhere on the internet. Relative paths are what you'll use constantly once you start organizing real projects into folders like <code>/images</code> and <code>/scripts</code>.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Lists & Containers</h3>
+        <p>Lists group related items. Generic containers — <code>&lt;div&gt;</code> for block-level grouping, <code>&lt;span&gt;</code> for inline grouping — exist purely to organize structure so CSS and JavaScript have something to target.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML</span><button class="copy-btn" data-copy="&lt;ul&gt;&#10;  &lt;li&gt;Check fuel levels&lt;/li&gt;&#10;  &lt;li&gt;Verify comms link&lt;/li&gt;&#10;  &lt;li&gt;Confirm crew status&lt;/li&gt;&#10;&lt;/ul&gt;&#10;&#10;&lt;div class=&quot;checklist-card&quot;&gt;&#10;  &lt;p&gt;All systems &lt;span class=&quot;status-ok&quot;&gt;GO&lt;/span&gt;&lt;/p&gt;&#10;&lt;/div&gt;">COPY</button></div>
+          <pre><code>&lt;ul&gt;
+  &lt;li&gt;Check fuel levels&lt;/li&gt;
+  &lt;li&gt;Verify comms link&lt;/li&gt;
+  &lt;li&gt;Confirm crew status&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class="checklist-card"&gt;
+  &lt;p&gt;All systems &lt;span class="status-ok"&gt;GO&lt;/span&gt;&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>&lt;ul&gt;</code> (unordered list) needs <code>&lt;li&gt;</code> children — use <code>&lt;ol&gt;</code> instead when order matters (step 1, step 2...). The <code>class</code> attribute doesn't do anything by itself; it's a label that CSS or JavaScript can later hook into to style or control that exact element.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Semantic Elements — Naming Things Honestly</h3>
+        <p>You <em>could</em> build an entire page out of nothing but <code>&lt;div&gt;</code>. It would work. It would also tell a screen reader, a search engine, or another engineer absolutely nothing about what each section means. <strong>Semantic elements</strong> — <code>header</code>, <code>nav</code>, <code>main</code>, <code>article</code>, <code>footer</code> — behave like <code>div</code> visually but carry real meaning.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML</span><button class="copy-btn" data-copy="&lt;header&gt;&lt;h1&gt;Mission Control&lt;/h1&gt;&lt;/header&gt;&#10;&lt;nav&gt;&lt;a href=&quot;#&quot;&gt;Home&lt;/a&gt;&lt;/nav&gt;&#10;&lt;main&gt;&#10;  &lt;article&gt;&lt;h2&gt;Mission 1.1: HTML&lt;/h2&gt;&lt;/article&gt;&#10;&lt;/main&gt;&#10;&lt;footer&gt;&lt;p&gt;© Academy&lt;/p&gt;&lt;/footer&gt;">COPY</button></div>
+          <pre><code>&lt;header&gt;&lt;h1&gt;Mission Control&lt;/h1&gt;&lt;/header&gt;
+&lt;nav&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/nav&gt;
+&lt;main&gt;
+  &lt;article&gt;&lt;h2&gt;Mission 1.1: HTML&lt;/h2&gt;&lt;/article&gt;
+&lt;/main&gt;
+&lt;footer&gt;&lt;p&gt;© Academy&lt;/p&gt;&lt;/footer&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Nothing visually changed compared to using all <code>div</code>s — but now a screen reader can jump straight to "main content," a search engine can tell your article from your navigation, and any engineer reading this file understands the layout instantly, without needing comments.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This is a live HTML editor. Edit the code on the left and watch the rendered page update on the right — instantly, no save button. This is exactly how you'll iterate on real pages.</p>
+
+      <div class="editor-grid">
+        <div class="editor-pane">
+          <div class="pane-header"><span>EDIT.HTML</span><span id="charCount">0 chars</span></div>
+          <textarea id="htmlEditor" class="sandbox-editor" spellcheck="false" style="min-height:320px;"></textarea>
+        </div>
+        <div class="preview-pane">
+          <div class="pane-header"><span>LIVE PREVIEW</span><span>●</span></div>
+          <iframe id="previewFrame" title="live preview" sandbox="allow-same-origin"></iframe>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnBadge">insert a status badge</button>
+        <button class="console-btn" id="btnBreak">break the nesting (see what happens)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Use the Command Console above (or a real text editor if you have one) to build a personal cadet profile page from scratch.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Start with the full document skeleton: doctype, html, head with a title, and body
+          <span class="sub">Your browser tab should show your chosen title</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Add an <code>&lt;h1&gt;</code> with your cadet call sign
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Add a paragraph describing your mission (what you're learning to build)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Add an unordered list of 3 skills you already have
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Add an image with a real <code>alt</code> description (any image URL works, even a placeholder)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Add a link to a site you like, opening in a new tab
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your image doesn't show up, double-check the <code>src</code> spelling and that you used quotes around it. If you're not sure what URL to use for a placeholder image, try <code>https://placehold.co/300x200</code> — it generates a simple image on the fly.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Rebuild your page's layout using semantic elements instead of generic divs: wrap your name/title in <code>&lt;header&gt;</code>, your main content in <code>&lt;main&gt;</code>, and add a <code>&lt;footer&gt;</code> with a copyright line. Nothing should look different — that's the point.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>&lt;html&gt;</code><span>Root element, wraps everything</span></div>
+        <div class="cheat-card"><code>&lt;head&gt;</code><span>Invisible metadata & setup</span></div>
+        <div class="cheat-card"><code>&lt;body&gt;</code><span>Everything visible on the page</span></div>
+        <div class="cheat-card"><code>&lt;h1&gt;–&lt;h6&gt;</code><span>Headings, in order of importance</span></div>
+        <div class="cheat-card"><code>&lt;p&gt;</code><span>A paragraph of text</span></div>
+        <div class="cheat-card"><code>&lt;a href="..."&gt;</code><span>A link</span></div>
+        <div class="cheat-card"><code>&lt;img src="..." alt="..."&gt;</code><span>An image</span></div>
+        <div class="cheat-card"><code>&lt;ul&gt; / &lt;ol&gt; / &lt;li&gt;</code><span>Unordered / ordered lists</span></div>
+        <div class="cheat-card"><code>&lt;div&gt; / &lt;span&gt;</code><span>Generic block / inline containers</span></div>
+        <div class="cheat-card"><code>&lt;header&gt;&lt;nav&gt;&lt;main&gt;&lt;footer&gt;</code><span>Semantic layout elements</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting to close tags, or closing them in the wrong order (e.g. <code>&lt;b&gt;&lt;i&gt;text&lt;/b&gt;&lt;/i&gt;</code>).</li>
+          <li>Skipping heading levels (jumping from <code>h1</code> to <code>h4</code>) instead of nesting them in order.</li>
+          <li>Leaving <code>alt</code> off images — a screen reader user gets nothing useful there.</li>
+          <li>Using a <code>div</code> for everything when a semantic element already exists for that purpose.</li>
+          <li>Forgetting quotes around attribute values: <code>src=photo.jpg</code> instead of <code>src="photo.jpg"</code>.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which attribute is required on every <code>&lt;img&gt;</code> tag for accessibility?</p>
+        <button class="quiz-btn" data-correct="false">title</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — alt text is what makes images accessible.">alt</button>
+        <button class="quiz-btn" data-correct="false">caption</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `<h1>Cadet Log</h1>
+<p>Status: <span style="color:green">nominal</span></p>
+<ul>
+  <li>Systems check complete</li>
+  <li>Comms link stable</li>
+</ul>
+<a href="https://nasa.gov" target="_blank">Learn more about real missions</a>`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const preview = initHtmlCssPreview({
+      editorId: "htmlEditor",
+      frameId: "previewFrame",
+      charCountId: "charCount",
+      starter: STARTER,
+    });
+
+    const editor = document.getElementById("htmlEditor");
+
+    document.getElementById("btnReset").addEventListener("click", () => {
+      editor.value = STARTER;
+      preview.render();
+    });
+
+    document.getElementById("btnBadge").addEventListener("click", () => {
+      editor.value += `\n<div style="display:inline-block;padding:4px 10px;background:#4ee1ff;color:#05070d;border-radius:6px;font-weight:bold;">GO FOR LAUNCH</div>`;
+      preview.render();
+    });
+
+    document.getElementById("btnBreak").addEventListener("click", () => {
+      editor.value = `<ul>\n<li>Item one\n<li>Item two\n<p>Unclosed paragraph\n<b>Unclosed bold <i>and italic</b> tag mismatch</i>`;
+      preview.render();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

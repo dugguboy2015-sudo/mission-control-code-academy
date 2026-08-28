@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 04: JavaScript — Bringing the Ship to Life | Mission Control Code Academy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rubik:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap');
+
+  :root {
+    --bg-void: #0a0e1a;
+    --bg-panel: #131a2e;
+    --bg-panel-alt: #1b2540;
+    --border-glow: #2e3d63;
+
+    --text-primary: #e8ecfb;
+    --text-secondary: #a8b3d1;
+    --text-muted: #6b7699;
+
+    --accent-cyan: #4ee1ff;    /* HTML/CSS/JS-family — our topic color */
+    --accent-purple: #b083ff;
+    --accent-orange: #ff9d4d;
+    --accent-green: #4dffb4;
+    --accent-pink: #ff6ec7;
+    --accent-yellow: #ffe66d;
+
+    --accent: var(--accent-cyan);
+
+    --success: #4dffb4;
+    --warning: #ffcf4d;
+    --danger: #ff6b6b;
+
+    --font-display: 'Orbitron', 'Segoe UI', sans-serif;
+    --font-body: 'Rubik', 'Segoe UI', sans-serif;
+    --font-code: 'Fira Code', 'Consolas', monospace;
+
+    --radius: 14px;
+    --glow-shadow: 0 0 24px rgba(78, 225, 255, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #10162b, var(--bg-void) 60%);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    background-attachment: fixed;
+    line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5; }
+
+  .content-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.02em; color: var(--text-primary); }
+  a { color: var(--accent); }
+  code { font-family: var(--font-code); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 64px 0 40px; text-align: center; border-bottom: 1px solid var(--border-glow); margin-bottom: 48px; }
+
+  .mission-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    background: rgba(78, 225, 255, 0.1);
+    border: 1px solid rgba(78, 225, 255, 0.4);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 16px; text-shadow: var(--glow-shadow); }
+  .hero .subtitle { color: var(--accent); font-family: var(--font-display); font-size: clamp(15px, 2.4vw, 20px); margin-bottom: 20px; }
+  .briefing-line { max-width: 680px; margin: 0 auto 28px; color: var(--text-secondary); font-size: 17px; }
+  .hero-meta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+  }
+  .badge.difficulty-cadet { color: var(--success); border-color: rgba(77,255,180,0.4); }
+  .badge.difficulty-officer { color: var(--warning); border-color: rgba(255,207,77,0.4); }
+  .badge.difficulty-commander { color: var(--danger); border-color: rgba(255,107,107,0.4); }
+
+  /* ---------- Section shell ---------- */
+  section.panel { margin-bottom: 56px; }
+  .section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .section-label .num {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--bg-void);
+    background: var(--accent);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-label h2 { font-size: 22px; margin: 0; text-transform: uppercase; }
+
+  .card { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 28px; }
+
+  .diagram-box { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: var(--radius); padding: 20px; margin: 20px 0; text-align: center; }
+  .diagram-caption { margin-top: 12px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+  /* ---------- Sub-sections ---------- */
+  .subsection { margin-bottom: 34px; padding-bottom: 34px; border-bottom: 1px dashed var(--border-glow); }
+  .subsection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .subsection h3 { font-size: 18px; color: var(--accent); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .subsection h3::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); flex-shrink: 0; }
+
+  /* ---------- Code blocks ---------- */
+  .code-block { position: relative; background: var(--bg-panel-alt); border-left: 3px solid var(--accent); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .code-tab { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(0,0,0,0.25); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); }
+  .copy-btn { background: transparent; border: 1px solid var(--border-glow); color: var(--text-secondary); font-family: var(--font-body); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { color: var(--success); border-color: var(--success); }
+  pre { margin: 0; padding: 16px; overflow-x: auto; }
+  pre code { font-family: var(--font-code); font-size: 13.5px; color: var(--text-primary); white-space: pre; }
+  .comment { color: var(--text-muted); }
+  .kw { color: var(--accent-cyan); }
+  .str { color: var(--accent-green); }
+  .num { color: var(--accent-yellow); }
+  .fn { color: var(--accent-pink); }
+
+  .whatjusthappened {
+    background: rgba(78, 225, 255, 0.06);
+    border: 1px solid rgba(78, 225, 255, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .whatjusthappened strong { color: var(--accent); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  details { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
+  details summary { cursor: pointer; font-family: var(--font-display); font-size: 13px; color: var(--accent); letter-spacing: 0.03em; }
+  details[open] summary { margin-bottom: 10px; }
+  details p, details ul { color: var(--text-secondary); font-size: 14px; }
+
+  /* ---------- JS Sandbox Console ---------- */
+  .sandbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .sandbox-grid { grid-template-columns: 1fr; }
+  }
+  .sandbox-pane {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--glow-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .run-btn {
+    background: var(--accent);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  #jsEditor {
+    width: 100%;
+    min-height: 220px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    padding: 14px;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .right-stack { display: flex; flex-direction: column; gap: 16px; }
+  #shipDisplay {
+    padding: 22px;
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--accent-cyan);
+    background: #0c1120;
+    transition: all 0.2s ease;
+  }
+  #consoleOutput {
+    min-height: 110px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 12px 14px;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  #consoleOutput .log-line { margin-bottom: 4px; }
+  #consoleOutput .log-error { color: var(--danger); }
+  .console-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .console-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .console-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Challenge checklist ---------- */
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-glow); }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] {
+    appearance: none; width: 20px; height: 20px; border: 2px solid var(--border-glow);
+    border-radius: 5px; margin-top: 2px; cursor: pointer; flex-shrink: 0; position: relative; transition: all 0.15s ease;
+  }
+  .checklist input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  .checklist input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; top: -3px; left: 3px; color: var(--bg-void); font-size: 14px; font-weight: bold;
+  }
+  .checklist label { color: var(--text-primary); font-size: 15px; }
+  .checklist .sub { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+  .bonus-box { margin-top: 20px; background: rgba(176, 131, 255, 0.08); border: 1px solid rgba(176, 131, 255, 0.35); border-radius: 10px; padding: 16px 18px; }
+  .bonus-box strong { color: var(--accent-purple); font-family: var(--font-display); font-size: 13px; }
+
+  /* ---------- Cheat sheet ---------- */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .cheat-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 14px 16px; }
+  .cheat-card code { display: block; color: var(--accent); font-size: 13.5px; margin-bottom: 6px; }
+  .cheat-card span { color: var(--text-secondary); font-size: 13px; }
+
+  .mistakes-box { margin-top: 24px; background: rgba(255, 107, 107, 0.07); border: 1px solid rgba(255, 107, 107, 0.35); border-radius: 10px; padding: 18px 20px; }
+  .mistakes-box h4 { color: var(--danger); font-size: 14px; margin: 0 0 10px; letter-spacing: 0.04em; }
+  .mistakes-box ul { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 14px; }
+  .mistakes-box li { margin-bottom: 6px; }
+
+  .quiz-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary);
+    padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 14px;
+    margin: 4px 6px 4px 0; transition: all 0.15s ease;
+  }
+  .quiz-btn:hover { border-color: var(--accent); }
+  .quiz-btn.correct { border-color: var(--success); color: var(--success); }
+  .quiz-btn.wrong { border-color: var(--danger); color: var(--danger); }
+  .quiz-feedback { margin-top: 10px; font-size: 14px; min-height: 20px; }
+
+  /* ---------- Footer ---------- */
+  .mission-footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border-glow); }
+  .stamp {
+    display: inline-block; font-family: var(--font-display); font-size: 15px; letter-spacing: 0.15em;
+    color: var(--success); border: 2px solid var(--success); padding: 14px 28px; border-radius: 10px;
+    transform: rotate(-3deg); box-shadow: 0 0 20px rgba(77, 255, 180, 0.25); margin-bottom: 28px;
+  }
+  .nav-links { display: flex; justify-content: center; gap: 20px; font-family: var(--font-display); font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { text-decoration: none; color: var(--text-secondary); border: 1px solid var(--border-glow); padding: 10px 18px; border-radius: 8px; transition: all 0.15s ease; }
+  .nav-links a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 600px) { .card, .diagram-box { padding: 18px; } }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>MISSION 04: JAVASCRIPT</h1>
+    <div class="subtitle">Bringing the Ship to Life — Logic, Reactions, and Real Behavior</div>
+    <p class="briefing-line">HTML gave your ship a hull. CSS gave it a paint job and a layout. Neither one can actually <em>do</em> anything — they're static. JavaScript is the onboard computer: it listens for events (a button press, a keystroke, a timer going off), runs logic to decide what should happen, and then reaches into the page to change it, live, without a reload. This is the mission where your pages stop being documents and start being applications.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~65 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every interactive system — a spacecraft's autopilot, a video game, a web app — follows the same basic loop: something happens (an <strong>event</strong>), the computer decides what to do about it (runs a <strong>function</strong>), and then the world changes as a result (an <strong>action</strong>, often updating what's on screen). JavaScript is the language that lets a webpage run exactly this loop.</p>
+      <p>Unlike HTML and CSS, which describe things, JavaScript gives <strong>instructions</strong> — a sequence of steps the browser executes in order, complete with decisions ("if this, do that"), repetition ("do this 10 times"), and memory (variables that store values you can use later). This is a real programming language, the same core concepts you'd find in Python, and it's the language every web browser on the planet understands natively.</p>
+      <p>The part of a webpage JavaScript reaches into and changes is the <strong>DOM</strong> — the same nested tree structure from Mission 02. JavaScript can find any element in that tree, read it, and rewrite it, all while the page is running, with no reload required.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <defs>
+            <marker id="jsarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- three stage boxes in a triangle/cycle -->
+          <rect x="40" y="30" width="180" height="70" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="130" y="58" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">1. EVENT</text>
+          <text x="130" y="78" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">button click, key press</text>
+
+          <rect x="420" y="30" width="180" height="70" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="510" y="58" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">2. FUNCTION</text>
+          <text x="510" y="78" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">your logic decides what to do</text>
+
+          <rect x="230" y="170" width="180" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="320" y="198" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">3. DOM UPDATE</text>
+          <text x="320" y="218" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">text, style, or content changes</text>
+
+          <!-- arrows -->
+          <path d="M220,65 L420,65" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#jsarrow)"/>
+          <path d="M480,100 L360,170" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#jsarrow)"/>
+          <path d="M260,170 L150,100" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#jsarrow)"/>
+        </svg>
+        <div class="diagram-caption">The core loop of every interactive app: something happens, code reacts, the page updates — and then it waits for the next event.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Variables & Data Types</h3>
+        <p>A variable is a labeled storage container. Use <code>let</code> for values that will change, <code>const</code> for values that won't. JavaScript's core data types are strings (text), numbers, booleans (true/false), arrays (ordered lists), and objects (labeled bundles of data).</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="let thrustPower = 78;&#10;const shipName = &quot;Voyager-9&quot;;&#10;let shieldsUp = true;&#10;&#10;let crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;];&#10;&#10;let ship = {&#10;  name: shipName,&#10;  fuel: 84,&#10;  online: true&#10;};">COPY</button></div>
+          <pre><code><span class="kw">let</span> thrustPower = <span class="num">78</span>;
+<span class="kw">const</span> shipName = <span class="str">"Voyager-9"</span>;
+<span class="kw">let</span> shieldsUp = <span class="kw">true</span>;
+
+<span class="kw">let</span> crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>]; <span class="comment">// array</span>
+
+<span class="kw">let</span> ship = { <span class="comment">// object</span>
+  name: shipName,
+  fuel: <span class="num">84</span>,
+  online: <span class="kw">true</span>
+};</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>thrustPower</code> is a number you can reassign later. <code>shipName</code> is locked with <code>const</code> — trying to reassign it throws an error, which is exactly the point: it protects values that should never accidentally change. Arrays use square brackets and index from 0 (<code>crew[0]</code> is <code>"Nova"</code>); objects use curly braces and named keys (<code>ship.fuel</code> is <code>84</code>).
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Functions — Reusable Instructions</h3>
+        <p>A function is a named block of code you can run whenever you need it, optionally feeding it different inputs (<strong>parameters</strong>) each time.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function calculateFuelNeeded(distanceInLightYears) {&#10;  const fuelPerLightYear = 12;&#10;  return distanceInLightYears * fuelPerLightYear;&#10;}&#10;&#10;let fuel = calculateFuelNeeded(5);&#10;console.log(fuel); // 60">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">calculateFuelNeeded</span>(distanceInLightYears) {
+  <span class="kw">const</span> fuelPerLightYear = <span class="num">12</span>;
+  <span class="kw">return</span> distanceInLightYears * fuelPerLightYear;
+}
+
+<span class="kw">let</span> fuel = <span class="fn">calculateFuelNeeded</span>(<span class="num">5</span>);
+console.<span class="fn">log</span>(fuel); <span class="comment">// 60</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Defining a function doesn't run it — calling it does, with <code>calculateFuelNeeded(5)</code>. The <code>return</code> keyword sends a value back out of the function so it can be stored or used elsewhere. Without <code>return</code>, a function completes silently and gives back <code>undefined</code>.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Arrow functions</summary>
+          <p>You'll frequently see a shorter syntax called an arrow function: <code>const calculateFuelNeeded = (d) => d * 12;</code> does the same thing as the example above. It's especially common for short functions passed directly into other functions (like event handlers), which you'll see constantly.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Conditionals & Operators</h3>
+        <p>Decisions in code are made with <code>if</code>/<code>else</code> statements and comparison operators like <code>===</code> (equals), <code>&gt;</code>, <code>&lt;</code>, and <code>!==</code> (not equal).</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function checkFuelStatus(fuel) {&#10;  if (fuel &lt; 10) {&#10;    return &quot;CRITICAL: refuel immediately&quot;;&#10;  } else if (fuel &lt; 40) {&#10;    return &quot;LOW: plan a refuel stop&quot;;&#10;  } else {&#10;    return &quot;NOMINAL&quot;;&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">checkFuelStatus</span>(fuel) {
+  <span class="kw">if</span> (fuel &lt; <span class="num">10</span>) {
+    <span class="kw">return</span> <span class="str">"CRITICAL: refuel immediately"</span>;
+  } <span class="kw">else if</span> (fuel &lt; <span class="num">40</span>) {
+    <span class="kw">return</span> <span class="str">"LOW: plan a refuel stop"</span>;
+  } <span class="kw">else</span> {
+    <span class="kw">return</span> <span class="str">"NOMINAL"</span>;
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          JavaScript checks conditions top to bottom and runs the first block that matches — once one matches, it skips the rest. Always use <code>===</code> (three equals signs) instead of <code>==</code> for comparisons; <code>===</code> checks both value and type, avoiding a whole category of confusing bugs.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Finding Elements in the DOM</h3>
+        <p>Before you can change something on the page, JavaScript needs to find it. <code>document.querySelector()</code> uses the exact same selector syntax as CSS.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const statusEl = document.querySelector(&quot;#status&quot;);&#10;statusEl.textContent = &quot;Systems nominal&quot;;&#10;statusEl.style.color = &quot;#4dffb4&quot;;&#10;statusEl.classList.add(&quot;highlight&quot;);">COPY</button></div>
+          <pre><code><span class="kw">const</span> statusEl = document.<span class="fn">querySelector</span>(<span class="str">"#status"</span>);
+statusEl.textContent = <span class="str">"Systems nominal"</span>;
+statusEl.style.color = <span class="str">"#4dffb4"</span>;
+statusEl.classList.<span class="fn">add</span>(<span class="str">"highlight"</span>);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>querySelector("#status")</code> finds the first element matching that CSS selector and hands it back as an object you can manipulate. <code>textContent</code> changes visible text, <code>.style</code> changes inline CSS directly, and <code>classList.add</code> attaches a CSS class — usually the cleanest way to change appearance, since the actual styling rules stay in your CSS file.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Events — Reacting to the Cadet</h3>
+        <p><code>addEventListener</code> attaches a function that runs automatically whenever a specific thing happens to an element — a click, a keystroke, a form submission.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const launchButton = document.querySelector(&quot;#launchButton&quot;);&#10;&#10;launchButton.addEventListener(&quot;click&quot;, function() {&#10;  const statusEl = document.querySelector(&quot;#status&quot;);&#10;  statusEl.textContent = &quot;LAUNCH SEQUENCE INITIATED&quot;;&#10;});">COPY</button></div>
+          <pre><code><span class="kw">const</span> launchButton = document.<span class="fn">querySelector</span>(<span class="str">"#launchButton"</span>);
+
+launchButton.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>() {
+  <span class="kw">const</span> statusEl = document.<span class="fn">querySelector</span>(<span class="str">"#status"</span>);
+  statusEl.textContent = <span class="str">"LAUNCH SEQUENCE INITIATED"</span>;
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Nothing runs immediately — the function inside <code>addEventListener</code> is stored and waits. Only when the cadet actually clicks <code>#launchButton</code> does the browser run it. This is the complete event loop from the briefing diagram, written as real code: event ("click") → function (the code in the braces) → DOM update (changing <code>statusEl.textContent</code>).
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real JavaScript sandbox. Write code on the left and hit Run. <code>console.log()</code> output appears in the console panel, and your code can reach into the "ship display" element on the right exactly like it would on a real page — try <code>document.querySelector("#shipDisplay")</code>.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: change the display</button>
+        <button class="console-btn" id="btnExample2">try: a click counter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above (or a real HTML file with a <code>&lt;script&gt;</code> tag), build a working click counter.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Select the ship display element with <code>document.querySelector</code> and store it in a variable
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Create a <code>let</code> variable called <code>clicks</code> starting at <code>0</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Add a click event listener that increases <code>clicks</code> by 1 every time it fires
+          <span class="sub">Use <code>clicks = clicks + 1;</code> or the shorthand <code>clicks++;</code></span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Inside the same listener, update the display's <code>textContent</code> to show the new count
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Add a conditional: once <code>clicks</code> reaches 5, change the display's text color using <code>.style.color</code>
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If clicking does nothing, check that your <code>addEventListener</code> is attached to an element that actually exists on the page (double-check the selector spelling) and that you're listening for <code>"click"</code>, not <code>"clicked"</code> or another made-up event name.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a text input and a second button. When clicked, read the input's value with <code>inputElement.value</code> and display a personalized message like <code>"Welcome aboard, Cadet [name]"</code> instead of a generic counter.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>let / const</code><span>Declare a changeable / locked variable</span></div>
+        <div class="cheat-card"><code>function name() {}</code><span>Define a reusable block of logic</span></div>
+        <div class="cheat-card"><code>return</code><span>Send a value back out of a function</span></div>
+        <div class="cheat-card"><code>if / else if / else</code><span>Branch based on a condition</span></div>
+        <div class="cheat-card"><code>=== / !==</code><span>Strict equals / not equals</span></div>
+        <div class="cheat-card"><code>document.querySelector()</code><span>Find an element using a CSS selector</span></div>
+        <div class="cheat-card"><code>.textContent</code><span>Read or change an element's visible text</span></div>
+        <div class="cheat-card"><code>.style.property</code><span>Change an element's inline CSS</span></div>
+        <div class="cheat-card"><code>.addEventListener()</code><span>Run a function when something happens</span></div>
+        <div class="cheat-card"><code>console.log()</code><span>Print a value for debugging</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Using <code>==</code> instead of <code>===</code> and getting surprising type-coercion bugs.</li>
+          <li>Forgetting <code>return</code> in a function and then wondering why the result is <code>undefined</code>.</li>
+          <li>Calling <code>querySelector</code> before the element exists on the page (script running too early).</li>
+          <li>Attaching an event listener with the wrong event name (<code>"onclick"</code> vs <code>"click"</code> as a string).</li>
+          <li>Reassigning a <code>const</code> — if a value needs to change later, it should have been <code>let</code>.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does <code>document.querySelector("#status")</code> return if no element on the page has <code>id="status"</code>?</p>
+        <button class="quiz-btn" data-correct="false">an empty string</button>
+        <button class="quiz-btn" data-correct="true">null</button>
+        <button class="quiz-btn" data-correct="false">an error is thrown immediately</button>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <div class="stamp">✓ MISSION COMPLETE</div>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links">
+      <a href="mission-03-css-flexbox.html">◂ MISSION 03: CSS &amp; FLEXBOX</a>
+      <a href="#">MISSION INDEX</a>
+      <a href="#">NEXT MISSION ▸</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Starfield ---------------- */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = document.documentElement.scrollHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 9000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.015 + 0.005
+      });
+    }
+  }
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(s.phase + t * s.speed));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232, 236, 251, ${twinkle * 0.6})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+
+  resizeCanvas();
+  initStars();
+  requestAnimationFrame(drawStars);
+  window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+
+  /* ---------------- Copy buttons ---------------- */
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1400);
+      });
+    });
+  });
+
+  /* ---------------- Quiz ---------------- */
+  const quizButtons = document.querySelectorAll('.quiz-btn');
+  const quizFeedback = document.getElementById('quizFeedback');
+  quizButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const correct = btn.getAttribute('data-correct') === 'true';
+      quizButtons.forEach(b => b.classList.remove('correct', 'wrong'));
+      if (correct) {
+        btn.classList.add('correct');
+        quizFeedback.textContent = 'Correct — null means "found nothing," and checking for it prevents crashes.';
+        quizFeedback.style.color = 'var(--success)';
+      } else {
+        btn.classList.add('wrong');
+        quizFeedback.textContent = 'Not quite. Try another option.';
+        quizFeedback.style.color = 'var(--danger)';
+      }
+    });
+  });
+
+  /* ---------------- JS Sandbox ---------------- */
+  const jsEditor = document.getElementById('jsEditor');
+  const shipDisplay = document.getElementById('shipDisplay');
+  const consoleOutput = document.getElementById('consoleOutput');
+  const runBtn = document.getElementById('runBtn');
+
+  const STARTER = `// Try me — then hit RUN
+const display = document.querySelector("#shipDisplay");
+display.textContent = "SYSTEMS ONLINE";
+display.style.color = "#4dffb4";
+
+console.log("Ship display updated.");`;
+
+  const EXAMPLE_DISPLAY = `const display = document.querySelector("#shipDisplay");
+let colors = ["#4ee1ff", "#ff6ec7", "#ffe66d", "#4dffb4"];
+let i = 0;
+
+display.addEventListener("click", function() {
+  i = (i + 1) % colors.length;
+  display.style.color = colors[i];
+  display.textContent = "COLOR " + (i + 1);
+});
+
+console.log("Click the ship display to cycle colors.");`;
+
+  const EXAMPLE_COUNTER = `const display = document.querySelector("#shipDisplay");
+let clicks = 0;
+
+display.style.cursor = "pointer";
+display.textContent = "CLICKS: 0";
+
+display.addEventListener("click", function() {
+  clicks++;
+  display.textContent = "CLICKS: " + clicks;
+  if (clicks >= 5) {
+    display.style.color = "#ff9d4d";
+  }
+});
+
+console.log("Click the ship display to count up.");`;
+
+  function logToConsole(text, isError) {
+    const line = document.createElement('div');
+    line.className = 'log-line' + (isError ? ' log-error' : '');
+    line.textContent = (isError ? '⚠ ' : '> ') + text;
+    consoleOutput.appendChild(line);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+  }
+
+  function formatArg(a) {
+    if (typeof a === 'object') {
+      try { return JSON.stringify(a); } catch (e) { return String(a); }
+    }
+    return String(a);
+  }
+
+  function runCode() {
+    consoleOutput.innerHTML = '';
+    // Reset the ship display and remove old listeners by cloning it
+    const fresh = document.createElement('div');
+    fresh.id = 'shipDisplay';
+    fresh.textContent = 'STATUS: STANDBY';
+    shipDisplay.replaceWith(fresh);
+    window.__shipDisplayEl = fresh;
+
+    const fakeConsole = {
+      log: (...args) => logToConsole(args.map(formatArg).join(' '), false),
+      error: (...args) => logToConsole(args.map(formatArg).join(' '), true)
+    };
+
+    try {
+      const runner = new Function('console', 'document', jsEditor.value);
+      // Provide a scoped "document" whose querySelector resolves #shipDisplay to our fresh element
+      const scopedDocument = {
+        querySelector: (sel) => {
+          if (sel === '#shipDisplay') return document.getElementById('shipDisplay');
+          return document.querySelector(sel);
+        },
+        getElementById: (id) => document.getElementById(id),
+        createElement: (tag) => document.createElement(tag)
+      };
+      runner(fakeConsole, scopedDocument);
+    } catch (err) {
+      logToConsole(err.message, true);
+    }
+  }
+
+  runBtn.addEventListener('click', runCode);
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    jsEditor.value = STARTER;
+    runCode();
+  });
+  document.getElementById('btnExample1').addEventListener('click', () => {
+    jsEditor.value = EXAMPLE_DISPLAY;
+    runCode();
+  });
+  document.getElementById('btnExample2').addEventListener('click', () => {
+    jsEditor.value = EXAMPLE_COUNTER;
+    runCode();
+  });
+
+  // Initialize
+  jsEditor.value = STARTER;
+  runCode();
+
+})();
+</script>
+
+</body>
+</html>

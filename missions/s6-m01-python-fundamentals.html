@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 6.1: Python Fundamentals — Second Language, Same Universe | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Terminal callout (Python-specific — not part of the shared design system) ---------- */
+  .terminal-callout {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-left: 3px solid var(--accent-green);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-family: var(--font-code);
+    font-size: 13px;
+  }
+  .terminal-callout .tc-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent-green);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .terminal-callout .tc-line { color: var(--text-secondary); margin-bottom: 3px; }
+  .terminal-callout .tc-prompt { color: var(--accent-green); }
+
+  /* ---------- Command Console: this mission's REPL pair is taller than the shared sandbox default ---------- */
+  #pyEditor { min-height: 320px; tab-size: 4; }
+  #pyOutput { min-height: 320px; max-height: 400px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.1: PYTHON FUNDAMENTALS</h1>
+    <div class="subtitle">Second Language, Same Universe — Ground Control's Language of Choice</div>
+    <p class="briefing-line">Everything you've built so far ran inside a browser, speaking JavaScript. But most of the software running the world — automation scripts, data pipelines, AI systems, the backend logic behind almost every app — runs somewhere else, and a huge share of it speaks Python. The good news: you already know the core concepts. Variables, functions, conditionals, loops — same ideas, new dialect. Python just says them differently, and in some ways more cleanly.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~60 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of JavaScript and Python as two starships from the same fleet, built to the same command structure but manufactured by different shipyards. Both understand variables, functions, conditionals, and loops. Both can talk to files, networks, and data. But the syntax — the exact wording of the commands — is different, and Python has one rule that surprises almost everyone at first: <strong>indentation is not just style, it's structure.</strong></p>
+      <p>In JavaScript, curly braces <code>{ }</code> mark where a block of code starts and ends. In Python, there are no braces — the code block is defined purely by how far it's indented. Get the indentation wrong and your program doesn't just look messy, it breaks or does something different than you intended. This forces genuinely readable code as a side effect, which is part of why Python is so popular for large projects.</p>
+      <p>Python is also famous for reading almost like plain English — <code>if x in list:</code> instead of a symbol-heavy equivalent — which is exactly why it's the default choice for data science, automation, backend web frameworks, and a huge share of today's AI tooling.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <!-- JS column -->
+          <rect x="20" y="20" width="320" height="220" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="180" y="46" fill="#4ee1ff" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">JAVASCRIPT</text>
+          <text x="38" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">function checkFuel(f) {</text>
+          <text x="52" y="102" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  if (f &lt; 10) {</text>
+          <text x="66" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">    return "LOW";</text>
+          <text x="52" y="146" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  }</text>
+          <text x="38" y="168" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">}</text>
+          <text x="38" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">Blocks marked with { }</text>
+
+          <!-- Python column -->
+          <rect x="360" y="20" width="320" height="220" rx="10" fill="#1b2540" stroke="#b083ff" stroke-width="2"/>
+          <text x="520" y="46" fill="#b083ff" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">PYTHON</text>
+          <text x="378" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">def check_fuel(f):</text>
+          <text x="392" y="102" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">  if f &lt; 10:</text>
+          <text x="406" y="124" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" xml:space="preserve">    return "LOW"</text>
+          <text x="378" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">Blocks marked by indentation</text>
+        </svg>
+        <div class="diagram-caption">Same logic, two dialects — Python drops the braces and semicolons entirely, relying on consistent indentation instead.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Printing & Indentation</h3>
+        <p><code>print()</code> is Python's equivalent of <code>console.log()</code> — it outputs text. There's no <code>{ }</code> for blocks; instead, everything at the same indentation level belongs to the same block. The standard is 4 spaces per level.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="print(&quot;Systems check initiated&quot;)&#10;&#10;fuel = 8&#10;if fuel &lt; 10:&#10;    print(&quot;WARNING: fuel critical&quot;)&#10;    print(&quot;Recommend immediate refuel&quot;)&#10;print(&quot;Check complete&quot;)">COPY</button></div>
+          <pre><code><span class="fn">print</span>(<span class="str">"Systems check initiated"</span>)
+
+fuel = <span class="num">8</span>
+<span class="kw">if</span> fuel &lt; <span class="num">10</span>:
+    <span class="fn">print</span>(<span class="str">"WARNING: fuel critical"</span>)
+    <span class="fn">print</span>(<span class="str">"Recommend immediate refuel"</span>)
+<span class="fn">print</span>(<span class="str">"Check complete"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The two indented <code>print</code> lines belong to the <code>if</code> block and only run when <code>fuel &lt; 10</code>. The final <code>print("Check complete")</code> is back at the outer indentation level, so it always runs regardless of the condition. Notice: no semicolons, no curly braces — just the colon (<code>:</code>) that opens a block and consistent indentation that defines it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Variables, Types & f-strings</h3>
+        <p>Python variables need no <code>let</code> or <code>const</code> — you just assign directly. Types are still there (string, int, float, bool, list, dict), Python just doesn't make you declare them upfront.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="ship_name = &quot;Voyager-9&quot;&#10;thrust_power = 78&#10;shields_up = True&#10;&#10;print(f&quot;{ship_name} is running at {thrust_power}% thrust&quot;)">COPY</button></div>
+          <pre><code>ship_name = <span class="str">"Voyager-9"</span>
+thrust_power = <span class="num">78</span>
+shields_up = <span class="kw">True</span>
+
+<span class="fn">print</span>(<span class="str">f"{ship_name} is running at {thrust_power}% thrust"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          An <strong>f-string</strong> (the <code>f</code> right before the opening quote) lets you drop variables directly into text using <code>{curly braces}</code> — Python's equivalent of JavaScript's backtick template strings. Booleans are capitalized in Python: <code>True</code> and <code>False</code>, not lowercase like JavaScript.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Lists & Dictionaries</h3>
+        <p>Python's <strong>list</strong> is the equivalent of a JavaScript array. Python's <strong>dictionary</strong> is the equivalent of a JavaScript object — labeled key/value pairs.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;]&#10;print(crew[0])  # Nova&#10;crew.append(&quot;Rell&quot;)&#10;&#10;ship = {&#10;    &quot;name&quot;: &quot;Voyager-9&quot;,&#10;    &quot;fuel&quot;: 84,&#10;    &quot;online&quot;: True&#10;}&#10;print(ship[&quot;fuel&quot;])  # 84">COPY</button></div>
+          <pre><code>crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>]
+<span class="fn">print</span>(crew[<span class="num">0</span>])  <span class="comment"># Nova</span>
+crew.append(<span class="str">"Rell"</span>)
+
+ship = {
+    <span class="str">"name"</span>: <span class="str">"Voyager-9"</span>,
+    <span class="str">"fuel"</span>: <span class="num">84</span>,
+    <span class="str">"online"</span>: <span class="kw">True</span>
+}
+<span class="fn">print</span>(ship[<span class="str">"fuel"</span>])  <span class="comment"># 84</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Lists index from 0, same as JavaScript arrays. <code>.append()</code> adds an item to the end. Dictionaries use square-bracket key access just like JavaScript objects with bracket notation (<code>ship["fuel"]</code>) — Python dictionaries don't support the dot notation (<code>ship.fuel</code>) that JavaScript objects allow.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Functions with def</h3>
+        <p>Python functions are defined with <code>def</code> instead of <code>function</code>, and don't require a <code>return</code> type declaration — Python figures that out at runtime.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="def calculate_fuel_needed(distance_light_years):&#10;    fuel_per_light_year = 12&#10;    return distance_light_years * fuel_per_light_year&#10;&#10;fuel = calculate_fuel_needed(5)&#10;print(fuel)  # 60">COPY</button></div>
+          <pre><code><span class="kw">def</span> <span class="fn">calculate_fuel_needed</span>(distance_light_years):
+    fuel_per_light_year = <span class="num">12</span>
+    <span class="kw">return</span> distance_light_years * fuel_per_light_year
+
+fuel = calculate_fuel_needed(<span class="num">5</span>)
+<span class="fn">print</span>(fuel)  <span class="comment"># 60</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice the naming convention: Python functions and variables traditionally use <code>snake_case</code> (underscores), while JavaScript prefers <code>camelCase</code>. Neither is more "correct" — they're just the accepted style in each language's community, and following the convention makes your code instantly readable to other engineers.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Default parameters</summary>
+          <p>You can give a parameter a fallback value: <code>def greet(name="Cadet"):</code> — if no argument is passed, <code>name</code> becomes <code>"Cadet"</code> automatically. This is handy for optional settings without forcing every caller to specify everything.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Conditionals & For Loops</h3>
+        <p>Python's <code>for</code> loop is built to iterate directly over items in a list — no manual index counting required, though you can still access an index with <code>enumerate()</code> when you need it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;]&#10;&#10;for member in crew:&#10;    if member == &quot;Kip&quot;:&#10;        print(f&quot;{member} is piloting today&quot;)&#10;    else:&#10;        print(f&quot;{member} is on standby&quot;)">COPY</button></div>
+          <pre><code>crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>]
+
+<span class="kw">for</span> member <span class="kw">in</span> crew:
+    <span class="kw">if</span> member == <span class="str">"Kip"</span>:
+        <span class="fn">print</span>(<span class="str">f"{member} is piloting today"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"{member} is on standby"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>for member in crew:</code> reads almost like English — "for each member in crew." This runs the indented block once per item in the list, with <code>member</code> holding a different value each pass. Python's <code>==</code> works exactly like JavaScript's <code>===</code> — there's no separate loose-equality operator to worry about.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real Python interpreter, running right in this page. Write actual Python on the left, hit Run, and see genuine output on the right — this is the same language you'd run on a real computer, just loaded here for instant practice.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: crew roster loop</button>
+        <button class="console-btn" id="btnExample2">try: fuel calculator function</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a crew roster tool using the Command Console above, or write it as a real <code>.py</code> file and run it on your own computer.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a list called <code>crew</code> with at least 4 names
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Write a function <code>greet_crew_member(name)</code> that returns a personalized greeting string using an f-string
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use a <code>for</code> loop to call that function on every name in <code>crew</code> and print the result
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Add a dictionary called <code>ship_status</code> with at least 3 keys (e.g. fuel, shields, crew_count)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Add an <code>if</code>/<code>else</code> check on one of those values that prints a warning if it's below some threshold
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your indentation error message mentions "unexpected indent" or "expected an indented block," count your spaces carefully — mixing tabs and spaces, or indenting a line that shouldn't be indented, is the single most common Python bug for anyone new to the language.</p>
+      </details>
+
+      <div class="terminal-callout">
+        <span class="tc-label">RUN IT FOR REAL — IN YOUR TERMINAL</span>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 --version</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> cd path/to/your/folder</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 crew_roster.py</div>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:-4px;">Save your script as <code>crew_roster.py</code> in a folder, open a terminal in that folder, and run the third command. If <code>python3</code> isn't recognized, try plain <code>python</code> instead — the command name varies slightly by operating system.</p>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Turn <code>ship_status</code> into a list of dictionaries — one per crew member, each with a <code>name</code> and a <code>role</code> key — then loop through it and print a formatted line for each person, like a real mission roster printout.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>print()</code><span>Output text to the console</span></div>
+        <div class="cheat-card"><code>f"{var}"</code><span>Insert a variable into a string</span></div>
+        <div class="cheat-card"><code>def name():</code><span>Define a function</span></div>
+        <div class="cheat-card"><code>if / elif / else:</code><span>Branch based on a condition</span></div>
+        <div class="cheat-card"><code>for x in list:</code><span>Loop over each item</span></div>
+        <div class="cheat-card"><code>[ ]</code><span>A list (like a JS array)</span></div>
+        <div class="cheat-card"><code>{ }</code><span>A dictionary (like a JS object)</span></div>
+        <div class="cheat-card"><code>list.append(x)</code><span>Add an item to a list</span></div>
+        <div class="cheat-card"><code>True / False</code><span>Booleans — always capitalized</span></div>
+        <div class="cheat-card"><code># comment</code><span>Single-line comment</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Inconsistent indentation — mixing tabs and spaces, or indenting a line by accident.</li>
+          <li>Forgetting the colon (<code>:</code>) at the end of an <code>if</code>, <code>for</code>, or <code>def</code> line.</li>
+          <li>Using lowercase <code>true</code>/<code>false</code> instead of Python's capitalized <code>True</code>/<code>False</code>.</li>
+          <li>Trying to access a dictionary with dot notation (<code>ship.fuel</code>) instead of bracket notation (<code>ship["fuel"]</code>).</li>
+          <li>Forgetting that Python is case-sensitive: <code>Crew</code> and <code>crew</code> are two different variables.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what actually defines a block of code in Python?</p>
+        <button class="quiz-btn" data-correct="false">curly braces { }</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — no braces, no semicolons, just consistent spacing.">consistent indentation</button>
+        <button class="quiz-btn" data-correct="false">semicolons</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `# Try me — then hit RUN
+ship_name = "Voyager-9"
+fuel = 62
+
+print(f"{ship_name} systems check")
+if fuel < 70:
+    print("Fuel below optimal — recommend refuel before next jump")
+else:
+    print("Fuel nominal")`;
+
+  const EXAMPLE_ROSTER = `crew = ["Nova", "Kip", "Zed", "Rell"]
+
+def greet_crew_member(name):
+    return f"Welcome aboard, {name}."
+
+for member in crew:
+    print(greet_crew_member(member))`;
+
+  const EXAMPLE_FUEL = `def calculate_fuel_needed(distance_light_years):
+    fuel_per_light_year = 12
+    return distance_light_years * fuel_per_light_year
+
+destinations = {"Kepler Station": 5, "Outpost Theta": 2, "Deep Range Relay": 9}
+
+for name in destinations:
+    distance = destinations[name]
+    fuel = calculate_fuel_needed(distance)
+    print(f"{name}: {distance} ly away, needs {fuel} fuel units")`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_ROSTER },
+        { btnId: "btnExample2", code: EXAMPLE_FUEL },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

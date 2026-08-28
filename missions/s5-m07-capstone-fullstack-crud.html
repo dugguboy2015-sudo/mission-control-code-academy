@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 5.7: Capstone — Full-Stack CRUD with Login — The Complete Launch Sequence | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Capstone dependency-chips strip ---------- */
+  .capstone-strip {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .capstone-chip {
+    font-family: var(--font-code);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+  }
+  .capstone-chip.c-git { border-color: rgba(255,157,77,0.4); color: var(--accent-orange); }
+  .capstone-chip.c-web { border-color: rgba(78,225,255,0.4); color: var(--accent-cyan); }
+  .capstone-chip.c-db { border-color: rgba(77,255,180,0.4); color: var(--accent-green); }
+
+  .danger-callout {
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.35);
+    border-left: 3px solid var(--danger);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .danger-callout strong { color: var(--danger); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+
+  /* ---------- Console tabs ---------- */
+  .console-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .console-tab-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .console-tab-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); }
+  .console-panel { display: none; }
+  .console-panel.active { display: block; }
+
+  /* ---------- Auth demo ---------- */
+  .auth-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .auth-grid { grid-template-columns: 1fr; }
+  }
+  .auth-widget {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    padding: 18px;
+  }
+  .auth-widget h4 {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--accent-cyan);
+    margin: 0 0 14px;
+    text-transform: uppercase;
+  }
+  .auth-widget input {
+    width: 100%;
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .auth-widget button {
+    width: 100%;
+    background: var(--accent-cyan);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .auth-widget button.secondary {
+    background: transparent;
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+  }
+  .auth-msg { font-size: 12px; color: var(--text-muted); min-height: 18px; margin-top: 4px; }
+  .auth-msg.error { color: var(--danger); }
+  .auth-msg.success { color: var(--success); }
+
+  .dashboard-pane {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 260px;
+  }
+  .dashboard-locked { color: var(--text-muted); font-family: var(--font-code); font-size: 13px; }
+  .dashboard-unlocked h3 { color: var(--success); margin: 0 0 10px; }
+  .dashboard-unlocked p { color: var(--text-secondary); font-size: 14px; }
+
+  /* ---------- Deploy pipeline (reuses launch-sequence pattern) ---------- */
+  .launch-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 760px) {
+    .launch-grid { grid-template-columns: 1fr; }
+  }
+  .launch-steps {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .launch-step-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+  }
+  .launch-step-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .launch-step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .launch-step-btn.done { border-color: var(--success); color: var(--success); }
+
+  .launch-visual {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .lv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .lv-stage-row { display: flex; justify-content: space-between; align-items: center; padding: 24px 20px 12px; gap: 6px; }
+  .lv-stage { flex: 1; text-align: center; }
+  .lv-stage .dot {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--bg-panel-alt);
+    border: 2px solid var(--border-glow); margin: 0 auto 8px; display: flex; align-items: center;
+    justify-content: center; font-family: var(--font-display); font-size: 13px; color: var(--text-muted);
+    transition: all 0.25s ease;
+  }
+  .lv-stage.active .dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 14px rgba(255,157,77,0.4); }
+  .lv-stage.complete .dot { background: var(--success); border-color: var(--success); color: var(--bg-void); }
+  .lv-stage span.label { font-family: var(--font-code); font-size: 11px; color: var(--text-muted); }
+  .lv-stage.active span.label, .lv-stage.complete span.label { color: var(--text-secondary); }
+  .lv-connector { flex: 0.4; height: 2px; background: var(--border-glow); margin-top: -28px; transition: background 0.25s ease; }
+  .lv-connector.complete { background: var(--success); }
+
+  #deployLog {
+    padding: 14px 18px;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    min-height: 90px;
+    max-height: 150px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-glow);
+  }
+  #deployLog .dl-line { margin-bottom: 4px; }
+  #deployLog .dl-success { color: var(--success); }
+  #deployLog .dl-url { color: var(--accent-cyan); }
+
+  /* ---------- Mission Challenge: numbered checklist steps ---------- */
+  .checklist .step-num {
+    font-family: var(--font-display); font-size: 12px; color: var(--accent);
+    background: rgba(255,157,77,0.1); border: 1px solid rgba(255,157,77,0.35);
+    border-radius: 6px; width: 22px; height: 22px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+</style>
+</head>
+<body class="accent-green" data-mission-id="s5-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 5 CAPSTONE</div>
+    <h1>MISSION 5.7: CAPSTONE — FULL-STACK CRUD WITH LOGIN</h1>
+    <div class="subtitle">The Complete Launch Sequence — Every System, Working Together</div>
+    <p class="briefing-line">Every mission so far tested one ship system in isolation: the hull, the paint job, the onboard computer, the memory banks. A real launch requires all of them working together at once. This mission builds and ships a genuine authenticated web application: HTML/CSS/JS on the frontend, Supabase handling your backend and login system, GitHub holding the source code, and Cloudflare Pages hosting the live, auto-deploying result. This is the closest thing to a real production workflow you'll build in this academy.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~90 MIN</span>
+      <span class="badge">🛠 GITHUB + SUPABASE + CLOUDFLARE ACCOUNTS</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c-git">Mission 3.1 · Git</span>
+      <span class="capstone-chip c-web">Missions 1.1–2.1 · HTML/CSS/JS</span>
+      <span class="capstone-chip c-db">Mission 5.2 · Supabase</span>
+      <span class="capstone-chip c-git">Mission 4.5 · Deployment</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A real, live web application is really three cooperating systems, each with one job. <strong>Cloudflare</strong> serves your static files — HTML, CSS, JS — fast, from servers positioned close to every visitor worldwide. <strong>Supabase</strong> handles anything that needs to be remembered or protected: your database and your login system. <strong>GitHub</strong> is the source of truth in the middle — the single place both your code and your deployment history live, and the trigger that tells Cloudflare "something changed, rebuild and redeploy."</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;height:auto;">
+          <defs>
+            <marker id="fsarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#ff9d4d"/>
+            </marker>
+          </defs>
+
+          <rect x="10" y="90" width="140" height="70" rx="10" fill="#1b2540" stroke="#a8b3d1" stroke-width="1.5"/>
+          <text x="80" y="118" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Visitor's</text>
+          <text x="80" y="136" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Browser</text>
+
+          <rect x="200" y="90" width="150" height="70" rx="10" fill="#1b2540" stroke="#ff9d4d" stroke-width="2"/>
+          <text x="275" y="118" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Cloudflare</text>
+          <text x="275" y="136" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">serves HTML/CSS/JS</text>
+
+          <rect x="410" y="90" width="150" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="485" y="118" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Supabase API</text>
+          <text x="485" y="136" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">checks who's asking</text>
+
+          <rect x="620" y="55" width="90" height="55" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5"/>
+          <text x="665" y="80" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Postgres DB</text>
+
+          <rect x="620" y="140" width="90" height="55" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="665" y="165" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Auth</text>
+
+          <path d="M150,125 L200,125" stroke="#ff9d4d" stroke-width="2" marker-end="url(#fsarrow)"/>
+          <path d="M275,90 L275,60 L410,60 L485,90" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#fsarrow)"/>
+          <path d="M560,110 L620,82" stroke="#4dffb4" stroke-width="2" marker-end="url(#fsarrow)"/>
+          <path d="M560,140 L620,160" stroke="#4dffb4" stroke-width="2" marker-end="url(#fsarrow)"/>
+
+          <text x="360" y="30" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Static files load from Cloudflare — but any login or data request goes straight to Supabase, not back through Cloudflare</text>
+        </svg>
+        <div class="diagram-caption">Two independent services, one experience: Cloudflare never sees your data, and Supabase never serves your HTML.</div>
+      </div>
+
+      <p>Getting a change live involves a second pipeline, entirely separate from what a visitor experiences: your own workflow for shipping updates.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;height:auto;">
+          <rect x="10" y="50" width="130" height="60" rx="10" fill="#1b2540" stroke="#a8b3d1" stroke-width="1.5"/>
+          <text x="75" y="85" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Your Laptop</text>
+
+          <rect x="195" y="50" width="130" height="60" rx="10" fill="#1b2540" stroke="#ff9d4d" stroke-width="2"/>
+          <text x="260" y="85" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">GitHub</text>
+
+          <rect x="380" y="50" width="150" height="60" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="455" y="80" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Cloudflare Pages</text>
+          <text x="455" y="96" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">detects push, builds</text>
+
+          <rect x="580" y="50" width="130" height="60" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="645" y="85" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Live in seconds</text>
+
+          <path d="M140,80 L195,80" stroke="#ff9d4d" stroke-width="2" marker-end="url(#fsarrow)"/>
+          <path d="M325,80 L380,80" stroke="#ff9d4d" stroke-width="2" marker-end="url(#fsarrow)"/>
+          <path d="M530,80 L580,80" stroke="#ff9d4d" stroke-width="2" marker-end="url(#fsarrow)"/>
+
+          <text x="360" y="30" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">git push — and everything downstream happens automatically</text>
+        </svg>
+        <div class="diagram-caption">This is the same shape as Mission 06's GitHub Pages pipeline — Cloudflare is a different provider, but the pattern (push → auto-build → live) is universal.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Building Real Auth: Sign Up, Sign In, Sign Out</h3>
+        <p>You saw <code>supabase-js</code> read and write data in Mission 07. Authentication uses the same client, with its own <code>auth</code> object.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);&#10;&#10;// Sign up a new cadet&#10;const { data, error } = await supabase.auth.signUp({&#10;  email: 'cadet@example.com',&#10;  password: 'secure-password'&#10;});&#10;&#10;// Sign in an existing cadet&#10;await supabase.auth.signInWithPassword({&#10;  email: 'cadet@example.com',&#10;  password: 'secure-password'&#10;});&#10;&#10;// Sign out&#10;await supabase.auth.signOut();">COPY</button></div>
+          <pre><code><span class="kw">const</span> supabase = <span class="fn">createClient</span>(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+<span class="comment">// Sign up a new cadet</span>
+<span class="kw">const</span> { data, error } = <span class="kw">await</span> supabase.auth.<span class="fn">signUp</span>({
+  email: <span class="str">'cadet@example.com'</span>,
+  password: <span class="str">'secure-password'</span>
+});
+
+<span class="comment">// Sign in an existing cadet</span>
+<span class="kw">await</span> supabase.auth.<span class="fn">signInWithPassword</span>({
+  email: <span class="str">'cadet@example.com'</span>,
+  password: <span class="str">'secure-password'</span>
+});
+
+<span class="comment">// Sign out</span>
+<span class="kw">await</span> supabase.auth.<span class="fn">signOut</span>();</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Supabase handles password hashing, storage, and issuing a secure <strong>session token</strong> automatically — you never touch a raw password after this call. <code>error</code> is always worth checking: a failed sign-in due to a wrong password comes back here rather than throwing, so silently ignoring it means broken logins fail invisibly.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Reacting to Auth State — Locking and Unlocking the UI</h3>
+        <p>A real app needs to know, at every moment, whether someone is logged in — and update the page accordingly without a reload. <code>onAuthStateChange</code> is a listener, similar in spirit to Firebase's <code>onSnapshot</code> from Mission 08: it fires immediately with the current state, then again automatically every time that state changes.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="supabase.auth.onAuthStateChange((event, session) =&gt; {&#10;  const dashboard = document.querySelector(&quot;#dashboard&quot;);&#10;  const loginForm = document.querySelector(&quot;#loginForm&quot;);&#10;&#10;  if (session) {&#10;    dashboard.style.display = &quot;block&quot;;&#10;    loginForm.style.display = &quot;none&quot;;&#10;  } else {&#10;    dashboard.style.display = &quot;none&quot;;&#10;    loginForm.style.display = &quot;block&quot;;&#10;  }&#10;});">COPY</button></div>
+          <pre><code>supabase.auth.<span class="fn">onAuthStateChange</span>((event, session) =&gt; {
+  <span class="kw">const</span> dashboard = document.<span class="fn">querySelector</span>(<span class="str">"#dashboard"</span>);
+  <span class="kw">const</span> loginForm = document.<span class="fn">querySelector</span>(<span class="str">"#loginForm"</span>);
+
+  <span class="kw">if</span> (session) {
+    dashboard.style.display = <span class="str">"block"</span>;
+    loginForm.style.display = <span class="str">"none"</span>;
+  } <span class="kw">else</span> {
+    dashboard.style.display = <span class="str">"none"</span>;
+    loginForm.style.display = <span class="str">"block"</span>;
+  }
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>session</code> is <code>null</code> when nobody is logged in and an object (containing the user's info and token) when they are. This single listener replaces having to manually re-check login state after every sign-in, sign-out, or page load — it stays live the entire time the page is open.
+        </div>
+        <div class="danger-callout">
+          <strong>SECURITY NOTE</strong>
+          Hiding the dashboard with CSS only protects what a visitor <em>sees</em> — it doesn't protect the actual data. Anyone who's logged in could still directly ask Supabase for another user's data unless you also set up <strong>Row Level Security</strong> policies on the database side, restricting each row to its own owner. The frontend check is for user experience; the database-side check is what's actually enforcing security.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Environment Variables & Keeping Secrets Out of Git</h3>
+        <p>Not every key is safe to publish. Supabase's <strong>anon key</strong> is designed to be public — it's restricted by the permission rules you configure. Its <strong>service role key</strong>, by contrast, bypasses all restrictions entirely and must never appear in frontend code or a public GitHub repo.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="# .gitignore&#10;.env&#10;&#10;# .env (never committed)&#10;SUPABASE_URL=https://yourproject.supabase.co&#10;SUPABASE_ANON_KEY=your-public-anon-key">COPY</button></div>
+          <pre><code><span class="comment"># .gitignore</span>
+.env
+
+<span class="comment"># .env (never committed)</span>
+SUPABASE_URL=https://yourproject.supabase.co
+SUPABASE_ANON_KEY=your-public-anon-key</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A <code>.gitignore</code> file tells Git to never track certain files — listing <code>.env</code> there means it never gets committed or pushed to GitHub, even accidentally. For a real deployed site, Cloudflare Pages has its own separate "Environment Variables" settings page where you re-enter these values directly in the dashboard, so your live site has them without them ever touching your repository.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: If the anon key is public anyway, why hide it at all?</summary>
+          <p>The anon key genuinely is meant to end up visible in your shipped JavaScript — that's normal and expected for Supabase. Using an environment variable is still good practice because it keeps your <em>project's specific configuration</em> separate from your code, makes it trivial to point the same code at a different project (like a separate testing database), and builds the habit that will matter enormously the moment a real secret (like a service role key) enters the picture.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Deploying to Cloudflare Pages</h3>
+        <p>With your code pushed to GitHub and your Supabase keys ready, connecting Cloudflare takes just a few screens.</p>
+        <div class="whatjusthappened">
+          <strong>WHERE TO CLICK</strong>
+          In the Cloudflare dashboard, go to <strong>Workers &amp; Pages → Create → Pages → Connect to Git</strong>, then choose your GitHub repository. Since this is a plain HTML/CSS/JS site with no build step, leave "Build command" empty and set "Build output directory" to the root (<code>/</code>). Before deploying, open <strong>Settings → Environment Variables</strong> and add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> exactly as they appear in your local <code>.env</code>. Click <strong>Save and Deploy</strong> — Cloudflare builds your first version and hands you a live <code>*.pages.dev</code> URL immediately.
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Cloudflare is now watching the same GitHub repository the way GitHub Pages did in Mission 06 — every future <code>git push</code> to your main branch triggers a fresh automatic build and deploy, typically live within seconds, distributed across Cloudflare's global network for fast loading everywhere.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Two linked simulations of the workflow you'll actually run. Try the auth flow first, then walk through the deployment pipeline that would ship it.</p>
+
+      <div class="console-tabs">
+        <button class="console-tab-btn active" data-tab="auth">AUTH DEMO</button>
+        <button class="console-tab-btn" data-tab="deploy">DEPLOY PIPELINE</button>
+      </div>
+
+      <div class="console-panel active" id="panel-auth">
+        <p style="color:var(--text-secondary);font-size:14px;margin-top:0;">A working mock of <code>supabase.auth</code>, in memory. Sign up with any email/password, then sign in — the dashboard on the right unlocks exactly the way <code>onAuthStateChange</code> would drive it on a real page.</p>
+        <div class="auth-grid">
+          <div class="auth-widget">
+            <h4>Sign Up / Sign In</h4>
+            <input type="email" id="authEmail" placeholder="cadet@example.com">
+            <input type="password" id="authPassword" placeholder="password">
+            <button id="signUpBtn">supabase.auth.signUp()</button>
+            <button id="signInBtn">supabase.auth.signInWithPassword()</button>
+            <button class="secondary" id="signOutBtn">supabase.auth.signOut()</button>
+            <div class="auth-msg" id="authMsg"></div>
+          </div>
+          <div class="dashboard-pane" id="dashboardPane">
+            <div class="dashboard-locked">🔒 dashboard.style.display = "none"<br><br>Sign in to unlock protected content.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-panel" id="panel-deploy">
+        <p style="color:var(--text-secondary);font-size:14px;margin-top:0;">Click each step in order and watch the pipeline update — this mirrors Mission 06, now with Cloudflare Pages and environment variables in the loop.</p>
+        <div class="launch-grid">
+          <div class="launch-steps">
+            <button class="launch-step-btn" data-step="0">1. git push origin main</button>
+            <button class="launch-step-btn" data-step="1" disabled>2. Cloudflare detects push</button>
+            <button class="launch-step-btn" data-step="2" disabled>3. Inject environment variables</button>
+            <button class="launch-step-btn" data-step="3" disabled>4. Build & deploy</button>
+            <button class="launch-step-btn" data-step="4" disabled>5. Live on *.pages.dev</button>
+          </div>
+          <div class="launch-visual">
+            <div class="lv-header"><span>DEPLOY PIPELINE</span><span>●</span></div>
+            <div class="lv-stage-row">
+              <div class="lv-stage" data-stage="github"><div class="dot">1</div><span class="label">GitHub</span></div>
+              <div class="lv-connector" data-conn="0"></div>
+              <div class="lv-stage" data-stage="detect"><div class="dot">2</div><span class="label">Detected</span></div>
+              <div class="lv-connector" data-conn="1"></div>
+              <div class="lv-stage" data-stage="building"><div class="dot">3</div><span class="label">Building</span></div>
+              <div class="lv-connector" data-conn="2"></div>
+              <div class="lv-stage" data-stage="live"><div class="dot">4</div><span class="label">Live</span></div>
+            </div>
+            <div id="deployLog"><div class="dl-line">Ready for deployment. Click step 1 to begin.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Ship a real, authenticated, live application. This pulls together every academy system so far — take your time.</p>
+      <ul class="checklist">
+        <li>
+          <span class="step-num">1</span>
+          <input type="checkbox" id="ch1"><label for="ch1">Build an <code>index.html</code> with a login form and a hidden <code>#dashboard</code> section
+        </label>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <input type="checkbox" id="ch2"><label for="ch2">Create a Supabase project, enable email authentication, and wire up <code>signUp</code> and <code>signInWithPassword</code>
+        </label>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <input type="checkbox" id="ch3"><label for="ch3">Add an <code>onAuthStateChange</code> listener that shows the dashboard only when a session exists
+        </label>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <input type="checkbox" id="ch4"><label for="ch4">Put your Supabase URL and anon key in a <code>.env</code> file, and confirm <code>.gitignore</code> excludes it before your first commit
+        </label>
+        </li>
+        <li>
+          <span class="step-num">5</span>
+          <input type="checkbox" id="ch5"><label for="ch5">Push the project to a new GitHub repository
+        </label>
+        </li>
+        <li>
+          <span class="step-num">6</span>
+          <input type="checkbox" id="ch6"><label for="ch6">Connect that repository to Cloudflare Pages and add your Supabase keys under its Environment Variables settings
+        </label>
+        </li>
+        <li>
+          <span class="step-num">7</span>
+          <input type="checkbox" id="ch7"><label for="ch7">Visit your live <code>*.pages.dev</code> URL, sign up for a real account, sign out, and sign back in
+          <span class="sub">This is the full loop, live, with nobody's computer required except the visitor's browser</span></label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your live site loads but auth silently fails, open the browser's developer console (right-click → Inspect → Console tab) and look for the actual error message — a wrong or missing environment variable in Cloudflare's settings is the most common cause, and it will usually show up there as a clear network or configuration error rather than a mysterious blank screen.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Connect a custom domain to your Cloudflare Pages project (Settings → Custom domains), and add a Row Level Security policy in Supabase so each signed-in user can only read and write their own row in a table — then verify with two different accounts that neither can see the other's data.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>auth.signUp()</code><span>Register a new user</span></div>
+        <div class="cheat-card"><code>auth.signInWithPassword()</code><span>Log in an existing user</span></div>
+        <div class="cheat-card"><code>auth.signOut()</code><span>End the current session</span></div>
+        <div class="cheat-card"><code>auth.onAuthStateChange()</code><span>React live to login/logout</span></div>
+        <div class="cheat-card">Session / JWT<span>Proof of identity issued after login</span></div>
+        <div class="cheat-card">Anon key<span>Public, restricted API key</span></div>
+        <div class="cheat-card">Service role key<span>Full-access key — never expose it</span></div>
+        <div class="cheat-card">Row Level Security<span>Database-side per-row permission rules</span></div>
+        <div class="cheat-card">.env / .gitignore<span>Keep local secrets out of Git</span></div>
+        <div class="cheat-card">CI/CD<span>Automatic build & deploy on every push</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Committing a <code>.env</code> file (or any secret key) to a public GitHub repository — treat this as a genuine emergency if it happens: rotate the key immediately.</li>
+          <li>Hiding the dashboard with CSS and assuming that alone makes the data secure — it doesn't, without Row Level Security on the database side.</li>
+          <li>Forgetting to add environment variables inside Cloudflare's own dashboard, so the live site can't find keys that exist only on your laptop.</li>
+          <li>Not checking the <code>error</code> object returned from auth calls, so failed logins fail silently instead of showing the user what went wrong.</li>
+          <li>Testing only on your own logged-in laptop and never confirming the flow actually works for a brand-new visitor with no prior session.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — hiding a dashboard with CSS when no user is logged in protects against what?</p>
+        <button class="quiz-btn" data-correct="false">Any possible way another user could access that data</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — real protection has to live on the server/database side too.">Only what a casual visitor sees in the interface — not the underlying data itself</button>
+        <button class="quiz-btn" data-correct="false">Nothing — CSS has no effect on security at all</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Console Tabs ---------------- */
+  document.querySelectorAll('.console-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.console-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.console-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  /* ---------------- Mock Supabase Auth ---------------- */
+  const mockUsers = {}; // email -> password
+  let currentSession = null;
+
+  const authMsg = document.getElementById('authMsg');
+  const dashboardPane = document.getElementById('dashboardPane');
+
+  function setMsg(text, cls) {
+    authMsg.textContent = text;
+    authMsg.className = 'auth-msg' + (cls ? ' ' + cls : '');
+  }
+
+  function onAuthStateChange(session) {
+    if (session) {
+      dashboardPane.innerHTML = `
+        <div class="dashboard-unlocked">
+          <h3>✓ Dashboard Unlocked</h3>
+          <p>dashboard.style.display = "block"</p>
+          <p style="color:var(--text-muted);font-size:12px;">Signed in as ${session.email}</p>
+        </div>`;
+    } else {
+      dashboardPane.innerHTML = `<div class="dashboard-locked">🔒 dashboard.style.display = "none"<br><br>Sign in to unlock protected content.</div>`;
+    }
+  }
+
+  document.getElementById('signUpBtn').addEventListener('click', () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if (!email || !password) { setMsg('Email and password required.', 'error'); return; }
+    if (mockUsers[email]) { setMsg('That email is already registered — try signing in.', 'error'); return; }
+    mockUsers[email] = password;
+    setMsg('Signed up. You can now sign in with those credentials.', 'success');
+  });
+
+  document.getElementById('signInBtn').addEventListener('click', () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if (mockUsers[email] && mockUsers[email] === password) {
+      currentSession = { email };
+      setMsg('Signed in successfully.', 'success');
+      onAuthStateChange(currentSession);
+    } else {
+      setMsg('Invalid login credentials.', 'error');
+    }
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', () => {
+    currentSession = null;
+    setMsg('Signed out.', '');
+    onAuthStateChange(null);
+  });
+
+  /* ---------------- Deploy Pipeline Simulator ---------------- */
+  const stepButtons = document.querySelectorAll('.launch-step-btn');
+  const deployLog = document.getElementById('deployLog');
+
+  const stepInfo = [
+    { activate: 'github', log: 'Pushed to GitHub — repository updated.' },
+    { activate: 'detect', log: 'Cloudflare Pages detected the new commit.' },
+    { activate: 'building', log: 'Environment variables injected: SUPABASE_URL, SUPABASE_ANON_KEY', connector: 0 },
+    { activate: 'building', log: 'Build started — no build command needed for a static site.', connector: 1 },
+    { activate: 'live', log: 'Deployed. Live at https://your-app.pages.dev', connector: 2, success: true }
+  ];
+
+  function logLine(text, cls) {
+    const line = document.createElement('div');
+    line.className = 'dl-line' + (cls ? ' ' + cls : '');
+    line.textContent = text;
+    deployLog.appendChild(line);
+    deployLog.scrollTop = deployLog.scrollHeight;
+  }
+
+  stepButtons.forEach((btn, idx) => {
+    btn.addEventListener('click', () => {
+      const info = stepInfo[idx];
+      logLine('> ' + btn.textContent.replace(/^\d+\.\s*/, ''));
+      const stageEl = document.querySelector(`.lv-stage[data-stage="${info.activate}"]`);
+      document.querySelectorAll('.lv-stage.active').forEach(s => {
+        if (s !== stageEl) { s.classList.remove('active'); s.classList.add('complete'); }
+      });
+      stageEl.classList.add('active');
+      if (typeof info.connector === 'number') {
+        document.querySelectorAll('.lv-connector')[info.connector].classList.add('complete');
+      }
+      setTimeout(() => {
+        logLine(info.log, info.success ? 'dl-success' : null);
+        if (info.success) stageEl.classList.add('complete');
+      }, 350);
+
+      btn.classList.add('done');
+      btn.disabled = true;
+      const next = stepButtons[idx + 1];
+      if (next) next.disabled = false;
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

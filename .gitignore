@@ -1,0 +1,15 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+.wrangler/
+
+# Local tooling and OS files
+.DS_Store
+Thumbs.db
+.vscode/*.log

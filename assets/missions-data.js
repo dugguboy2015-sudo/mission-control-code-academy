@@ -1,0 +1,166 @@
+window.MISSION_MANIFEST = {
+  "academy": "Mission Control Code Academy",
+  "cadet": "Cadet",
+  "sectors": [
+    {
+      "id": "s0",
+      "num": 0,
+      "name": "Ground School",
+      "subtitle": "Foundations & Mental Models",
+      "accent": "cyan",
+      "missions": [
+        { "id": "s0-m01", "num": "0.1", "title": "How Computers & Code Think", "subtitle": "Input, Process, Output", "file": "missions/s0-m01-computers-and-code.html", "status": "live", "difficulty": "cadet", "estMinutes": 30 },
+        { "id": "s0-m02", "num": "0.2", "title": "How the Web Works", "subtitle": "Browser, Server, HTTP, URL, DNS", "file": "missions/s0-m02-how-the-web-works.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 },
+        { "id": "s0-m03", "num": "0.3", "title": "Your Workshop", "subtitle": "Editor, Files, Running Things, DevTools — and Your AI Co-Pilot", "file": "missions/s0-m03-your-workshop.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 }
+      ]
+    },
+    {
+      "id": "s1",
+      "num": 1,
+      "name": "Building the Web",
+      "subtitle": "HTML, CSS & Design",
+      "accent": "cyan",
+      "missions": [
+        { "id": "s1-m01", "num": "1.1", "title": "HTML Structure & Semantics", "subtitle": "The Document Skeleton", "file": "missions/s1-m01-html-structure.html", "status": "live", "difficulty": "cadet", "estMinutes": 45, "source": "mission-02-html-basics.html" },
+        { "id": "s1-m02", "num": "1.2", "title": "Forms, Inputs & Media", "subtitle": "Taking Input from the Cadet", "file": "missions/s1-m02-forms-and-media.html", "status": "planned", "difficulty": "cadet", "estMinutes": 40 },
+        { "id": "s1-m03", "num": "1.3", "title": "CSS Fundamentals & the Box Model", "subtitle": "Selectors, the Cascade, Box Model", "file": "missions/s1-m03-css-fundamentals.html", "status": "planned", "difficulty": "cadet", "estMinutes": 45, "note": "mission-03 partially covers selectors/cascade/typography; this mission still needs a dedicated box-model deep-dive" },
+        { "id": "s1-m04", "num": "1.4", "title": "Flexbox Layout", "subtitle": "Arranging the Bridge — Styling and Positioning Every Station", "file": "missions/s1-m04-css-flexbox.html", "status": "live", "difficulty": "officer", "estMinutes": 55, "source": "mission-03-css-flexbox.html" },
+        { "id": "s1-m05", "num": "1.5", "title": "CSS Grid Layout", "subtitle": "Two-Dimensional Layout", "file": "missions/s1-m05-css-grid.html", "status": "planned", "difficulty": "cadet", "estMinutes": 50 },
+        { "id": "s1-m06", "num": "1.6", "title": "Positioning & Responsive Design", "subtitle": "Mobile-First, Media Queries", "file": "missions/s1-m06-responsive-design.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s1-m07", "num": "1.7", "title": "Transitions, Animation & Polish", "subtitle": "Making It Feel Alive", "file": "missions/s1-m07-transitions-animation.html", "status": "planned", "difficulty": "officer", "estMinutes": 40 },
+        { "id": "s1-m08", "num": "1.8", "title": "Design Track: Visual Hierarchy & Accessibility", "subtitle": "Color, Type, Spacing, A11y Basics", "file": "missions/s1-m08-design-fundamentals.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s1-m09", "num": "1.9", "title": "Capstone: Your Personal Site", "subtitle": "Design & Build a Multi-Section Site", "file": "missions/s1-m09-capstone-personal-site.html", "status": "planned", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L1" }
+      ]
+    },
+    {
+      "id": "s2",
+      "num": 2,
+      "name": "Programming with JavaScript",
+      "subtitle": "Real Computer Science",
+      "accent": "cyan",
+      "missions": [
+        { "id": "s2-m01", "num": "2.1", "title": "Variables, Types & Operators", "subtitle": "Bringing the Ship to Life", "file": "missions/s2-m01-js-foundations.html", "status": "live", "difficulty": "cadet", "estMinutes": 65, "source": "mission-04-javascript-interactivity.html", "note": "broad first-contact JS mission (vars/functions/conditionals/DOM/events); deeper dedicated missions below still needed" },
+        { "id": "s2-m02", "num": "2.2", "title": "Conditionals & Control Flow", "subtitle": "Teaching the Ship to Decide", "file": "missions/s2-m02-conditionals.html", "status": "planned", "difficulty": "cadet", "estMinutes": 35 },
+        { "id": "s2-m03", "num": "2.3", "title": "Loops & Iteration", "subtitle": "Doing Things Again, On Purpose", "file": "missions/s2-m03-loops.html", "status": "planned", "difficulty": "cadet", "estMinutes": 40 },
+        { "id": "s2-m04", "num": "2.4", "title": "Functions in Depth", "subtitle": "Parameters, Return Values, Scope", "file": "missions/s2-m04-functions-in-depth.html", "status": "planned", "difficulty": "cadet", "estMinutes": 45 },
+        { "id": "s2-m05", "num": "2.5", "title": "Arrays & Array Methods", "subtitle": "map / filter / reduce", "file": "missions/s2-m05-arrays.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s2-m06", "num": "2.6", "title": "Objects & Structured Data", "subtitle": "Modeling the Real World in Code", "file": "missions/s2-m06-objects.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m07", "num": "2.7", "title": "The DOM In Depth", "subtitle": "Finding & Changing the Page", "file": "missions/s2-m07-dom-in-depth.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m08", "num": "2.8", "title": "Events & Interactivity In Depth", "subtitle": "Bubbling, Delegation, Real Apps", "file": "missions/s2-m08-events-in-depth.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m09", "num": "2.9", "title": "Debugging & DevTools", "subtitle": "Reading Errors Like a Professional", "file": "missions/s2-m09-debugging-devtools.html", "status": "planned", "difficulty": "officer", "estMinutes": 40 },
+        { "id": "s2-m10", "num": "2.10", "title": "Thinking Like a Programmer", "subtitle": "Problem-Solving & Simple Algorithms", "file": "missions/s2-m10-algorithmic-thinking.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s2-m11", "num": "2.11", "title": "Capstone: Interactive Game or Quiz App", "subtitle": "Everything, Combined", "file": "missions/s2-m11-capstone-game.html", "status": "planned", "difficulty": "officer", "estMinutes": 100, "capstone": true, "ladderLevel": "L1" }
+      ]
+    },
+    {
+      "id": "s3",
+      "num": 3,
+      "name": "Version Control & Collaboration",
+      "subtitle": "Git & GitHub",
+      "accent": "orange",
+      "missions": [
+        { "id": "s3-m01", "num": "3.1", "title": "Git & GitHub Fundamentals", "subtitle": "Commits, Branching, Merging, Remotes", "file": "missions/s3-m01-git-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 70, "source": "mission-01-git-branching.html", "note": "currently a broad single mission covering the log/staging/branching/merging/remotes together; splitting into 3.2 (dedicated branching/merging deep-dive) and 3.3 (GitHub/PRs deep-dive) is still planned" },
+        { "id": "s3-m02", "num": "3.2", "title": "Branching & Merging Deep-Dive", "subtitle": "Parallel Timelines, Conflict Resolution", "file": "missions/s3-m02-branching-merging.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s3-m03", "num": "3.3", "title": "GitHub, Remotes & Pull Requests", "subtitle": "Syncing with Mission Control", "file": "missions/s3-m03-github-pull-requests.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 }
+      ]
+    },
+    {
+      "id": "s4",
+      "num": 4,
+      "name": "Dynamic & Connected Web",
+      "subtitle": "Async, APIs & Deployment",
+      "accent": "cyan",
+      "missions": [
+        { "id": "s4-m01", "num": "4.1", "title": "Organizing Code: Modules & Files", "subtitle": "Splitting the Ship into Systems", "file": "missions/s4-m01-modules.html", "status": "planned", "difficulty": "officer", "estMinutes": 35 },
+        { "id": "s4-m02", "num": "4.2", "title": "Async JavaScript", "subtitle": "Promises & async/await", "file": "missions/s4-m02-async-javascript.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s4-m03", "num": "4.3", "title": "fetch, JSON & Public APIs", "subtitle": "Talking to Other Ships", "file": "missions/s4-m03-fetch-and-apis.html", "status": "planned", "difficulty": "officer", "estMinutes": 55, "threadNote": "Thread 4 (boxes & arrows): first mission to require a system diagram before code" },
+        { "id": "s4-m04", "num": "4.4", "title": "State & Storage", "subtitle": "localStorage — Remembering Between Visits", "file": "missions/s4-m04-state-and-storage.html", "status": "planned", "difficulty": "officer", "estMinutes": 35 },
+        { "id": "s4-m05", "num": "4.5", "title": "Deploying to the Web", "subtitle": "GitHub Pages & Cloudflare Pages", "file": "missions/s4-m05-deployment.html", "status": "live", "difficulty": "officer", "accent": "orange", "estMinutes": 45, "source": "mission-06-deployment.html", "threadNote": "Thread 2 (ship it): first deploy mission" },
+        { "id": "s4-m06", "num": "4.6", "title": "Capstone: Live API App", "subtitle": "Consume a Real Public API, Deployed", "file": "missions/s4-m06-capstone-api-app.html", "status": "planned", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L2" }
+      ]
+    },
+    {
+      "id": "s5",
+      "num": 5,
+      "name": "Data & Backends",
+      "subtitle": "Supabase, Firebase & APIs",
+      "accent": "green",
+      "missions": [
+        { "id": "s5-m01", "num": "5.1", "title": "Data Modeling", "subtitle": "Tables, Rows, Columns, Keys, Relationships", "file": "missions/s5-m01-data-modeling.html", "status": "planned", "difficulty": "officer", "estMinutes": 40, "note": "mission-07 partially covers this inside its Supabase mission; a standalone conceptual treatment is still planned" },
+        { "id": "s5-m02", "num": "5.2", "title": "Supabase: Database + CRUD", "subtitle": "SQL in the Browser", "file": "missions/s5-m02-supabase-crud.html", "status": "live", "difficulty": "officer", "estMinutes": 65, "source": "mission-07-databases.html" },
+        { "id": "s5-m03", "num": "5.3", "title": "Auth: Sign Up, Sign In, Protected UI", "subtitle": "Locking and Unlocking the Dashboard", "file": "missions/s5-m03-auth.html", "status": "planned", "difficulty": "commander", "estMinutes": 60, "note": "a dedicated auth-only treatment is still planned; mission-09 (now the 5.7 capstone) already demonstrates working auth end-to-end" },
+        { "id": "s5-m04", "num": "5.4", "title": "Firebase: Firestore, Auth & Realtime", "subtitle": "A First-Class Alternative Stack", "file": "missions/s5-m04-firebase.html", "status": "live", "difficulty": "officer", "estMinutes": 65, "source": "mission-08-firebase.html" },
+        { "id": "s5-m05", "num": "5.5", "title": "Supabase vs Firebase", "subtitle": "SQL vs NoSQL — When to Choose Which", "file": "missions/s5-m05-sql-vs-nosql.html", "status": "planned", "difficulty": "commander", "estMinutes": 35 },
+        { "id": "s5-m06", "num": "5.6", "title": "What a Backend Is", "subtitle": "Serverless Functions & a Tiny API", "file": "missions/s5-m06-serverless-backends.html", "status": "planned", "difficulty": "commander", "estMinutes": 55, "threadNote": "Thread 3 (cost-aware): first mission to compute free-tier limits explicitly" },
+        { "id": "s5-m07", "num": "5.7", "title": "Capstone: Full-Stack CRUD with Login", "subtitle": "Assemble the Whole Stack", "file": "missions/s5-m07-capstone-fullstack-crud.html", "status": "live", "difficulty": "commander", "estMinutes": 120, "capstone": true, "ladderLevel": "L3", "source": "mission-09-fullstack-deployment.html", "note": "covers auth + env vars + Cloudflare deploy end-to-end already; a future pass should add the L3 ladder's explicit free-tier cost check" }
+      ]
+    },
+    {
+      "id": "s6",
+      "num": 6,
+      "name": "Python & Computational Thinking",
+      "subtitle": "The Language of AI Work Ahead",
+      "accent": "purple",
+      "missions": [
+        { "id": "s6-m01", "num": "6.1", "title": "Python Fundamentals", "subtitle": "Second Language, Same Universe", "file": "missions/s6-m01-python-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 60, "source": "mission-05-python-fundamentals.html" },
+        { "id": "s6-m02", "num": "6.2", "title": "Lists, Dicts & Data Structures", "subtitle": "Python's Arrays and Objects", "file": "missions/s6-m02-python-data-structures.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s6-m03", "num": "6.3", "title": "Files, Loops & Working with Data", "subtitle": "Reading Real Files in Python", "file": "missions/s6-m03-python-files-and-data.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s6-m04", "num": "6.4", "title": "Capstone: Data-Crunching Mini-Project", "subtitle": "A Real Python Analysis Tool", "file": "missions/s6-m04-capstone-python-data.html", "status": "planned", "difficulty": "officer", "estMinutes": 80, "capstone": true }
+      ]
+    },
+    {
+      "id": "s7",
+      "num": 7,
+      "name": "AI-Enabled Applications",
+      "subtitle": "The Pivot",
+      "accent": "pink",
+      "missions": [
+        { "id": "s7-m01", "num": "7.1", "title": "What AI/ML/LLMs Actually Are", "subtitle": "Tokens, Prediction, No Magic", "file": "missions/s7-m01-what-is-ai.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m02", "num": "7.2", "title": "Prompt Engineering Fundamentals", "subtitle": "Talking to the Model Precisely", "file": "missions/s7-m02-prompt-engineering.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m03", "num": "7.3", "title": "Calling an LLM API Safely", "subtitle": "Build a Chatbot Through Your Own Proxy", "file": "missions/s7-m03-calling-llm-apis.html", "status": "planned", "difficulty": "commander", "estMinutes": 65, "threadNote": "Thread 1 formalized: keys never touch the client" },
+        { "id": "s7-m04", "num": "7.4", "title": "Structured Output & Tool Calling", "subtitle": "Making the Model Speak JSON", "file": "missions/s7-m04-structured-output-tools.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s7-m05", "num": "7.5", "title": "Embeddings & Semantic Search", "subtitle": "Meaning as Numbers", "file": "missions/s7-m05-embeddings.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s7-m06", "num": "7.6", "title": "RAG: Chat With Your Own Notes", "subtitle": "Retrieval-Augmented Generation", "file": "missions/s7-m06-rag.html", "status": "planned", "difficulty": "commander", "estMinutes": 70 },
+        { "id": "s7-m07", "num": "7.7", "title": "AI in the UI", "subtitle": "Streaming, Loading States, Guardrails", "file": "missions/s7-m07-ai-in-the-ui.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m08", "num": "7.8", "title": "AI Economics & Model Selection", "subtitle": "Token Math, Routing, Fallbacks", "file": "missions/s7-m08-ai-economics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45, "threadNote": "Thread 3 formalized: napkin-math the monthly bill before building" },
+        { "id": "s7-m09", "num": "7.9", "title": "Context Engineering", "subtitle": "Managing the Context Window", "file": "missions/s7-m09-context-engineering.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s7-m10", "num": "7.10", "title": "Capstone: AI-Enabled Web App", "subtitle": "Deployed, Cost-Estimated, Guardrailed", "file": "missions/s7-m10-capstone-ai-enabled-app.html", "status": "planned", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L4" }
+      ]
+    },
+    {
+      "id": "s8",
+      "num": 8,
+      "name": "AI-Native Apps & Agents",
+      "subtitle": "Advanced",
+      "accent": "pink",
+      "missions": [
+        { "id": "s8-m01", "num": "8.1", "title": "AI-Native vs AI-Enabled", "subtitle": "Designing Around the Model", "file": "missions/s8-m01-ai-native-vs-enabled.html", "status": "planned", "difficulty": "commander", "estMinutes": 40 },
+        { "id": "s8-m02", "num": "8.2", "title": "The Agent Loop", "subtitle": "Reason → Act → Observe", "file": "missions/s8-m02-agent-loop.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s8-m03", "num": "8.3", "title": "Tool-Using Agents", "subtitle": "Giving the Model Hands", "file": "missions/s8-m03-tool-using-agents.html", "status": "planned", "difficulty": "commander", "estMinutes": 60 },
+        { "id": "s8-m04", "num": "8.4", "title": "Multi-Step Planning & Memory", "subtitle": "Agents That Remember", "file": "missions/s8-m04-planning-and-memory.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m05", "num": "8.5", "title": "Connecting Agents to Real Systems", "subtitle": "MCP, Introduced", "file": "missions/s8-m05-mcp-intro.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m06", "num": "8.6", "title": "Evals", "subtitle": "How You Know the AI Actually Works", "file": "missions/s8-m06-evals.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m07", "num": "8.7", "title": "Observability & Tracing for AI", "subtitle": "Logging Prompts, Outputs, Cost, Failures", "file": "missions/s8-m07-observability.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s8-m08", "num": "8.8", "title": "Capstone: Small Autonomous Agent", "subtitle": "With an Eval Suite", "file": "missions/s8-m08-capstone-agent.html", "status": "planned", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L5" }
+      ]
+    },
+    {
+      "id": "s9",
+      "num": 9,
+      "name": "Engineering Craft",
+      "subtitle": "Woven Throughout, Formalized Here",
+      "accent": "orange",
+      "missions": [
+        { "id": "s9-m01", "num": "9.1", "title": "Testing Basics", "subtitle": "Proving Your Code Works", "file": "missions/s9-m01-testing-basics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m02", "num": "9.2", "title": "Debugging Methodology", "subtitle": "Reading Errors Like an Engineer", "file": "missions/s9-m02-debugging-methodology.html", "status": "planned", "difficulty": "commander", "estMinutes": 40 },
+        { "id": "s9-m03", "num": "9.3", "title": "Using AI as a Coding Partner", "subtitle": "Responsibly, and Well", "file": "missions/s9-m03-ai-coding-partner.html", "status": "planned", "difficulty": "commander", "estMinutes": 40, "threadNote": "Thread 1 formalized as its own mission" },
+        { "id": "s9-m04", "num": "9.4", "title": "Code Quality & Refactoring", "subtitle": "Making It Good, Not Just Working", "file": "missions/s9-m04-code-quality.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m05", "num": "9.5", "title": "Security & Privacy Basics", "subtitle": "Protecting Users and Data", "file": "missions/s9-m05-security-basics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m06", "num": "9.6", "title": "AI Security", "subtitle": "Prompt Injection, Exfiltration, Key Safety", "file": "missions/s9-m06-ai-security.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s9-m07", "num": "9.7", "title": "CI/CD & Deploy Pipelines", "subtitle": "Automated Build → Test → Ship", "file": "missions/s9-m07-cicd.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s9-m08", "num": "9.8", "title": "Final Capstone: AI-Native Product", "subtitle": "On the Architect's Stack, Fully Production-Ready", "file": "missions/s9-m08-final-capstone.html", "status": "planned", "difficulty": "commander", "estMinutes": 180, "capstone": true, "ladderLevel": "L5" }
+      ]
+    }
+  ]
+}
+;

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 3.1: Git & GitHub Fundamentals — Splitting the Timeline | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Command Console (bespoke terminal + branch graph widget) ---------- */
+  .terminal {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--glow-shadow);
+  }
+  .terminal-header {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.red { background: #ff6b6b; }
+  .dot.yellow { background: #ffcf4d; }
+  .dot.green { background: #4dffb4; }
+
+  .terminal-body {
+    padding: 16px;
+    font-family: var(--font-code);
+    font-size: 13.5px;
+    min-height: 140px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .terminal-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-word; }
+  .terminal-line.echo { color: var(--accent); }
+  .terminal-line.out { color: var(--text-secondary); }
+  .terminal-line.err { color: var(--danger); }
+  .terminal-prompt { color: var(--accent-green); }
+
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-glow);
+    background: rgba(255,255,255,0.02);
+  }
+  .terminal-input-row span { color: var(--accent-green); font-family: var(--font-code); }
+  #termInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13.5px;
+  }
+  .term-hint-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 16px 16px;
+  }
+  .term-hint-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .term-hint-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s3-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 3</div>
+    <h1>MISSION 3.1: GIT & GITHUB FUNDAMENTALS</h1>
+    <div class="subtitle">Splitting the Timeline — Version Control for Real Engineers</div>
+    <p class="briefing-line">Every serious engineering project needs a flight recorder — a way to save checkpoints, branch off to try risky experiments, and merge good ideas back into the main mission without losing anything. That's Git. Today you install the tool every professional software team on Earth (and presumably beyond) uses every single day.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 TERMINAL REQUIRED</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture your codebase as a spacecraft's mission log. Every time you make real progress — a working feature, a bug fix, a new module wired in — you drop a <strong>checkpoint buoy</strong> into the timeline. That buoy records the exact state of every file at that moment, forever. If a future change breaks something, you don't panic: you fly back to the last good buoy and pick a different path forward.</p>
+      <p>Git is the system that manages these buoys. Each checkpoint is called a <strong>commit</strong>. The chain of commits is your project's history. And because software is rarely built by one person sitting alone, Git also lets you <strong>branch</strong> — split off a parallel timeline to try something experimental (a new feature, a risky refactor) without touching the main timeline at all. If the experiment works, you <strong>merge</strong> it back in. If it doesn't, you just... don't. The main timeline never knew it happened.</p>
+      <p>This is the single most important habit separating hobby coders from engineers: <em>never work without a safety net you fully control.</em></p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;">
+          <defs>
+            <marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/>
+            </marker>
+          </defs>
+          <!-- main timeline -->
+          <line x1="40" y1="130" x2="600" y2="130" stroke="#2e3d63" stroke-width="2"/>
+          <text x="20" y="135" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="end">main</text>
+
+          <!-- main commits -->
+          <circle cx="90" cy="130" r="10" fill="#ff9d4d"/>
+          <circle cx="220" cy="130" r="10" fill="#ff9d4d"/>
+          <circle cx="470" cy="130" r="10" fill="#ff9d4d"/>
+          <circle cx="600" cy="130" r="12" fill="#4dffb4"/>
+
+          <text x="90" y="160" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c1</text>
+          <text x="220" y="160" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c2</text>
+          <text x="470" y="160" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">merge</text>
+          <text x="600" y="160" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c4</text>
+
+          <!-- branch off point -->
+          <path d="M220,130 Q300,60 380,60" fill="none" stroke="#4ee1ff" stroke-width="2" stroke-dasharray="0"/>
+          <path d="M380,60 Q430,60 470,130" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+
+          <circle cx="300" cy="72" r="9" fill="#4ee1ff"/>
+          <circle cx="380" cy="60" r="9" fill="#4ee1ff"/>
+
+          <text x="230" y="45" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12">feature/laser-controls</text>
+          <text x="300" y="95" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c3a</text>
+          <text x="380" y="83" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c3b</text>
+
+          <text x="90" y="185" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle" opacity="0">.</text>
+
+          <!-- labels -->
+          <text x="90" y="200" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="12" text-anchor="middle">start</text>
+          <text x="600" y="200" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="12" text-anchor="middle">now</text>
+        </svg>
+        <div class="diagram-caption">The main timeline keeps advancing while a branch splits off to build a feature safely, then merges back in at "merge."</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Initializing the Ship's Log</h3>
+        <p>Every Git project starts by turning an ordinary folder into a <strong>repository</strong> — a folder Git is now watching for changes. This creates a hidden <code>.git</code> directory that stores the entire history.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git init">COPY</button></div>
+          <pre><code><span class="comment"># Run this inside your project folder</span>
+git init
+
+<span class="comment"># Check that Git is now watching this folder</span>
+git status</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Git created a hidden <code>.git</code> folder that will hold every commit you ever make in this project. <code>git status</code> is your dashboard — it always tells you the current state: what's changed, what's staged, what branch you're on.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Staging Area — Choosing What Goes in the Log</h3>
+        <p>Git doesn't save your whole project every time. It saves a <strong>snapshot of exactly the files you choose</strong>. That selection step is called <strong>staging</strong>. Think of it as loading specific cargo onto the checkpoint buoy before you drop it — you decide what's important enough to record right now.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git add mission.py&#10;git commit -m &quot;Add thruster control script&quot;">COPY</button></div>
+          <pre><code><span class="comment"># Stage a specific file</span>
+git add mission.py
+
+<span class="comment"># Or stage everything that's changed</span>
+git add .
+
+<span class="comment"># Commit the staged snapshot with a clear message</span>
+git commit -m "Add thruster control script"</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>git add</code> moves files into the staging area (the "about to be recorded" zone). <code>git commit</code> permanently seals that staged snapshot into the project history with a message explaining <em>why</em>. Good commit messages are a real engineering skill — future-you will read them at 2am trying to figure out what past-you broke.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why not just save everything automatically?</summary>
+          <p>Because not every change is worth a permanent checkpoint. You might have half-finished experiments, temporary debug prints, or files you never want tracked at all (like passwords). Staging gives you full control over what becomes "official" history. You'll also use a <code>.gitignore</code> file to tell Git to never even look at certain files or folders (like <code>node_modules/</code> or <code>.env</code>).</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Branching — Opening a Parallel Timeline</h3>
+        <p>Branches let you build something new without risking the working main version. This is the feature that makes Git actually powerful, not just a backup tool.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git branch feature/laser-controls&#10;git checkout feature/laser-controls&#10;&#10;git checkout -b feature/laser-controls">COPY</button></div>
+          <pre><code><span class="comment"># Create a new branch</span>
+git branch feature/laser-controls
+
+<span class="comment"># Switch to it</span>
+git checkout feature/laser-controls
+
+<span class="comment"># Or do both in one command (shortcut)</span>
+git checkout -b feature/laser-controls</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          You now have two timelines: <code>main</code> and <code>feature/laser-controls</code>, currently pointing at the same commit. Any commits you make now happen only on the branch you're standing on. <code>main</code> stays exactly as it was until you decide to merge.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Merging — Bringing the Timeline Back Together</h3>
+        <p>Once your branch's work is solid, you bring it back into <code>main</code>. Git tries to combine the histories automatically. Most of the time it just works. Sometimes both timelines changed the <em>same line</em> of the <em>same file</em> — that's a <strong>merge conflict</strong>, and Git asks you to decide which version wins.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git checkout main&#10;git merge feature/laser-controls">COPY</button></div>
+          <pre><code><span class="comment"># Switch back to the timeline you want to merge INTO</span>
+git checkout main
+
+<span class="comment"># Pull the branch's commits into main</span>
+git merge feature/laser-controls</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Git replayed the branch's commits onto <code>main</code> (or created a special "merge commit" joining both histories). Your feature is now part of the main timeline, and the branch can be deleted — its work has already been absorbed.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: What does a merge conflict actually look like?</summary>
+          <p>Git edits the file directly and inserts conflict markers so you can see both versions and choose:</p>
+          <pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+thrust_power = 100
+=======
+thrust_power = 120
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/laser-controls</code></pre>
+          <p>You delete the markers, keep (or blend) the code you actually want, then <code>git add</code> the file and <code>git commit</code> to finish the merge. It's not scary — it's just Git being honest that it needs a human decision.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Remotes — Syncing with Mission Control (GitHub)</h3>
+        <p>So far everything has lived only on your machine. A <strong>remote</strong> is a copy of the repository hosted elsewhere — usually GitHub — so you can back up your work, sync across devices, and collaborate with other engineers.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git remote add origin https://github.com/yourname/your-repo.git&#10;git push -u origin main&#10;&#10;git pull origin main">COPY</button></div>
+          <pre><code><span class="comment"># Connect your local repo to a GitHub repo</span>
+git remote add origin https://github.com/yourname/your-repo.git
+
+<span class="comment"># Send your commits up to GitHub</span>
+git push -u origin main
+
+<span class="comment"># Pull down commits made elsewhere (e.g. by a teammate)</span>
+git pull origin main</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>origin</code> is just a nickname for "the remote repository." <code>push</code> uploads your local commits; <code>pull</code> downloads and merges commits you don't have yet. The <code>-u</code> flag remembers this pairing so future pushes are just <code>git push</code>.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This is a simulated Git terminal — no real files are touched, but the commands behave like the real thing and the timeline graph below updates live. Try typing commands yourself, or tap a suggestion.</p>
+
+      <div class="diagram-box" style="text-align:left;">
+        <svg id="graphSvg" viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;display:block;margin:0 auto;"></svg>
+        <div class="diagram-caption">Live commit graph — reacts to the commands you run below.</div>
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        </div>
+        <div class="terminal-body" id="termBody">
+          <div class="terminal-line out">Simulated Git Console v1.0 — repo initialized on branch <span class="terminal-prompt">main</span></div>
+          <div class="terminal-line out">Type a command below, e.g. "git commit -m 'fix thrusters'"</div>
+        </div>
+        <div class="terminal-input-row">
+          <span id="termBranchLabel">main $</span>
+          <input type="text" id="termInput" autocomplete="off" spellcheck="false" placeholder="git status">
+        </div>
+        <div class="term-hint-row">
+          <button class="term-hint-btn" data-cmd="git status">git status</button>
+          <button class="term-hint-btn" data-cmd="git commit -m 'add radar module'">git commit -m 'add radar module'</button>
+          <button class="term-hint-btn" data-cmd="git checkout -b feature/shields">git checkout -b feature/shields</button>
+          <button class="term-hint-btn" data-cmd="git commit -m 'raise shields'">git commit -m 'raise shields'</button>
+          <button class="term-hint-btn" data-cmd="git checkout main">git checkout main</button>
+          <button class="term-hint-btn" data-cmd="git merge feature/shields">git merge feature/shields</button>
+          <button class="term-hint-btn" data-cmd="git log">git log</button>
+          <button class="term-hint-btn" data-cmd="reset">reset simulation</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Time to leave the simulator. Open a real terminal on your computer and complete this sequence for real, in an actual folder.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a new folder called <code>mission-log</code> and run <code>git init</code> inside it
+          <span class="sub">Verify with <code>git status</code> — it should say "nothing to commit"</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Create a file <code>log.txt</code>, write one sentence in it, then stage and commit it
+          <span class="sub">Use a real, descriptive commit message — not "update"</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Create a branch called <code>experiment</code> and switch to it
+          <span class="sub"><code>git checkout -b experiment</code></span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">On the <code>experiment</code> branch, add a second sentence to <code>log.txt</code> and commit it
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Switch back to <code>main</code> and confirm your second sentence is <em>not</em> there
+          <span class="sub">This proves the branch actually isolated your change</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Merge <code>experiment</code> into <code>main</code> and confirm the second sentence now appears
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If <code>git checkout main</code> refuses because of "uncommitted changes," it means you forgot to commit on the experiment branch first. Git is protecting you from silently losing work — that's a feature, not a bug.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Deliberately create a merge conflict: edit the <em>same line</em> of <code>log.txt</code> differently on both <code>main</code> and <code>experiment</code> before merging. Resolve it by hand, then commit the resolution. This is the exact skill you'll use on every real team project.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>git init</code><span>Start tracking a folder</span></div>
+        <div class="cheat-card"><code>git status</code><span>Show current state</span></div>
+        <div class="cheat-card"><code>git add &lt;file&gt;</code><span>Stage a change</span></div>
+        <div class="cheat-card"><code>git commit -m "msg"</code><span>Save a checkpoint</span></div>
+        <div class="cheat-card"><code>git branch &lt;name&gt;</code><span>Create a branch</span></div>
+        <div class="cheat-card"><code>git checkout &lt;name&gt;</code><span>Switch branches</span></div>
+        <div class="cheat-card"><code>git checkout -b &lt;name&gt;</code><span>Create + switch in one step</span></div>
+        <div class="cheat-card"><code>git merge &lt;name&gt;</code><span>Combine a branch into current one</span></div>
+        <div class="cheat-card"><code>git log</code><span>View commit history</span></div>
+        <div class="cheat-card"><code>git push</code><span>Upload commits to remote</span></div>
+        <div class="cheat-card"><code>git pull</code><span>Download commits from remote</span></div>
+        <div class="cheat-card"><code>git clone &lt;url&gt;</code><span>Copy a remote repo locally</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Committing without staging first (<code>git commit</code> only saves what's staged, not everything).</li>
+          <li>Vague commit messages like "fix" or "stuff" — you will regret this in three weeks.</li>
+          <li>Working directly on <code>main</code> for risky experiments instead of branching first.</li>
+          <li>Forgetting to commit before switching branches, then wondering where the work went.</li>
+          <li>Panicking at a merge conflict instead of reading what Git is actually telling you.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which command creates a new branch AND switches to it in one step?</p>
+        <button class="quiz-btn" data-correct="false">git branch -b</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — one command, two jobs.">git checkout -b</button>
+        <button class="quiz-btn" data-correct="false">git merge -b</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Simulated Git Console ---------------- */
+  const termBody = document.getElementById('termBody');
+  const termInput = document.getElementById('termInput');
+  const termBranchLabel = document.getElementById('termBranchLabel');
+  const graphSvg = document.getElementById('graphSvg');
+
+  let repo, currentBranch, branches, commitCounter;
+
+  function resetRepo() {
+    commitCounter = 1;
+    branches = {
+      main: [{ id: 'c1', label: 'c1' }]
+    };
+    currentBranch = 'main';
+    repo = true;
+  }
+  resetRepo();
+
+  function printLine(text, cls) {
+    const line = document.createElement('div');
+    line.className = 'terminal-line ' + (cls || 'out');
+    line.textContent = text;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+
+  function printEcho(cmd) {
+    const line = document.createElement('div');
+    line.className = 'terminal-line echo';
+    line.textContent = currentBranch + ' $ ' + cmd;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+
+  function updateBranchLabel() {
+    termBranchLabel.textContent = currentBranch + ' $';
+  }
+
+  function runCommand(raw) {
+    const cmd = raw.trim();
+    if (!cmd) return;
+    printEcho(cmd);
+
+    if (cmd === 'reset') {
+      resetRepo();
+      termBody.innerHTML = '';
+      printLine('Simulation reset. Back on branch main with a single initial commit.', 'out');
+      updateBranchLabel();
+      renderGraph();
+      return;
+    }
+
+    if (cmd === 'git status') {
+      printLine(`On branch ${currentBranch}`, 'out');
+      printLine('nothing to commit, working tree clean', 'out');
+      return;
+    }
+
+    if (cmd === 'git log') {
+      const commits = branches[currentBranch];
+      commits.slice().reverse().forEach(c => {
+        printLine(`commit ${c.id}  ${c.label}`, 'out');
+      });
+      return;
+    }
+
+    let m = cmd.match(/^git commit -m ['"](.+)['"]$/);
+    if (m) {
+      commitCounter++;
+      const newId = 'c' + commitCounter;
+      branches[currentBranch].push({ id: newId, label: m[1] });
+      printLine(`[${currentBranch} ${newId}] ${m[1]}`, 'out');
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git checkout -b ([\w\-\/]+)$/);
+    if (m) {
+      const name = m[1];
+      if (branches[name]) {
+        printLine(`fatal: a branch named '${name}' already exists`, 'err');
+        return;
+      }
+      branches[name] = branches[currentBranch].slice();
+      currentBranch = name;
+      printLine(`Switched to a new branch '${name}'`, 'out');
+      updateBranchLabel();
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git checkout ([\w\-\/]+)$/);
+    if (m) {
+      const name = m[1];
+      if (!branches[name]) {
+        printLine(`error: pathspec '${name}' did not match any branch known to git`, 'err');
+        return;
+      }
+      currentBranch = name;
+      printLine(`Switched to branch '${name}'`, 'out');
+      updateBranchLabel();
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git branch ([\w\-\/]+)$/);
+    if (m) {
+      const name = m[1];
+      if (branches[name]) {
+        printLine(`fatal: a branch named '${name}' already exists`, 'err');
+        return;
+      }
+      branches[name] = branches[currentBranch].slice();
+      printLine(`Created branch '${name}' (still on ${currentBranch})`, 'out');
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git merge ([\w\-\/]+)$/);
+    if (m) {
+      const name = m[1];
+      if (!branches[name]) {
+        printLine(`merge: ${name} - not something we can merge`, 'err');
+        return;
+      }
+      const target = branches[currentBranch];
+      const source = branches[name];
+      const targetIds = new Set(target.map(c => c.id));
+      const newCommits = source.filter(c => !targetIds.has(c.id));
+      if (newCommits.length === 0) {
+        printLine('Already up to date.', 'out');
+        return;
+      }
+      commitCounter++;
+      const mergeId = 'c' + commitCounter;
+      branches[currentBranch] = target.concat(newCommits, [{ id: mergeId, label: `Merge branch '${name}' into ${currentBranch}` }]);
+      printLine(`Merge made by the 'ort' strategy.`, 'out');
+      printLine(` ${newCommits.length} commit(s) incorporated from ${name}`, 'out');
+      renderGraph();
+      return;
+    }
+
+    if (cmd.startsWith('git add')) {
+      printLine('Changes staged.', 'out');
+      return;
+    }
+
+    printLine(`command not recognized in simulator: ${cmd}`, 'err');
+  }
+
+  function renderGraph() {
+    // Simple layered layout: main on a horizontal line, other branches offset above
+    const branchNames = Object.keys(branches);
+    const mainCommits = branches.main;
+    const width = 720, height = 200;
+    const marginX = 50, spacingX = Math.min(80, (width - 2 * marginX) / Math.max(mainCommits.length, 1));
+    const mainY = 140;
+
+    let svgParts = [];
+    svgParts.push(`<line x1="${marginX - 10}" y1="${mainY}" x2="${marginX + (mainCommits.length - 1) * spacingX + 10}" y2="${mainY}" stroke="#2e3d63" stroke-width="2"/>`);
+    svgParts.push(`<text x="${marginX - 20}" y="${mainY + 5}" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="end">main</text>`);
+
+    mainCommits.forEach((c, i) => {
+      const x = marginX + i * spacingX;
+      const isLast = i === mainCommits.length - 1;
+      const color = isLast ? '#4dffb4' : '#ff9d4d';
+      svgParts.push(`<circle cx="${x}" cy="${mainY}" r="${isLast ? 9 : 7}" fill="${color}"/>`);
+      svgParts.push(`<text x="${x}" y="${mainY + 24}" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">${c.id}</text>`);
+    });
+
+    let branchRow = 0;
+    branchNames.filter(n => n !== 'main').forEach((name) => {
+      branchRow++;
+      const y = mainY - branchRow * 45;
+      const commits = branches[name];
+      const commonLen = (() => {
+        let n = 0;
+        while (n < commits.length && n < mainCommits.length && commits[n].id === mainCommits[n].id) n++;
+        return n;
+      })();
+      const startX = marginX + (commonLen - 1) * spacingX;
+      const uniqueCommits = commits.slice(commonLen);
+
+      if (uniqueCommits.length > 0) {
+        let pathX = startX, pathY = mainY;
+        const branchColor = '#4ee1ff';
+        uniqueCommits.forEach((c, i) => {
+          const x = startX + (i + 1) * spacingX;
+          svgParts.push(`<path d="M${pathX},${pathY} L${x},${y}" fill="none" stroke="${branchColor}" stroke-width="2"/>`);
+          svgParts.push(`<circle cx="${x}" cy="${y}" r="7" fill="${branchColor}"/>`);
+          svgParts.push(`<text x="${x}" y="${y - 14}" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">${c.id}</text>`);
+          pathX = x; pathY = y;
+        });
+        svgParts.push(`<text x="${startX + spacingX}" y="${y - 24}" fill="${branchColor}" font-family="Fira Code, monospace" font-size="11">${name}</text>`);
+      } else {
+        svgParts.push(`<text x="${startX + 10}" y="${y}" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11">${name} (no new commits)</text>`);
+      }
+    });
+
+    graphSvg.innerHTML = svgParts.join('');
+  }
+
+  termInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = termInput.value;
+      termInput.value = '';
+      runCommand(val);
+    }
+  });
+
+  document.querySelectorAll('.term-hint-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      runCommand(btn.getAttribute('data-cmd'));
+    });
+  });
+
+  renderGraph();
+
+})();
+</script>
+
+</body>
+</html>

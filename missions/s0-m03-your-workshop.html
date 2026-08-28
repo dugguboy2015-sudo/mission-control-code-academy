@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 0.3: Your Workshop — Editor, Terminal, DevTools & Your AI Co-Pilot | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Mini terminal navigator ---------- */
+  .fsterm { background: #05070d; border: 1px solid var(--border-glow); border-radius: 10px; overflow: hidden; box-shadow: var(--glow-shadow); }
+  .fsterm-body { padding: 14px 16px; font-family: var(--font-code); font-size: 13px; min-height: 180px; max-height: 260px; overflow-y: auto; }
+  .fsterm-line { margin-bottom: 4px; color: var(--text-secondary); }
+  .fsterm-line .p { color: var(--accent); }
+  .fsterm-line .out { color: var(--text-muted); }
+  .fsterm-line .err { color: var(--danger); }
+  .fsterm-input-row { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border-glow); font-family: var(--font-code); font-size: 13px; }
+  .fsterm-input-row .p { color: var(--accent); font-weight: bold; }
+  #fsInput { flex: 1; background: transparent; border: none; outline: none; color: var(--text-primary); font-family: var(--font-code); font-size: 13px; }
+  .fs-hint-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px dashed var(--border-glow); }
+  .fs-hint-btn { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary); font-family: var(--font-code); font-size: 12px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+  .fs-hint-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .copilot-rule {
+    background: rgba(78, 225, 255, 0.06); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 18px 22px; margin: 16px 0; text-align: center;
+  }
+  .copilot-rule strong { display: block; font-family: var(--font-display); font-size: 15px; color: var(--accent); letter-spacing: 0.02em; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s0-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 0</div>
+    <h1>MISSION 0.3: YOUR WORKSHOP</h1>
+    <div class="subtitle">Editor, Files, Running Things, DevTools — and Your AI Co-Pilot</div>
+    <p class="briefing-line">Every engineer has a workshop — a set of tools they know cold, so well that using them stops taking any thought at all. Yours has four parts: a code editor where you write, a terminal where you run things, a browser's DevTools where you inspect what's actually happening, and — increasingly, for every engineer alive today — an AI coding assistant that can write code alongside you. This mission sets up all four, and teaches you the single most important rule for that last one before you ever touch it for real.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~35 MIN</span>
+      <span class="badge">🛠 EDITOR + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of your workshop as mission control itself. The <strong>editor</strong> is where you write the instructions — a text editor built specifically for code, with features a plain notepad doesn't have: syntax highlighting, error detection, and file management. The <strong>terminal</strong> is a direct, typed line to your computer's operating system — instead of clicking icons, you type exact commands, and it's faster and more powerful once it's familiar. <strong>DevTools</strong>, built into every browser, is your window into what a webpage is actually doing right now — you already used its Network tab in Mission 0.2.</p>
+      <p>The fourth tool is newer, and it changes how engineers work more than anything since the internet itself: an <strong>AI coding assistant</strong>. It can write working code from a plain-English description, explain a confusing error, or suggest a fix — often in seconds. Used well, it's the single biggest force-multiplier available to you. Used carelessly, it's how people ship code they don't understand and can't fix. This mission draws the line clearly, before you lean on it for anything real.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <rect x="30" y="20" width="150" height="70" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="105" y="50" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">EDITOR</text>
+          <text x="105" y="68" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">you write instructions</text>
+
+          <rect x="265" y="20" width="150" height="70" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="340" y="50" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">TERMINAL</text>
+          <text x="340" y="68" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">you run them</text>
+
+          <rect x="500" y="20" width="150" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="575" y="50" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">DEVTOOLS</text>
+          <text x="575" y="68" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">you inspect the result</text>
+
+          <rect x="180" y="140" width="320" height="60" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="340" y="167" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">AI CO-PILOT</text>
+          <text x="340" y="185" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">drafts fast — YOU still verify every line</text>
+
+          <path d="M105,90 L105,140 L180,160" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <path d="M575,90 L575,140 L500,160" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <path d="M340,90 L340,140" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="3 3"/>
+        </svg>
+        <div class="diagram-caption">Four tools, one workshop — the AI co-pilot feeds drafts into the same editor/terminal/DevTools loop you already control.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Your Code Editor</h3>
+        <p>A code editor (the most widely used free one is Visual Studio Code, "VS Code") is a text editor with superpowers built specifically for writing code: it colors your code by meaning (syntax highlighting — you've seen this in every code block in this academy), flags likely mistakes before you even run anything, and organizes your work into <strong>projects</strong> — a folder containing every file your app needs, kept together on purpose.</p>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          Always open your editor on the whole project <em>folder</em>, not a single file. Real projects are made of many files working together (HTML, CSS, JS, images) — your editor needs to see the whole folder to help you navigate between them and catch errors that span files.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Terminal</h3>
+        <p>The terminal takes typed commands instead of clicks. It sounds old-fashioned; it's actually faster and more precise once you know a handful of commands, and it's how you'll run programs, install tools, and use Git starting in Mission 3.1.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="pwd&#10;ls&#10;cd missions&#10;ls&#10;cd ..">COPY</button></div>
+          <pre><code><span class="kw">pwd</span>   <span class="comment"># print working directory — "where am I right now?"</span>
+<span class="kw">ls</span>    <span class="comment"># list — "what's in this folder?"</span>
+<span class="kw">cd</span> missions   <span class="comment"># change directory — "go into the missions folder"</span>
+<span class="kw">ls</span>
+<span class="kw">cd</span> ..    <span class="comment"># go back up one level</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Every terminal session has a "current location" in your file system, exactly like the browser's URL points at a specific address. <code>pwd</code> tells you where you are, <code>ls</code> tells you what's around you, and <code>cd</code> moves you — the three commands you'll type more than any others.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Windows uses different names for some commands</summary>
+          <p>On Windows' own Command Prompt, the list command is <code>dir</code> instead of <code>ls</code>, though <code>pwd</code>, <code>cd</code>, and <code>cd ..</code> work the same. If you install Git for Windows (which you'll need for Mission 3.1 anyway), it comes with "Git Bash," a terminal that uses the same commands shown here — that's what most of this academy assumes.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Browser DevTools</h3>
+        <p>You already used the Network tab in Mission 0.2. DevTools has two other tabs you'll live in constantly: <strong>Elements</strong> shows you the live DOM tree of the current page — you can click any element on screen and jump straight to its HTML — and <strong>Console</strong> shows error messages and lets you run JavaScript directly against the live page, which is exactly how the sandboxes in this academy work under the hood.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Your AI Co-Pilot — The One Rule That Matters</h3>
+        <p>An AI coding assistant is extremely capable and occasionally, confidently wrong. It can produce code that looks perfect, runs without errors, and still does the wrong thing — the same gap between "precise" and "correct" you explored with the Literal Robot in Mission 0.1, just harder to spot because the output is fluent, real code instead of an obviously silly action.</p>
+        <div class="copilot-rule">
+          <strong>THE RULE</strong>
+          AI writes the first draft. You are the engineer who reads it, understands it, tests it, and takes responsibility for it. If you can't explain what a piece of AI-written code does, you don't get to use it yet.
+        </div>
+        <p>This isn't caution for its own sake — it's the actual skill. A junior engineer who can prompt well, read critically, test thoroughly, and catch a subtly wrong suggestion is far more valuable than one who can only copy-paste. You'll practice this explicitly and often, starting with the checklist below and returning to it throughout the academy — it's Thread 1 of what it means to build AI-native systems, and it starts now, not in Sector 7.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A simulated terminal, but this time file-system-only — no Git yet. Practice <code>pwd</code>, <code>ls</code>, <code>cd</code>, and <code>mkdir</code> until they feel automatic.</p>
+
+      <div class="fsterm">
+        <div class="pane-header"><span>SIMULATED FILE SYSTEM</span><span>●</span></div>
+        <div class="fsterm-body" id="fsOutput"></div>
+        <div class="fsterm-input-row">
+          <span class="p" id="fsPrompt">~/academy $</span>
+          <input type="text" id="fsInput" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="fs-hint-row">
+          <button class="fs-hint-btn" data-cmd="pwd">pwd</button>
+          <button class="fs-hint-btn" data-cmd="ls">ls</button>
+          <button class="fs-hint-btn" data-cmd="cd missions">cd missions</button>
+          <button class="fs-hint-btn" data-cmd="cd ..">cd ..</button>
+          <button class="fs-hint-btn" data-cmd="mkdir sandbox">mkdir sandbox</button>
+          <button class="fs-hint-btn" data-cmd="reset">reset simulation</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Two parts — one in a real terminal on your own computer, one with a real AI assistant.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Open a real terminal on your computer and run <code>pwd</code> to see where it starts you</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Use <code>cd</code> to navigate into a folder you recognize, then <code>ls</code> to confirm what's inside it</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Create a new folder for this academy's projects using <code>mkdir</code></label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Ask an AI coding assistant for a short piece of code you don't already know (e.g. "JavaScript to reverse a string") — then, before running it, explain out loud or in writing exactly what every line does</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Find or invent one edge case the AI's answer might not handle (an empty input, a weird value) and check whether it actually breaks</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If you're not sure how to open a terminal: on Windows, search for "Git Bash" (after installing Git) or "PowerShell"; on Mac, search for "Terminal"; VS Code also has a built-in terminal panel under its View menu.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Deliberately ask the AI assistant a slightly ambiguous question — the way the Literal Robot was tricked in Mission 0.1 — and see if it makes a reasonable assumption, asks a clarifying question, or confidently guesses wrong. Note which one happened.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>pwd</code><span>Print your current location</span></div>
+        <div class="cheat-card"><code>ls</code><span>List what's in the current folder</span></div>
+        <div class="cheat-card"><code>cd folder</code><span>Move into a folder</span></div>
+        <div class="cheat-card"><code>cd ..</code><span>Move up one level</span></div>
+        <div class="cheat-card"><code>mkdir name</code><span>Create a new folder</span></div>
+        <div class="cheat-card">DevTools → Elements</div>
+        <div class="cheat-card">DevTools → Console<span>Run JS live, read errors</span></div>
+        <div class="cheat-card">AI Co-Pilot Rule<span>Read it, understand it, test it, own it</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Opening a single file in your editor instead of the whole project folder — you lose cross-file navigation.</li>
+          <li>Pasting AI-generated code straight into a real project without reading it first.</li>
+          <li>Assuming code that "runs without errors" must be correct — the Literal Robot lesson applies here too.</li>
+          <li>Never checking DevTools Console when something looks wrong — it's usually the very first thing to check.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — an AI assistant gives you code that runs with no errors. What does that tell you?</p>
+        <button class="quiz-btn" data-correct="false">The code is definitely correct</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — running without errors only means the syntax was valid, not that the logic does what you actually need.">Only that the syntax was valid — you still need to verify the logic yourself</button>
+        <button class="quiz-btn" data-correct="false">Nothing — you should never trust AI-generated code at all</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  let fs = null;
+  let path = [];
+
+  function freshFs() {
+    return {
+      name: "academy",
+      type: "dir",
+      children: {
+        "missions": { type: "dir", children: { "s0-m01-computers-and-code.html": { type: "file" }, "s0-m02-how-the-web-works.html": { type: "file" } } },
+        "assets": { type: "dir", children: { "academy.css": { type: "file" }, "academy.js": { type: "file" } } },
+        "index.html": { type: "file" },
+        "missions.json": { type: "file" },
+      },
+    };
+  }
+
+  function currentDir() {
+    let node = fs;
+    for (const p of path) node = node.children[p];
+    return node;
+  }
+
+  function promptText() {
+    return "~/academy" + (path.length ? "/" + path.join("/") : "") + " $";
+  }
+
+  const output = document.getElementById("fsOutput");
+  const promptEl = document.getElementById("fsPrompt");
+
+  function print(html, cls) {
+    const line = document.createElement("div");
+    line.className = "fsterm-line" + (cls ? " " + cls : "");
+    line.innerHTML = html;
+    output.appendChild(line);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function runCmd(raw) {
+    const cmd = raw.trim();
+    print(`<span class="p">${promptText()}</span> ${cmd}`);
+    if (cmd === "") return;
+    const parts = cmd.split(/\s+/);
+    const base = parts[0];
+
+    if (base === "pwd") {
+      print(`<span class="out">/${path.length ? "academy/" + path.join("/") : "academy"}</span>`);
+    } else if (base === "ls") {
+      const dir = currentDir();
+      const names = Object.keys(dir.children || {});
+      print(`<span class="out">${names.length ? names.join("   ") : "(empty)"}</span>`);
+    } else if (base === "cd") {
+      const target = parts[1];
+      if (!target || target === "~") { path = []; }
+      else if (target === "..") { path.pop(); }
+      else {
+        const dir = currentDir();
+        const next = dir.children && dir.children[target];
+        if (!next) { print(`<span class="err">cd: no such file or directory: ${target}</span>`); return; }
+        if (next.type !== "dir") { print(`<span class="err">cd: not a directory: ${target}</span>`); return; }
+        path.push(target);
+      }
+      promptEl.textContent = promptText();
+    } else if (base === "mkdir") {
+      const name = parts[1];
+      if (!name) { print(`<span class="err">mkdir: missing operand</span>`); return; }
+      currentDir().children[name] = { type: "dir", children: {} };
+      print(`<span class="out">created directory '${name}'</span>`);
+    } else if (base === "reset") {
+      fs = freshFs();
+      path = [];
+      promptEl.textContent = promptText();
+      print(`<span class="out">simulation reset</span>`);
+    } else {
+      print(`<span class="err">command not found: ${base}</span>`);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    fs = freshFs();
+    print(`<span class="out">Simulated file system ready. Try: pwd, ls, cd missions, cd .., mkdir sandbox</span>`);
+
+    const input = document.getElementById("fsInput");
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        runCmd(input.value);
+        input.value = "";
+      }
+    });
+
+    document.querySelectorAll(".fs-hint-btn").forEach((btn) => {
+      btn.addEventListener("click", () => runCmd(btn.getAttribute("data-cmd")));
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

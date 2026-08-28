@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+</head>
+<body class="accent-cyan">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <header class="dashboard-hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>CADET TRAINING RECORD</h1>
+    <p class="briefing-line">Ten sectors. Zero to AI-native. Every mission ends with something you can run, break, and fix yourself — and every capstone ships to a real, working URL.</p>
+    <div class="overall-progress">
+      <div class="progress-track"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
+      <div class="progress-label" id="overallLabel">0 / 0 MISSIONS COMPLETE</div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--success)"></span> Live &amp; ready</span>
+    <span><span class="dot" style="background:var(--text-muted)"></span> Planned</span>
+    <span><span class="dot" style="background:var(--accent-yellow)"></span> Capstone</span>
+    <span>🟢 Cadet &nbsp; 🟡 Officer &nbsp; 🔴 Commander</span>
+  </div>
+
+  <div class="sector-list" id="sectorList"></div>
+
+  <footer class="mission-footer" style="margin-top:56px;">
+    <p style="color:var(--text-muted);font-size:13px;">Progress is stored locally in this browser. <a href="CURRICULUM-PLAN.md" style="color:var(--text-secondary);">View the full curriculum plan ▸</a></p>
+  </footer>
+
+</div>
+
+<script src="assets/missions-data.js"></script>
+<script src="assets/academy.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const DIFF_ICON = { cadet: "🟢", officer: "🟡", commander: "🔴" };
+
+  function render() {
+    const manifest = window.MISSION_MANIFEST;
+    const progress = window.MCCA.getProgress();
+    const listEl = document.getElementById("sectorList");
+    listEl.innerHTML = "";
+
+    let totalMissions = 0;
+    let totalDone = 0;
+
+    manifest.sectors.forEach((sector) => {
+      const missions = sector.missions;
+      const doneInSector = missions.filter((m) => progress[m.id]).length;
+      totalMissions += missions.length;
+      totalDone += doneInSector;
+      const pct = Math.round((doneInSector / missions.length) * 100);
+
+      const card = document.createElement("div");
+      card.className = "sector-card accent-" + sector.accent;
+
+      const head = document.createElement("div");
+      head.className = "sector-head";
+      head.innerHTML = `
+        <div class="sector-num">S${sector.num}</div>
+        <div class="sector-head-text">
+          <h2>${sector.name}</h2>
+          <p>${sector.subtitle}</p>
+        </div>
+        <div class="sector-progress-mini">
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span>${doneInSector}/${missions.length}</span>
+        </div>
+        <div class="sector-caret">▾</div>
+      `;
+      head.addEventListener("click", () => card.classList.toggle("open"));
+
+      const rows = document.createElement("div");
+      rows.className = "mission-rows";
+      missions.forEach((m) => {
+        const isDone = !!progress[m.id];
+        const isPlanned = m.status === "planned";
+        const row = document.createElement(isPlanned ? "div" : "a");
+        row.className = "mission-row" + (isPlanned ? " is-planned" : "");
+        if (!isPlanned) row.href = m.file;
+        row.innerHTML = `
+          <div class="mission-check${isDone ? " done" : ""}">${isDone ? "✓" : ""}</div>
+          <div class="mission-row-text">
+            <span class="m-num">${m.num}</span><span class="m-title">${DIFF_ICON[m.difficulty] || ""} ${m.title}</span>
+            <span class="m-sub">${m.subtitle || ""}</span>
+          </div>
+          <div class="mission-row-tags">
+            ${m.capstone ? '<span class="tag-pill capstone">CAPSTONE</span>' : ""}
+            <span class="tag-pill ${isPlanned ? "planned" : "live"}">${isPlanned ? "PLANNED" : "LIVE"}</span>
+          </div>
+        `;
+        rows.appendChild(row);
+      });
+
+      card.appendChild(head);
+      card.appendChild(rows);
+      listEl.appendChild(card);
+    });
+
+    document.getElementById("overallFill").style.width = Math.round((totalDone / totalMissions) * 100) + "%";
+    document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    render();
+    // First sector open by default
+    const first = document.querySelector(".sector-card");
+    if (first) first.classList.add("open");
+  });
+})();
+</script>
+
+</body>
+</html>

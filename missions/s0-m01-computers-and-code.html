@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 0.1: How Computers & Code Think — Input, Process, Output | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Literal Robot simulator ---------- */
+  .robot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .robot-grid { grid-template-columns: 1fr; } }
+  #robotOutput .robot-line { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-glow); }
+  #robotOutput .robot-line:last-child { border-bottom: none; }
+  #robotOutput .robot-said { color: var(--text-muted); font-size: 12px; }
+  #robotOutput .robot-did { color: var(--accent-yellow); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s0-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 0</div>
+    <h1>MISSION 0.1: HOW COMPUTERS & CODE THINK</h1>
+    <div class="subtitle">Input, Process, Output — The Loop Behind Everything You'll Ever Build</div>
+    <p class="briefing-line">Before you write a single line of HTML, CSS, JavaScript, or Python, you need to understand what you're actually commanding. A computer isn't smart. It isn't creative. It doesn't guess what you meant. It is an extraordinarily fast, extraordinarily literal machine that follows exact instructions, one at a time, with zero room for "close enough." Every mission after this one is about learning to write those instructions precisely — in different languages, for different jobs. This mission is about understanding the machine itself.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~30 MIN</span>
+      <span class="badge">🛠 NO CODE YET</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture the bridge of a starship. The captain doesn't personally fly the ship, fire the engines, or adjust life support — the captain gives precise orders, and the ship's systems execute them exactly as given, instantly and without opinion. "Increase speed" is not a valid order; a real ship needs "increase thrust to 60%." A computer works the same way. The part of it that actually executes instructions — the <strong>CPU</strong> (Central Processing Unit) — is like the ship's systems: unbelievably fast, completely obedient, and totally incapable of filling in gaps you left out.</p>
+      <p>Every single thing a computer does, no matter how complex it looks on screen, breaks down into the same three-step loop: it takes in <strong>input</strong> (a key press, a mouse click, a sensor reading, a file), it <strong>processes</strong> that input by running through a precise sequence of instructions, and it produces <strong>output</strong> (text on a screen, a sound, a message sent across the internet, a motor turning). A video game, a search engine, a self-driving car, and the calculator app on your phone are all, underneath, this exact same loop — just running it millions of times per second, at massive scale.</p>
+      <p>A <strong>program</strong> — what you'll spend the rest of this academy learning to write — is simply a precise, ordered list of instructions that tells the computer exactly what to do during the "process" step. Get the order wrong, leave a step ambiguous, or forget an instruction the computer needs, and you won't get "close enough." You'll get exactly what you asked for — which is often not at all what you meant. That gap, between what you meant and what you precisely said, is where almost every bug in the history of software has come from.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="ipoarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+          <rect x="20" y="70" width="170" height="80" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="105" y="105" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="14" text-anchor="middle">INPUT</text>
+          <text x="105" y="125" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">key press, click,</text>
+          <text x="105" y="138" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">sensor, file</text>
+
+          <rect x="255" y="70" width="170" height="80" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="340" y="105" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="14" text-anchor="middle">PROCESS</text>
+          <text x="340" y="125" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">CPU runs your</text>
+          <text x="340" y="138" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">exact instructions</text>
+
+          <rect x="490" y="70" width="170" height="80" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="575" y="105" fill="#4dffb4" font-family="Fira Code, monospace" font-size="14" text-anchor="middle">OUTPUT</text>
+          <text x="575" y="125" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">screen, sound,</text>
+          <text x="575" y="138" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">network, motor</text>
+
+          <path d="M190,110 L255,110" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#ipoarrow)"/>
+          <path d="M425,110 L490,110" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#ipoarrow)"/>
+          <path d="M575,150 L575,190 L105,190 L105,150" fill="none" stroke="#4dffb4" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#ipoarrow)"/>
+          <text x="340" y="205" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">output often becomes the next input — the loop repeats</text>
+        </svg>
+        <div class="diagram-caption">Every computer system, from a calculator to a spacecraft's autopilot, is this loop — running fast, running often, but never anything more mysterious than this.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>What a Computer Actually Does</h3>
+        <p>Underneath everything — every app, every game, every website — a computer only ever does one primitive thing, over and over, billions of times per second: it reads an instruction, does exactly that instruction, and moves to the next one. Those instructions are ultimately just numbers (<strong>binary</strong> — 1s and 0s, "on" and "off" electrical states), but no one writes programs that way anymore. Instead, you'll write in a <strong>programming language</strong> — a human-readable language with strict, unambiguous rules — and a translator program converts it down to the instructions the CPU understands.</p>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          "The computer is thinking about it" is never actually what's happening. The computer is executing a list you wrote, in order, exactly as written. If something goes wrong, the bug is almost always in the list — not in the machine.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Programs Are Precise Instructions (Algorithms)</h3>
+        <p>An <strong>algorithm</strong> is just a precise, ordered sequence of steps to accomplish something — the word sounds intimidating, but you use algorithms constantly without noticing. "Boil water, add pasta, wait 9 minutes, drain" is an algorithm. The difference between that and a real program is precision: a computer can't handle "wait until it looks done" — it needs an exact, checkable condition, like "wait until 9 minutes have passed" or "wait until the temperature sensor reads 100°C."</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PSEUDOCODE</span><button class="copy-btn" data-copy="START&#10;SET fuel_level = read_fuel_sensor()&#10;IF fuel_level &lt; 10:&#10;    DISPLAY &quot;WARNING: LOW FUEL&quot;&#10;ELSE:&#10;    DISPLAY &quot;FUEL NOMINAL&quot;&#10;END">COPY</button></div>
+          <pre><code><span class="kw">START</span>
+<span class="kw">SET</span> fuel_level = <span class="fn">read_fuel_sensor</span>()
+<span class="kw">IF</span> fuel_level &lt; <span class="num">10</span>:
+    <span class="fn">DISPLAY</span> <span class="str">"WARNING: LOW FUEL"</span>
+<span class="kw">ELSE</span>:
+    <span class="fn">DISPLAY</span> <span class="str">"FUEL NOMINAL"</span>
+<span class="kw">END</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This is <strong>pseudocode</strong> — not a real programming language, just a way to write an algorithm's logic clearly before committing to any one language's exact syntax. Notice every step is unambiguous: there's an exact number (<code>10</code>), an exact condition (<code>&lt;</code>), and an exact action for both cases. You'll write real code just like this starting in Sector 1 and 2 — same logic, stricter grammar.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Data & Memory — Where the Computer Keeps Things</h3>
+        <p>A computer needs somewhere to hold values while it works — the fuel level it just read, a name the user typed, the score in a game. <strong>RAM</strong> (memory) is fast, temporary scratch space: it holds whatever the running program currently needs, and it empties out completely when the power goes off. <strong>Storage</strong> (a hard drive or SSD) is slower but permanent — it's where files, photos, and installed programs live even after you shut down.</p>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          When you write <code>let fuel = 84;</code> in a future mission, you're asking the computer to set aside a labeled slot of RAM and put <code>84</code> in it. That value exists only while your program is running — which is exactly why Sector 4 later teaches you how to deliberately save things to permanent storage when you need them to survive a reload.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Programming Languages & Translation</h3>
+        <p>You're about to learn several programming languages in this academy — HTML, CSS, JavaScript, and Python among them. Each one exists because it's well-suited to a particular job (HTML structures documents, Python is popular for data and AI, JavaScript runs natively in every browser). But underneath all of them, a translator program — a <strong>compiler</strong> or an <strong>interpreter</strong> — converts your human-readable code into the raw instructions the CPU actually runs.</p>
+        <details>
+          <summary>▸ DEEP DIVE: Compiled vs. interpreted languages</summary>
+          <p>A <strong>compiled</strong> language translates your entire program into machine instructions ahead of time, producing a standalone file that runs directly. An <strong>interpreted</strong> language translates and runs your code line-by-line, on the fly, each time it's executed. JavaScript and Python are both interpreted (technically, modern JavaScript engines do some clever just-in-time compiling for speed, but you can think of it as interpreted for now). This is why you can edit a JavaScript file and immediately see it run in the browser with no separate "build" step — you'll feel this directly in Mission 2.1's live sandbox.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Meet the Literal Robot. It follows instructions exactly as written — no assumptions, no "obviously you meant." Write step-by-step instructions for it to make a peanut butter sandwich, hit run, and watch it do <em>precisely</em> what you typed, not what you meant. This is the single most important habit in programming, and you're about to feel exactly why it matters.</p>
+
+      <div class="robot-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>YOUR INSTRUCTIONS</span><button class="run-btn" id="robotRunBtn">▶ RUN</button></div>
+          <textarea id="robotEditor" class="sandbox-editor" spellcheck="false" style="min-height:220px;"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>ROBOT LOG</span><span>●</span></div>
+          <div id="robotOutput" class="sandbox-output" style="max-height:280px;"></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="robotBtnReset">reset starter instructions</button>
+        <button class="console-btn" id="robotBtnVague">try: vague instructions (watch it fail)</button>
+        <button class="console-btn" id="robotBtnPrecise">try: precise instructions (watch it work)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the Command Console above, write a set of instructions for the Literal Robot to pour a glass of water, following every rule below.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Every step is numbered and happens in a specific order</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">No vague words like "some," "a bit," or "carefully" — every quantity or condition is exact</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">There is a clear, checkable stopping condition (not "until it's full enough," but a specific measurable point)</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Run it in the console and confirm the robot does exactly what you wrote — not what you meant</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">If it does something wrong or silly, fix your instructions (not the robot) until it works</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Try the "vague instructions" example button first to see the kind of mistake to avoid, then the "precise instructions" example to see the fix. Your own instructions should look like the precise style: numbered steps, exact amounts, exact stop conditions.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add an <code>IF</code> step in pseudocode style — for example, "IF the glass is already full, STOP before pouring." You won't run real conditionals until Mission 2.1, but writing the logic out precisely in plain English is exactly the skill that transfers directly into code.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>CPU</code><span>The chip that executes instructions, one at a time, exactly as given</span></div>
+        <div class="cheat-card"><code>RAM (Memory)</code><span>Fast, temporary scratch space — empties when power is lost</span></div>
+        <div class="cheat-card"><code>Storage</code><span>Slower, permanent space for files that survive a shutdown</span></div>
+        <div class="cheat-card"><code>Algorithm</code><span>A precise, ordered sequence of steps to accomplish something</span></div>
+        <div class="cheat-card"><code>Program</code><span>An algorithm written in a language a computer can run</span></div>
+        <div class="cheat-card"><code>Input → Process → Output</code><span>The universal loop behind every computer system</span></div>
+        <div class="cheat-card"><code>Compiler / Interpreter</code><span>Translates human-readable code into machine instructions</span></div>
+        <div class="cheat-card"><code>Bug</code><span>The gap between what you meant and what you precisely said</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Assuming the computer will "figure out" an ambiguous instruction — it will do something exact and probably unwanted instead.</li>
+          <li>Confusing RAM (temporary) with storage (permanent) — this bites people the first time they lose unsaved work.</li>
+          <li>Thinking "the code isn't working" means the computer made a mistake — it almost always means the instructions were imprecise.</li>
+          <li>Skipping the "what's the exact stop condition?" question when planning a step that repeats.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — if you give a computer an ambiguous instruction, what does it do?</p>
+        <button class="quiz-btn" data-correct="false">It pauses and asks you to clarify</button>
+        <button class="quiz-btn" data-correct="false">It guesses what you probably meant and does that</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — computers don't guess. They do something exact based on the ambiguous instruction as literally written, which is almost never what you intended.">It does something exact and specific — just probably not what you wanted</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `1. Get two slices of bread
+2. Open the peanut butter jar
+3. Spread peanut butter on one slice
+4. Put the slices together
+5. Put the sandwich on a plate`;
+
+  const VAGUE = `1. Get some bread
+2. Put a bit of peanut butter on it
+3. Make it into a sandwich`;
+
+  const PRECISE = `1. Place 2 slices of bread on the plate
+2. Open the peanut butter jar
+3. Using the knife, spread 1 tablespoon of peanut butter evenly on slice 1
+4. Place slice 2 on top of slice 1, matching the edges
+5. STOP — the sandwich is complete`;
+
+  const output = document.getElementById("robotOutput");
+
+  function say(text) {
+    const line = document.createElement("div");
+    line.className = "robot-said";
+    line.textContent = "ROBOT READS: " + text;
+    output.appendChild(line);
+  }
+  function did(text) {
+    const line = document.createElement("div");
+    line.className = "robot-did";
+    line.textContent = "ROBOT DOES: " + text;
+    output.appendChild(line);
+  }
+  function wrap(said, done) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "robot-line";
+    output.appendChild(wrapper);
+    const saidEl = document.createElement("div");
+    saidEl.className = "robot-said";
+    saidEl.textContent = "ROBOT READS: " + said;
+    const didEl = document.createElement("div");
+    didEl.className = "robot-did";
+    didEl.textContent = "ROBOT DOES: " + done;
+    wrapper.appendChild(saidEl);
+    wrapper.appendChild(didEl);
+  }
+
+  function literalInterpret(line) {
+    const lower = line.toLowerCase();
+    if (/\bsome\b/.test(lower)) {
+      return "Grabs a completely arbitrary, possibly enormous amount — \"some\" has no exact meaning to a literal machine.";
+    }
+    if (/\ba bit\b|\ba little\b/.test(lower)) {
+      return "Interprets \"a bit\" as exactly one bit (a single unit) — technically followed, comically wrong.";
+    }
+    if (/\bcarefully\b|\bnicely\b|\bproperly\b/.test(lower)) {
+      return "Ignores the word entirely — there's no measurable instruction here, so nothing changes about how it acts.";
+    }
+    if (/^\d+\.\s*/.test(line) === false && line.trim() !== "") {
+      return "Executes it anyway, but with no step number, its place in the sequence is unclear — steps may run out of order.";
+    }
+    if (/make it into a sandwich/.test(lower)) {
+      return "Has no defined action for \"make it into\" — halts with ERROR: undefined operation.";
+    }
+    if (/stop/.test(lower)) {
+      return "Halts execution immediately, exactly as instructed.";
+    }
+    return "Executes the step exactly as written, no more and no less.";
+  }
+
+  function runRobot() {
+    output.innerHTML = "";
+    const lines = document.getElementById("robotEditor").value.split("\n").filter((l) => l.trim() !== "");
+    if (lines.length === 0) {
+      const line = document.createElement("div");
+      line.className = "robot-did";
+      line.textContent = "ROBOT DOES: nothing — no instructions were given.";
+      output.appendChild(line);
+      return;
+    }
+    lines.forEach((line) => {
+      wrap(line.trim(), literalInterpret(line.trim()));
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const editor = document.getElementById("robotEditor");
+    editor.value = STARTER;
+    runRobot();
+
+    document.getElementById("robotRunBtn").addEventListener("click", runRobot);
+    document.getElementById("robotBtnReset").addEventListener("click", () => { editor.value = STARTER; runRobot(); });
+    document.getElementById("robotBtnVague").addEventListener("click", () => { editor.value = VAGUE; runRobot(); });
+    document.getElementById("robotBtnPrecise").addEventListener("click", () => { editor.value = PRECISE; runRobot(); });
+  });
+})();
+</script>
+
+</body>
+</html>
