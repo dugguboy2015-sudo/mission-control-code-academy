@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.5: Arrays & Array Methods — map / filter / reduce | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Pipeline Visualizer ---------- */
+  .pipeline-widget { margin: 22px 0 28px; }
+  .pipeline-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stage-arrow { color: var(--text-muted); font-family: var(--font-code); font-size: 14px; }
+  .stage-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .stage-btn:hover:not(:disabled) { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .stage-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+  .stage-btn.stage-done { border-color: var(--success); color: var(--success); opacity: 0.7; }
+  .pipeline-spacer { flex: 1; }
+
+  .pipeline-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    padding: 24px 18px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    min-height: 140px;
+  }
+
+  .pipeline-card {
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    border-radius: 10px;
+    padding: 12px 10px;
+    width: 128px;
+    text-align: center;
+    transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .pipeline-card .card-name {
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .pipeline-card .card-value {
+    font-family: var(--font-code);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+  }
+  .pipeline-card.card-mapped { border-color: var(--accent-pink); }
+  .pipeline-card.card-mapped .card-value { color: var(--accent-pink); }
+  .pipeline-card.card-kept { border-color: var(--accent-green); box-shadow: 0 0 14px rgba(77,255,180,0.3); }
+  .pipeline-card.card-kept .card-value { color: var(--accent-green); }
+  .pipeline-card.card-filtered { opacity: 0.28; transform: scale(0.92); border-color: var(--border-glow); }
+  .pipeline-card.card-filtered .card-value { color: var(--text-muted); text-decoration: line-through; }
+  .pipeline-card.card-collapsing { opacity: 0; transform: scale(0.3) translateY(24px); }
+
+  .pipeline-result-card {
+    background: linear-gradient(160deg, #16332a, #0e2019);
+    border: 2px solid var(--accent-green);
+    border-radius: 12px;
+    padding: 22px 36px;
+    text-align: center;
+    box-shadow: 0 0 26px rgba(77,255,180,0.35);
+    animation: pipelinePop 0.4s ease;
+  }
+  @keyframes pipelinePop { from { opacity: 0; transform: scale(0.55); } to { opacity: 1; transform: scale(1); } }
+  .pipeline-result-card .card-name {
+    font-family: var(--font-display); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--text-secondary); margin-bottom: 8px;
+  }
+  .pipeline-result-card .card-value { font-family: var(--font-code); font-size: 30px; font-weight: 700; color: var(--accent-green); }
+
+  .pipeline-status { margin-top: 14px; color: var(--text-muted); font-size: 13.5px; min-height: 20px; line-height: 1.5; }
+
+  .pipeline-code {
+    margin-top: 14px;
+    background: var(--bg-panel-alt);
+    border-left: 3px solid var(--accent-cyan);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--font-code);
+    font-size: 13px;
+  }
+  .pipeline-code .code-line { padding: 2px 0; color: var(--text-secondary); opacity: 0.4; transition: opacity 0.2s ease, color 0.2s ease; }
+  .pipeline-code .code-line.base { opacity: 0.75; }
+  .pipeline-code .code-line.active { opacity: 1; color: var(--text-primary); }
+  .pipeline-code .code-line.done { opacity: 0.65; color: var(--accent-green); }
+
+  .pipeline-trace {
+    margin-top: 10px;
+    font-family: var(--font-code);
+    font-size: 13px;
+    color: var(--accent-green);
+    min-height: 20px;
+    word-break: break-word;
+  }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.5: ARRAYS & ARRAY METHODS</h1>
+    <div class="subtitle">map / filter / reduce</div>
+    <p class="briefing-line">In Mission 2.3 you looped over arrays by hand — an index, a condition, a running total, all wired together with <code>for</code> statements. That works, but professionals rarely write it that way anymore. Arrays come with built-in methods that express exactly what you mean — "transform every item," "keep only the ones that match," "combine everything into one value" — without a single hand-rolled loop. This is the mission where a cargo manifest becomes something you can reshape, narrow down, and total up in three clean, readable steps.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture a cargo manifest for your ship — a list of every crate in the hold, each with a name and a weight. A loading officer might need to answer three completely different questions about that same list: "What's the handling cost of each item?" (a <strong>transformation</strong>), "Which items are actually over the weight limit?" (a <strong>narrowing-down</strong>), and "What's the total cost across everything that made the cut?" (a <strong>combination</strong> into one number). Those three questions map almost exactly onto JavaScript's three most important array methods: <code>.map()</code>, <code>.filter()</code>, and <code>.reduce()</code>.</p>
+      <p>What makes these methods worth learning — beyond just being shorter than a <code>for</code> loop — is that each one has exactly one job, and its name tells you what that job is. When you read <code>cargo.filter(...)</code> in someone else's code, you instantly know a shorter list comes out the other end. A hand-written loop could be doing literally anything; you'd have to read every line to find out. That readability is a real engineering advantage, not just style preference.</p>
+      <p>They also share a quieter but equally important trait: <code>.map()</code>, <code>.filter()</code>, <code>.reduce()</code>, and <code>.find()</code> all return something <strong>new</strong> and leave the original array exactly as it was. That's called <strong>immutability</strong>, and it's the opposite of methods like <code>.push()</code> and <code>.sort()</code>, which change the original array in place. Knowing which category a method falls into will save you from some genuinely confusing bugs later.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 860 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;height:auto;">
+          <defs>
+            <marker id="pipeA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+            <marker id="pipeB" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#ff6ec7"/>
+            </marker>
+            <marker id="pipeC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4dffb4"/>
+            </marker>
+          </defs>
+
+          <!-- source array -->
+          <text x="33" y="24" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">cargo (6)</text>
+          <rect x="20" y="38" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="20" y="68" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="20" y="98" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="20" y="128" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="20" y="158" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <rect x="20" y="188" width="26" height="24" rx="4" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+
+          <path d="M50,125 L130,125" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#pipeA)"/>
+
+          <!-- MAP stage -->
+          <rect x="130" y="30" width="150" height="190" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="205" y="20" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">.map()</text>
+          <rect x="150" y="48" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <rect x="150" y="78" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <rect x="150" y="108" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <rect x="150" y="138" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <rect x="150" y="168" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <rect x="150" y="198" width="26" height="24" rx="4" fill="#131a2e" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="235" y="205" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">same 6, new values</text>
+
+          <path d="M280,125 L360,125" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#pipeB)"/>
+
+          <!-- FILTER stage -->
+          <rect x="360" y="30" width="150" height="190" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="435" y="20" fill="#ffe66d" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">.filter()</text>
+          <rect x="380" y="48" width="26" height="24" rx="4" fill="#131a2e" stroke="#4dffb4" stroke-width="1.5"/>
+          <rect x="380" y="78" width="26" height="24" rx="4" fill="none" stroke="#3a4568" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+          <rect x="380" y="108" width="26" height="24" rx="4" fill="#131a2e" stroke="#4dffb4" stroke-width="1.5"/>
+          <rect x="380" y="138" width="26" height="24" rx="4" fill="none" stroke="#3a4568" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+          <rect x="380" y="168" width="26" height="24" rx="4" fill="#131a2e" stroke="#4dffb4" stroke-width="1.5"/>
+          <rect x="380" y="198" width="26" height="24" rx="4" fill="none" stroke="#3a4568" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+          <text x="465" y="205" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">3 survive, 3 dropped</text>
+
+          <path d="M510,125 L590,125" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#pipeC)"/>
+
+          <!-- REDUCE stage -->
+          <rect x="590" y="85" width="250" height="80" rx="10" fill="#16332a" stroke="#4dffb4" stroke-width="2"/>
+          <text x="715" y="112" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">.reduce()</text>
+          <text x="715" y="140" fill="#e8ecfb" font-family="Fira Code, monospace" font-size="18" font-weight="bold" text-anchor="middle">585 CR</text>
+        </svg>
+        <div class="diagram-caption">One array, three stages: map transforms every item (still 6), filter drops the ones that don't qualify (down to 3), and reduce collapses what's left into a single answer.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Array Recap — Index, Length, Push & Pop</h3>
+        <p>An array is an ordered list, indexed from <code>0</code>. Before the fancier methods, three basics are worth re-grounding: reading by index, checking <code>.length</code>, and the two mutating methods that add or remove from the <em>end</em> of the array.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const cargo = [&#10;  { name: &quot;Oxygen Tanks&quot;, weight: 40 },&#10;  { name: &quot;Water Rations&quot;, weight: 25 },&#10;  { name: &quot;Titanium Plating&quot;, weight: 90 },&#10;  { name: &quot;Medical Kit&quot;, weight: 12 },&#10;  { name: &quot;Spare Thrusters&quot;, weight: 65 },&#10;  { name: &quot;Seed Vault&quot;, weight: 18 }&#10;];&#10;&#10;console.log(cargo[0]);       // { name: &quot;Oxygen Tanks&quot;, weight: 40 }&#10;console.log(cargo.length);   // 6&#10;&#10;cargo.push({ name: &quot;Spare Boots&quot;, weight: 4 }); // mutates! length is now 7&#10;cargo.pop();                                     // mutates! back to 6">COPY</button></div>
+          <pre><code><span class="kw">const</span> cargo = [
+  { name: <span class="str">"Oxygen Tanks"</span>, weight: <span class="num">40</span> },
+  { name: <span class="str">"Water Rations"</span>, weight: <span class="num">25</span> },
+  { name: <span class="str">"Titanium Plating"</span>, weight: <span class="num">90</span> },
+  { name: <span class="str">"Medical Kit"</span>, weight: <span class="num">12</span> },
+  { name: <span class="str">"Spare Thrusters"</span>, weight: <span class="num">65</span> },
+  { name: <span class="str">"Seed Vault"</span>, weight: <span class="num">18</span> }
+];
+
+console.<span class="fn">log</span>(cargo[<span class="num">0</span>]);       <span class="comment">// { name: "Oxygen Tanks", weight: 40 }</span>
+console.<span class="fn">log</span>(cargo.length);   <span class="comment">// 6</span>
+
+cargo.<span class="fn">push</span>({ name: <span class="str">"Spare Boots"</span>, weight: <span class="num">4</span> }); <span class="comment">// mutates! length is now 7</span>
+cargo.<span class="fn">pop</span>();                                     <span class="comment">// mutates! back to 6</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>cargo[0]</code> reads the first object by index. <code>.length</code> is a live property, not a method — no parentheses. <code>.push()</code> and <code>.pop()</code> both change <code>cargo</code> directly, in place — no new array is created. That's the mutating category. Everything in the rest of this mission is the opposite category: it hands back a new array (or value) and leaves <code>cargo</code> alone.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>.map() — Transform Every Item</h3>
+        <p><code>.map()</code> runs a function on every item in an array and collects whatever that function <code>return</code>s into a brand-new array — always the <strong>same length</strong> as the original, one output per input.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const costs = cargo.map(function (item) {&#10;  return item.weight * 3; // 3 credits per kg&#10;});&#10;&#10;console.log(costs); // [120, 75, 270, 36, 195, 54]&#10;console.log(cargo.length === costs.length); // true — always true for map">COPY</button></div>
+          <pre><code><span class="kw">const</span> costs = cargo.<span class="fn">map</span>(<span class="kw">function</span> (item) {
+  <span class="kw">return</span> item.weight * <span class="num">3</span>; <span class="comment">// 3 credits per kg</span>
+});
+
+console.<span class="fn">log</span>(costs); <span class="comment">// [120, 75, 270, 36, 195, 54]</span>
+console.<span class="fn">log</span>(cargo.length === costs.length); <span class="comment">// true — always true for map</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The callback function runs once per item, in order. Whatever it <code>return</code>s becomes the matching item in the new array. <code>cargo</code> still has 6 objects with their original <code>weight</code> property untouched — <code>costs</code> is a completely separate array of 6 plain numbers.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>.filter() — Keep What Matches</h3>
+        <p><code>.filter()</code> also runs a function on every item, but that function must return <code>true</code> or <code>false</code>. Items where it returns <code>true</code> survive into the new array; everything else is left out. The result can be shorter than the original — or just as long, or even empty.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const heavyCargo = cargo.filter(function (item) {&#10;  return item.weight > 50;&#10;});&#10;&#10;console.log(heavyCargo.length); // 2&#10;console.log(heavyCargo.map(item =&gt; item.name)); // [&quot;Titanium Plating&quot;, &quot;Spare Thrusters&quot;]">COPY</button></div>
+          <pre><code><span class="kw">const</span> heavyCargo = cargo.<span class="fn">filter</span>(<span class="kw">function</span> (item) {
+  <span class="kw">return</span> item.weight &gt; <span class="num">50</span>;
+});
+
+console.<span class="fn">log</span>(heavyCargo.length); <span class="comment">// 2</span>
+console.<span class="fn">log</span>(heavyCargo.<span class="fn">map</span>(item =&gt; item.name)); <span class="comment">// ["Titanium Plating", "Spare Thrusters"]</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Only <code>weight &gt; 50</code> is checked, one item at a time: Oxygen Tanks (40) fails, Titanium Plating (90) passes, and so on. <code>heavyCargo</code> ends up with just the 2 items that passed — <code>cargo</code> is still 6 items, unchanged. Notice the second line chains a <code>.map()</code> straight onto the filtered result — that's completely normal; every array method returns an array, so you can immediately call another method on it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>.reduce() — Combining Everything</h3>
+        <p>This is the one that trips people up, so slow down here. <code>.reduce()</code> walks through the array item by item, carrying a single running value — the <strong>accumulator</strong> — from one iteration to the next, and hands back whatever that accumulator ends up as after the last item.</p>
+        <p>It takes two arguments: a callback shaped <code>(accumulator, currentItem) =&gt; newAccumulator</code>, and a starting value for the accumulator. That second argument matters — always pass it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const totalWeight = cargo.reduce(function (total, item) {&#10;  return total + item.weight;&#10;}, 0); // 0 is the starting value&#10;&#10;console.log(totalWeight); // 250">COPY</button></div>
+          <pre><code><span class="kw">const</span> totalWeight = cargo.<span class="fn">reduce</span>(<span class="kw">function</span> (total, item) {
+  <span class="kw">return</span> total + item.weight;
+}, <span class="num">0</span>); <span class="comment">// 0 is the starting value</span>
+
+console.<span class="fn">log</span>(totalWeight); <span class="comment">// 250</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED — TRACING THE ACCUMULATOR</strong>
+          <code>total</code> starts at <code>0</code> (the second argument). Then, for each item, it becomes the <code>return</code> value of the callback — carried forward into the next call:
+          <br><br>
+          start: <code>total = 0</code><br>
+          Oxygen Tanks (40): <code>total = 0 + 40 = 40</code><br>
+          Water Rations (25): <code>total = 40 + 25 = 65</code><br>
+          Titanium Plating (90): <code>total = 65 + 90 = 155</code><br>
+          Medical Kit (12): <code>total = 155 + 12 = 167</code><br>
+          Spare Thrusters (65): <code>total = 167 + 65 = 232</code><br>
+          Seed Vault (18): <code>total = 232 + 18 = 250</code>
+          <br><br>
+          After the last item, <code>.reduce()</code> hands back the final accumulator — <code>250</code> — as a plain number, not an array. If you skip the <code>0</code>, JavaScript uses the array's first item as the starting accumulator instead and starts looping from the <em>second</em> item — which works for simple sums but silently breaks the moment your accumulator needs to be a different shape than your items (like building a total from objects). Always pass the starting value explicitly.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Chaining all three into one pipeline</summary>
+          <p>Because every one of these methods returns an array (except <code>.reduce()</code>, which returns whatever you build), you can chain them directly, one after another, in a single expression — no intermediate variables needed:</p>
+          <div class="code-block">
+            <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const totalSurcharge = cargo&#10;  .map(item =&gt; item.weight * 3)     // -&gt; [120, 75, 270, 36, 195, 54]&#10;  .filter(cost =&gt; cost &gt; 100)      // -&gt; [120, 270, 195]&#10;  .reduce((sum, cost) =&gt; sum + cost, 0); // -&gt; 585&#10;&#10;console.log(totalSurcharge); // 585">COPY</button></div>
+            <pre><code><span class="kw">const</span> totalSurcharge = cargo
+  .<span class="fn">map</span>(item =&gt; item.weight * <span class="num">3</span>)     <span class="comment">// -&gt; [120, 75, 270, 36, 195, 54]</span>
+  .<span class="fn">filter</span>(cost =&gt; cost &gt; <span class="num">100</span>)      <span class="comment">// -&gt; [120, 270, 195]</span>
+  .<span class="fn">reduce</span>((sum, cost) =&gt; sum + cost, <span class="num">0</span>); <span class="comment">// -&gt; 585</span>
+
+console.<span class="fn">log</span>(totalSurcharge); <span class="comment">// 585</span></code></pre>
+          </div>
+          <p>Read it top to bottom like an assembly line: raw items go in the top, a single number comes out the bottom. This is exactly the pipeline you'll drive by hand in the Command Console below.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>.find() & Immutability</h3>
+        <p><code>.find()</code> returns the <strong>first item</strong> that matches a condition — not an array, just the item itself (or <code>undefined</code> if nothing matches). Use it when you want exactly one thing, not a filtered list.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const medKit = cargo.find(function (item) {&#10;  return item.name === &quot;Medical Kit&quot;;&#10;});&#10;&#10;console.log(medKit); // { name: &quot;Medical Kit&quot;, weight: 12 }&#10;&#10;const missing = cargo.find(item =&gt; item.name === &quot;Laser Cannon&quot;);&#10;console.log(missing); // undefined — always check for this">COPY</button></div>
+          <pre><code><span class="kw">const</span> medKit = cargo.<span class="fn">find</span>(<span class="kw">function</span> (item) {
+  <span class="kw">return</span> item.name === <span class="str">"Medical Kit"</span>;
+});
+
+console.<span class="fn">log</span>(medKit); <span class="comment">// { name: "Medical Kit", weight: 12 }</span>
+
+<span class="kw">const</span> missing = cargo.<span class="fn">find</span>(item =&gt; item.name === <span class="str">"Laser Cannon"</span>);
+console.<span class="fn">log</span>(missing); <span class="comment">// undefined — always check for this</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.find()</code> stops looking the moment it finds a match — it doesn't scan the whole array like <code>.filter()</code> does. And here's the immutability payoff for the whole mission: after every <code>.map()</code>, <code>.filter()</code>, <code>.reduce()</code>, and <code>.find()</code> call above, <code>cargo.length</code> is still <code>6</code>. None of them ever touched the original array — only <code>.push()</code>, <code>.pop()</code>, and mutating methods like <code>.sort()</code> do that. When you're not sure which category a method falls into, check the docs — it's one of the most common sources of "why did my original data change?!" bugs.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The <strong>Pipeline Visualizer</strong> below runs the exact chain from the deep dive, one stage at a time — click MAP, then FILTER, then REDUCE, and watch the cargo cards actually transform, thin out, and collapse into a final number. Then drop into the free-form JS sandbox underneath and write your own array-method code against a live "ship display."</p>
+
+      <div class="pipeline-widget">
+        <div class="pipeline-controls">
+          <button class="stage-btn" id="btnMap">① MAP</button>
+          <span class="stage-arrow">→</span>
+          <button class="stage-btn" id="btnFilter" disabled>② FILTER</button>
+          <span class="stage-arrow">→</span>
+          <button class="stage-btn" id="btnReduce" disabled>③ REDUCE</button>
+          <span class="pipeline-spacer"></span>
+          <button class="console-btn" id="btnPipelineReset">↺ reset manifest</button>
+        </div>
+
+        <div class="pipeline-stage" id="pipelineStage"></div>
+
+        <p class="pipeline-status" id="pipelineStatus"></p>
+
+        <div class="pipeline-code">
+          <div class="code-line base">cargo</div>
+          <div class="code-line" id="codeLineMap">&nbsp;&nbsp;.map(item =&gt; item.weight * 3)</div>
+          <div class="code-line" id="codeLineFilter">&nbsp;&nbsp;.filter(cost =&gt; cost &gt; 100)</div>
+          <div class="code-line" id="codeLineReduce">&nbsp;&nbsp;.reduce((sum, cost) =&gt; sum + cost, 0);</div>
+        </div>
+        <div class="pipeline-trace" id="pipelineTrace"></div>
+      </div>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: map + filter a roster</button>
+        <button class="console-btn" id="btnExample2">try: reduce a total</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above (or a real HTML file with a <code>&lt;script&gt;</code> tag), work with a crew roster instead of cargo.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create an array called <code>crew</code> with at least 4 objects, each having <code>name</code>, <code>role</code>, and <code>xp</code> (a number)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Use <code>.map()</code> to build a new array of just the crew members' names
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>.filter()</code> to narrow <code>crew</code> down to only members with <code>xp</code> above a threshold you choose
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Use <code>.find()</code> to locate one specific crew member by <code>name</code> or <code>role</code>
+          <span class="sub">Log the result — and try searching for someone who doesn't exist to see <code>undefined</code></span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Use <code>.reduce()</code> — with an explicit starting value — to total everyone's <code>xp</code> into one number
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Log <code>crew.length</code> at the very end and confirm it's still your original count — proof that none of the above mutated it
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your reduce total comes out wrong or crashes, check two things: did you actually pass a starting value as the second argument (usually <code>0</code>), and does your callback <code>return</code> the new accumulator on every path? A callback with curly braces that forgets <code>return</code> silently hands back <code>undefined</code>, and <code>undefined + anything</code> turns your total into <code>NaN</code>.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Chain all three into one pipeline, the way the Pipeline Visualizer does: <code>crew.map(...).filter(...).reduce(...)</code> in a single expression that goes straight from the full roster to one final number — no intermediate variables.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>arr.map(fn)</code><span>New array, same length, transformed values</span></div>
+        <div class="cheat-card"><code>arr.filter(fn)</code><span>New array, only items where fn returns true</span></div>
+        <div class="cheat-card"><code>arr.reduce(fn, start)</code><span>Collapse the array into one accumulated value</span></div>
+        <div class="cheat-card"><code>arr.find(fn)</code><span>First matching item, or undefined — never an array</span></div>
+        <div class="cheat-card"><code>arr.push() / .pop()</code><span>Mutate the original array in place</span></div>
+        <div class="cheat-card"><code>arr.sort()</code><span>Also mutates — sorts the original in place</span></div>
+        <div class="cheat-card">immutability</div>
+        <div class="cheat-card" style="margin-top:-14px;"><code>&nbsp;</code><span>map/filter/reduce/find never change the original</span></div>
+        <div class="cheat-card"><code>arr.length</code><span>Live property — no parentheses</span></div>
+        <div class="cheat-card"><code>a.map(f).filter(g)</code><span>Methods chain because each returns an array</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Calling <code>.reduce()</code> without a starting value and getting a confusing result (or a crash on an empty array).</li>
+          <li>Expecting <code>.map()</code> or <code>.filter()</code> to change the original array — they don't; you have to store what they return.</li>
+          <li>Forgetting <code>return</code> inside a multi-line <code>{ }</code> callback, silently turning every result into <code>undefined</code>.</li>
+          <li>Using <code>.find()</code> when you actually wanted <code>.filter()</code> (or vice versa) — one gives one item, the other gives an array.</li>
+          <li>Losing track of what the accumulator holds mid-reduce — when in doubt, trace it step by step like the Field Manual did.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does <code>[].reduce((total, item) => total + item.weight, 0)</code> return when called on an <strong>empty</strong> array?</p>
+        <button class="quiz-btn" data-correct="false">undefined</button>
+        <button class="quiz-btn" data-correct="false">an error is thrown</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — with no items to loop over, reduce just hands back the starting value untouched.">0</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Pipeline Visualizer ---------------- */
+  const CARGO = [
+    { name: "Oxygen Tanks", weight: 40 },
+    { name: "Water Rations", weight: 25 },
+    { name: "Titanium Plating", weight: 90 },
+    { name: "Medical Kit", weight: 12 },
+    { name: "Spare Thrusters", weight: 65 },
+    { name: "Seed Vault", weight: 18 },
+  ];
+  const RATE = 3;       // credits per kg, used by the MAP stage
+  const THRESHOLD = 100; // CR, used by the FILTER stage
+
+  const stageEl = document.getElementById("pipelineStage");
+  const statusEl = document.getElementById("pipelineStatus");
+  const traceEl = document.getElementById("pipelineTrace");
+  const lineMap = document.getElementById("codeLineMap");
+  const lineFilter = document.getElementById("codeLineFilter");
+  const lineReduce = document.getElementById("codeLineReduce");
+  const btnMap = document.getElementById("btnMap");
+  const btnFilter = document.getElementById("btnFilter");
+  const btnReduce = document.getElementById("btnReduce");
+  const btnPipelineReset = document.getElementById("btnPipelineReset");
+
+  function buildCard(item, valueText, extraClass) {
+    const card = document.createElement("div");
+    card.className = "pipeline-card" + (extraClass ? " " + extraClass : "");
+    const nameEl = document.createElement("div");
+    nameEl.className = "card-name";
+    nameEl.textContent = item.name;
+    const valEl = document.createElement("div");
+    valEl.className = "card-value";
+    valEl.textContent = valueText;
+    card.appendChild(nameEl);
+    card.appendChild(valEl);
+    return card;
+  }
+
+  function updateCodeLines(stage) {
+    [lineMap, lineFilter, lineReduce].forEach((el) => el.classList.remove("active", "done"));
+    if (stage >= 1) lineMap.classList.add(stage === 1 ? "active" : "done");
+    if (stage >= 2) lineFilter.classList.add(stage === 2 ? "active" : "done");
+    if (stage >= 3) lineReduce.classList.add("active");
+  }
+
+  function renderStage0() {
+    stageEl.innerHTML = "";
+    CARGO.forEach((item) => stageEl.appendChild(buildCard(item, item.weight + " KG")));
+    statusEl.textContent = "Cargo manifest loaded — 6 items, each with just a name and a weight. Click MAP to start the pipeline.";
+    traceEl.textContent = "";
+    updateCodeLines(0);
+  }
+
+  function renderStage1() {
+    stageEl.innerHTML = "";
+    CARGO.forEach((item) => {
+      const cost = item.weight * RATE;
+      stageEl.appendChild(buildCard(item, cost + " CR", "card-mapped"));
+    });
+    statusEl.textContent = ".map() ran — every item now shows a computed handling cost (weight × " + RATE + " CR/kg) instead of its raw weight. Still 6 items: map only transforms, it never removes.";
+    updateCodeLines(1);
+  }
+
+  function renderStage2() {
+    stageEl.innerHTML = "";
+    CARGO.forEach((item) => {
+      const cost = item.weight * RATE;
+      const kept = cost > THRESHOLD;
+      stageEl.appendChild(buildCard(item, cost + " CR", kept ? "card-mapped card-kept" : "card-mapped card-filtered"));
+    });
+    statusEl.textContent = ".filter() ran — only items over " + THRESHOLD + " CR survive (green). The dimmed ones are shown here so you can see what got cut, but a real .filter() call actually removes them from the array it returns.";
+    updateCodeLines(2);
+  }
+
+  function renderStage3() {
+    const keptEls = Array.from(stageEl.querySelectorAll(".card-kept"));
+    const filteredEls = Array.from(stageEl.querySelectorAll(".card-filtered"));
+
+    filteredEls.forEach((el) => { el.style.transition = "opacity 0.35s ease"; el.style.opacity = "0"; });
+    keptEls.forEach((el, i) => { setTimeout(() => el.classList.add("card-collapsing"), i * 150); });
+
+    const keptItems = CARGO
+      .map((item) => ({ name: item.name, cost: item.weight * RATE }))
+      .filter((item) => item.cost > THRESHOLD);
+
+    let acc = 0;
+    let traceStr = String(acc);
+    keptItems.forEach((item) => {
+      const next = acc + item.cost;
+      traceStr += " → " + acc + " + " + item.cost + " = " + next;
+      acc = next;
+    });
+
+    const settleDelay = keptEls.length * 150 + 450;
+    setTimeout(() => {
+      stageEl.innerHTML = "";
+      const resultCard = document.createElement("div");
+      resultCard.className = "pipeline-result-card";
+      const nameEl = document.createElement("div");
+      nameEl.className = "card-name";
+      nameEl.textContent = "TOTAL SURCHARGE";
+      const valEl = document.createElement("div");
+      valEl.className = "card-value";
+      valEl.textContent = acc + " CR";
+      resultCard.appendChild(nameEl);
+      resultCard.appendChild(valEl);
+      stageEl.appendChild(resultCard);
+      traceEl.textContent = traceStr;
+    }, settleDelay);
+
+    statusEl.textContent = ".reduce() ran — the surviving items collapsed into one running total. The original cargo array back in memory still has all 6 items, completely untouched.";
+    updateCodeLines(3);
+  }
+
+  function resetAll() {
+    renderStage0();
+    [btnMap, btnFilter, btnReduce].forEach((b) => b.classList.remove("stage-done"));
+    btnMap.disabled = false;
+    btnFilter.disabled = true;
+    btnReduce.disabled = true;
+  }
+
+  btnMap.addEventListener("click", () => {
+    renderStage1();
+    btnMap.disabled = true;
+    btnMap.classList.add("stage-done");
+    btnFilter.disabled = false;
+  });
+  btnFilter.addEventListener("click", () => {
+    renderStage2();
+    btnFilter.disabled = true;
+    btnFilter.classList.add("stage-done");
+    btnReduce.disabled = false;
+  });
+  btnReduce.addEventListener("click", () => {
+    renderStage3();
+    btnReduce.disabled = true;
+    btnReduce.classList.add("stage-done");
+  });
+  btnPipelineReset.addEventListener("click", resetAll);
+
+  resetAll();
+
+  /* ---------------- JS Sandbox ---------------- */
+  const STARTER = `// Try me — then hit RUN
+const cargo = [
+  { name: "Oxygen Tanks", weight: 40 },
+  { name: "Water Rations", weight: 25 },
+  { name: "Titanium Plating", weight: 90 }
+];
+
+const heavyItems = cargo.filter(item => item.weight > 30);
+console.log(heavyItems.length + " items over 30kg");
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = heavyItems.length + " HEAVY ITEMS";`;
+
+  const EXAMPLE_MAP_FILTER = `const crew = [
+  { name: "Nova", role: "Pilot", xp: 340 },
+  { name: "Kip", role: "Engineer", xp: 120 },
+  { name: "Zed", role: "Medic", xp: 275 },
+  { name: "Rho", role: "Navigator", xp: 90 }
+];
+
+const names = crew.map(member => member.name);
+console.log("Roster: " + names.join(", "));
+
+const veterans = crew.filter(member => member.xp > 200);
+console.log(veterans.length + " veterans (xp > 200)");
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = veterans.length + " VETERANS ABOARD";`;
+
+  const EXAMPLE_REDUCE = `const crew = [
+  { name: "Nova", role: "Pilot", xp: 340 },
+  { name: "Kip", role: "Engineer", xp: 120 },
+  { name: "Zed", role: "Medic", xp: 275 },
+  { name: "Rho", role: "Navigator", xp: 90 }
+];
+
+const totalXp = crew.reduce(function (total, member) {
+  return total + member.xp;
+}, 0);
+
+console.log("Total crew XP: " + totalXp);
+console.log("Original crew.length is still: " + crew.length);
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = "TOTAL XP: " + totalXp;`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_MAP_FILTER },
+        { btnId: "btnExample2", code: EXAMPLE_REDUCE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

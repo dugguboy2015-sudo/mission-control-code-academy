@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.6: Objects & Structured Data — Modeling the Real World in Code | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s2-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.6: OBJECTS & STRUCTURED DATA</h1>
+    <div class="subtitle">Modeling the Real World in Code</div>
+    <p class="briefing-line">Arrays are great at one thing: ordered lists of similar stuff. But a starship isn't a list — it's a name, a fuel level, a crew roster, and a bundle of subsystems, all different <em>kinds</em> of information glued together. Objects are how you model that. Every real system you'll ever build — a user profile, a game character, an API response — is, underneath, just an object. This is the mission where your data starts looking like the things it represents.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of an array as a row of numbered cargo crates in the hold: <code>crates[0]</code>, <code>crates[1]</code>, <code>crates[2]</code>. It's fast and simple, but it only tells you a crate's <em>position</em> — not what's actually inside it. If you want to know the crew member's name, their role, and their clearance level, tracking three separate arrays and hoping the indexes line up is a bug waiting to happen.</p>
+      <p>An <strong>object</strong> is a labeled control panel instead of a numbered crate. Every switch on the panel has a name printed above it — <code>fuel</code>, <code>name</code>, <code>online</code> — and you flip or read a switch by its name, not by counting from the left. That's the whole idea: objects store <strong>key/value pairs</strong>, where each key is a label and each value is whatever data lives behind it — a number, a string, an array, even another object.</p>
+      <p>Most things worth modeling in the real world are exactly this shape: named attributes, not a numbered sequence. A ship has a name and a fuel level, not a "first thing" and a "second thing." Once you can nest objects and arrays inside each other, you can represent almost anything — a whole starship, a game character's inventory, a user's profile — as one connected structure you can pass around, save, and inspect.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="objarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- outer ship object -->
+          <rect x="20" y="20" width="600" height="280" rx="12" fill="#141b30" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="38" y="44" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" font-weight="bold">ship = &#123; &#8230; &#125;</text>
+
+          <!-- name -->
+          <rect x="40" y="60" width="150" height="46" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="115" y="80" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">name:</text>
+          <text x="115" y="96" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">"Voyager-9"</text>
+
+          <!-- fuel -->
+          <rect x="210" y="60" width="150" height="46" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="285" y="80" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">fuel:</text>
+          <text x="285" y="96" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">84</text>
+
+          <!-- crew array -->
+          <rect x="380" y="60" width="220" height="90" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5"/>
+          <text x="490" y="80" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">crew: [ &#8230; ]  (array of objects)</text>
+          <rect x="392" y="90" width="90" height="48" rx="6" fill="#141b30" stroke="#ffe66d" stroke-width="1"/>
+          <text x="437" y="108" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">name: "Nova"</text>
+          <text x="437" y="122" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">role: "Pilot"</text>
+          <rect x="490" y="90" width="90" height="48" rx="6" fill="#141b30" stroke="#ffe66d" stroke-width="1"/>
+          <text x="535" y="108" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">name: "Kip"</text>
+          <text x="535" y="122" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">role: "Engineer"</text>
+
+          <!-- systems nested object -->
+          <rect x="40" y="130" width="300" height="150" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="190" y="152" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">systems: &#123; &#8230; &#125;  (nested object)</text>
+
+          <rect x="56" y="164" width="120" height="40" rx="6" fill="#141b30" stroke="#ff6ec7" stroke-width="1"/>
+          <text x="116" y="188" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">shields: true</text>
+
+          <rect x="192" y="164" width="130" height="40" rx="6" fill="#141b30" stroke="#ff6ec7" stroke-width="1"/>
+          <text x="257" y="188" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">engines: "warp"</text>
+
+          <rect x="56" y="216" width="266" height="46" rx="6" fill="#141b30" stroke="#ff6ec7" stroke-width="1"/>
+          <text x="189" y="236" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">checkStatus() &#123; &#8230; &#125;</text>
+          <text x="189" y="252" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">a method — a function stored as a value</text>
+
+          <text x="470" y="290" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">access: ship.name · ship["fuel"] · ship.crew[0].name · ship.systems.checkStatus()</text>
+        </svg>
+        <div class="diagram-caption">One <code>ship</code> object, three kinds of nesting: a plain value (<code>name</code>), an array of objects (<code>crew</code>), and a whole sub-object with its own method (<code>systems</code>). Boxes inside boxes — that's structured data.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Object Literals & Property Access</h3>
+        <p>An <strong>object literal</strong> is written with curly braces: a comma-separated list of <code>key: value</code> pairs. Each key becomes a named <strong>property</strong> you can read back out.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const ship = {&#10;  name: &quot;Voyager-9&quot;,&#10;  fuel: 84,&#10;  online: true&#10;};&#10;&#10;console.log(ship.name);   // &quot;Voyager-9&quot;&#10;console.log(ship.fuel);   // 84&#10;&#10;ship.fuel = 91;           // update an existing property&#10;ship.destination = &quot;Kepler-442b&quot;; // add a brand-new property">COPY</button></div>
+          <pre><code><span class="kw">const</span> ship = {
+  name: <span class="str">"Voyager-9"</span>,
+  fuel: <span class="num">84</span>,
+  online: <span class="kw">true</span>
+};
+
+console.<span class="fn">log</span>(ship.name);   <span class="comment">// "Voyager-9"</span>
+console.<span class="fn">log</span>(ship.fuel);   <span class="comment">// 84</span>
+
+ship.fuel = <span class="num">91</span>;           <span class="comment">// update an existing property</span>
+ship.destination = <span class="str">"Kepler-442b"</span>; <span class="comment">// add a brand-new property</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>ship</code> is declared with <code>const</code> — but that only locks the <em>variable</em> from being reassigned to a completely different object. The properties <em>inside</em> it are still fully editable, which is why <code>ship.fuel = 91</code> works fine. Reading a property that was never set (like <code>ship.captain</code> here) doesn't crash — it quietly returns <code>undefined</code>.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Dot Notation vs. Bracket Notation</h3>
+        <p><code>ship.name</code> — dot notation — is what you'll write most of the time: short and readable. But dot notation only works when the key is a valid identifier typed literally into your code. <strong>Bracket notation</strong>, <code>ship["name"]</code>, does the same lookup but takes the key as a string — which means the key can come from a <em>variable</em>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const ship = { name: &quot;Voyager-9&quot;, fuel: 84 };&#10;&#10;// dot notation: key is typed literally&#10;console.log(ship.fuel);&#10;&#10;// bracket notation: key can be a variable&#10;const field = &quot;fuel&quot;;&#10;console.log(ship[field]);       // still 84 — looked up dynamically&#10;&#10;// bracket notation is REQUIRED for weird keys&#10;const stats = { &quot;hull integrity&quot;: 100, &quot;2ndOfficer&quot;: &quot;Kip&quot; };&#10;console.log(stats[&quot;hull integrity&quot;]); // has a space — dot notation can&#39;t do this&#10;console.log(stats[&quot;2ndOfficer&quot;]);     // starts with a digit — same problem">COPY</button></div>
+          <pre><code><span class="kw">const</span> ship = { name: <span class="str">"Voyager-9"</span>, fuel: <span class="num">84</span> };
+
+<span class="comment">// dot notation: key is typed literally</span>
+console.<span class="fn">log</span>(ship.fuel);
+
+<span class="comment">// bracket notation: key can be a variable</span>
+<span class="kw">const</span> field = <span class="str">"fuel"</span>;
+console.<span class="fn">log</span>(ship[field]);       <span class="comment">// still 84 — looked up dynamically</span>
+
+<span class="comment">// bracket notation is REQUIRED for weird keys</span>
+<span class="kw">const</span> stats = { <span class="str">"hull integrity"</span>: <span class="num">100</span>, <span class="str">"2ndOfficer"</span>: <span class="str">"Kip"</span> };
+console.<span class="fn">log</span>(stats[<span class="str">"hull integrity"</span>]); <span class="comment">// has a space — dot notation can't do this</span>
+console.<span class="fn">log</span>(stats[<span class="str">"2ndOfficer"</span>]);     <span class="comment">// starts with a digit — same problem</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The key rule: use dot notation when you know the exact property name while writing the code. Switch to bracket notation the moment the key is stored in a variable, computed, or contains characters (spaces, a leading digit, dashes) that would make <code>ship.hull integrity</code> a syntax error. "Pick a property based on user input or a loop variable" is the single most common reason to reach for brackets.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Nesting Objects & Arrays</h3>
+        <p>Values inside an object aren't limited to strings and numbers — they can be arrays, or other objects, nested as deep as you need. Chain <code>.</code> and <code>[]</code> together to drill down to whatever you're after.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const ship = {&#10;  name: &quot;Voyager-9&quot;,&#10;  crew: [&#10;    { name: &quot;Nova&quot;, role: &quot;Pilot&quot; },&#10;    { name: &quot;Kip&quot;, role: &quot;Engineer&quot; }&#10;  ],&#10;  systems: {&#10;    shields: true,&#10;    engines: &quot;warp&quot;&#10;  }&#10;};&#10;&#10;console.log(ship.crew[0].name);        // &quot;Nova&quot; — array index, then property&#10;console.log(ship.systems.engines);     // &quot;warp&quot; — object inside an object&#10;ship.crew[1].role = &quot;Chief Engineer&quot;;  // update a property deep inside">COPY</button></div>
+          <pre><code><span class="kw">const</span> ship = {
+  name: <span class="str">"Voyager-9"</span>,
+  crew: [
+    { name: <span class="str">"Nova"</span>, role: <span class="str">"Pilot"</span> },
+    { name: <span class="str">"Kip"</span>, role: <span class="str">"Engineer"</span> }
+  ],
+  systems: {
+    shields: <span class="kw">true</span>,
+    engines: <span class="str">"warp"</span>
+  }
+};
+
+console.<span class="fn">log</span>(ship.crew[<span class="num">0</span>].name);        <span class="comment">// "Nova" — array index, then property</span>
+console.<span class="fn">log</span>(ship.systems.engines);     <span class="comment">// "warp" — object inside an object</span>
+ship.crew[<span class="num">1</span>].role = <span class="str">"Chief Engineer"</span>;  <span class="comment">// update a property deep inside</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>ship.crew</code> is an array, so it needs an index (<code>[0]</code>) to pick one crew member — then <code>.name</code> reads a property off <em>that</em> object. Read it left to right: "go into <code>ship</code>, then <code>crew</code>, then item <code>0</code>, then <code>name</code>." This is exactly how you'll model most real data — a whole ship in a single connected structure instead of a dozen loose variables.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Methods & <code>this</code></h3>
+        <p>When a property's value is a function, it's called a <strong>method</strong> — a piece of behavior that belongs to the object. Inside a regular (non-arrow) method, the special keyword <code>this</code> refers to "the object the method was called on," which lets the method read the object's own other properties.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const ship = {&#10;  name: &quot;Voyager-9&quot;,&#10;  fuel: 84,&#10;  systems: {&#10;    shields: true,&#10;    checkStatus: function() {&#10;      return this.shields ? &quot;SHIELDS UP&quot; : &quot;SHIELDS DOWN&quot;;&#10;    }&#10;  }&#10;};&#10;&#10;console.log(ship.systems.checkStatus()); // &quot;SHIELDS UP&quot;">COPY</button></div>
+          <pre><code><span class="kw">const</span> ship = {
+  name: <span class="str">"Voyager-9"</span>,
+  fuel: <span class="num">84</span>,
+  systems: {
+    shields: <span class="kw">true</span>,
+    checkStatus: <span class="kw">function</span>() {
+      <span class="kw">return</span> <span class="kw">this</span>.shields ? <span class="str">"SHIELDS UP"</span> : <span class="str">"SHIELDS DOWN"</span>;
+    }
+  }
+};
+
+console.<span class="fn">log</span>(ship.systems.<span class="fn">checkStatus</span>()); <span class="comment">// "SHIELDS UP"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Inside <code>checkStatus</code>, <code>this</code> means "<code>ship.systems</code> — whatever object I was called on" — so <code>this.shields</code> reads that same object's <code>shields</code> property without needing to hardcode the name <code>ship.systems.shields</code>. The basic rule for now: use a regular <code>function() {}</code> for a method that needs <code>this</code>, because an arrow function doesn't get its own <code>this</code> the same way and will usually fail here. You'll go deeper on arrow-function <code>this</code> later — for now, "regular function for methods that use <code>this</code>" is a safe default.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Iterating: <code>Object.keys()</code>, <code>Object.values()</code>, <code>Object.entries()</code></h3>
+        <p>Objects don't have indexes, so you can't <code>for</code>-loop over them the way you loop over an array. Instead, JavaScript gives you three built-in helpers that turn an object's contents into arrays you <em>can</em> loop over.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const systems = { shields: true, engines: &quot;warp&quot;, hull: 97 };&#10;&#10;console.log(Object.keys(systems));    // [&quot;shields&quot;, &quot;engines&quot;, &quot;hull&quot;]&#10;console.log(Object.values(systems));  // [true, &quot;warp&quot;, 97]&#10;console.log(Object.entries(systems)); // [[&quot;shields&quot;,true], [&quot;engines&quot;,&quot;warp&quot;], [&quot;hull&quot;,97]]&#10;&#10;for (const [key, value] of Object.entries(systems)) {&#10;  console.log(key + &quot;: &quot; + value);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">const</span> systems = { shields: <span class="kw">true</span>, engines: <span class="str">"warp"</span>, hull: <span class="num">97</span> };
+
+console.<span class="fn">log</span>(Object.<span class="fn">keys</span>(systems));    <span class="comment">// ["shields", "engines", "hull"]</span>
+console.<span class="fn">log</span>(Object.<span class="fn">values</span>(systems));  <span class="comment">// [true, "warp", 97]</span>
+console.<span class="fn">log</span>(Object.<span class="fn">entries</span>(systems)); <span class="comment">// [["shields",true], ["engines","warp"], ["hull",97]]</span>
+
+<span class="kw">for</span> (<span class="kw">const</span> [key, value] <span class="kw">of</span> Object.<span class="fn">entries</span>(systems)) {
+  console.<span class="fn">log</span>(key + <span class="str">": "</span> + value);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>Object.keys()</code> gives you just the property names, <code>Object.values()</code> gives you just the data, and <code>Object.entries()</code> gives you both together as <code>[key, value]</code> pairs — perfect for a <code>for...of</code> loop when you need to know which property you're looking at, not just its value.
+        </div>
+      </div>
+
+      <details>
+        <summary>▸ DEEP DIVE: Objects and JSON</summary>
+        <p>An object literal like <code>{ name: "Voyager-9", fuel: 84 }</code> looks almost identical to <strong>JSON</strong> (JavaScript Object Notation) — the format nearly every API on the internet uses to send data around, which you'll meet properly in Sector 4. JSON is stricter, though: every key must be wrapped in double quotes (<code>"name"</code>, not <code>name</code>), values can't be functions or <code>undefined</code>, and trailing commas aren't allowed. Think of JSON as "object literal syntax, but locked down enough that any programming language can read it" — which is exactly why it works as a universal format for shipping data between a server and a browser.</p>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real JavaScript sandbox. Build and manipulate a nested <code>ship</code> object on the left and hit Run — <code>console.log()</code> output appears in the console panel, and you can update the "ship display" element on the right exactly like a real page.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: dynamic key lookup</button>
+        <button class="console-btn" id="btnExample2">try: iterate with entries()</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above, build a small nested object modeling a space station and put everything from this mission to work.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a <code>station</code> object with at least a <code>name</code> and one nested object inside it (like <code>station.power</code> with its own properties)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Give <code>station</code> a <code>modules</code> array containing at least two objects (each with its own <code>name</code> property)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Access one property using <strong>bracket notation with a variable</strong> — store a key name in a variable first, then read <code>station[thatVariable]</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Add a method to <code>station</code> (or one of its nested objects) that uses <code>this</code> to read another property and returns a status string
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Use <code>Object.keys()</code> or <code>Object.entries()</code> to loop over one of your nested objects and <code>console.log()</code> each property
+          <span class="sub">A <code>for...of</code> loop over <code>Object.entries(...)</code> is the cleanest way to get both the key and the value</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Update the ship display's <code>textContent</code> with a message built from at least two different properties of your object
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If <code>this</code> inside your method returns <code>undefined</code> instead of the value you expected, check that the method is written as <code>function() { ... }</code> rather than an arrow function — and that you're calling it as <code>object.method()</code>, not storing the function alone in a variable and calling it separately.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write a function that takes any object and a key name as parameters, and returns whether that key exists on the object (hint: compare against <code>Object.keys(obj)</code>, or look up <code>in</code> the object). Test it against a key that exists and one that doesn't.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>{ key: value }</code><span>Object literal syntax</span></div>
+        <div class="cheat-card"><code>obj.key</code><span>Dot notation — key typed literally</span></div>
+        <div class="cheat-card"><code>obj["key"]</code><span>Bracket notation — key as a string or variable</span></div>
+        <div class="cheat-card"><code>obj.key = value</code><span>Add or update a property</span></div>
+        <div class="cheat-card"><code>obj.a.b[0].c</code><span>Chain dot/bracket to drill into nested data</span></div>
+        <div class="cheat-card"><code>method() { this... }</code><span>A function stored as a property; <code>this</code> = the calling object</span></div>
+        <div class="cheat-card"><code>Object.keys(obj)</code><span>Array of an object's property names</span></div>
+        <div class="cheat-card"><code>Object.values(obj)</code><span>Array of an object's values</span></div>
+        <div class="cheat-card"><code>Object.entries(obj)</code><span>Array of <code>[key, value]</code> pairs</span></div>
+        <div class="cheat-card"><code>obj.missing</code><span>Returns <code>undefined</code>, not an error</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing <code>obj.2ndOfficer</code> or <code>obj.hull integrity</code> — a key with a space or a leading digit needs bracket notation with quotes: <code>obj["2ndOfficer"]</code>.</li>
+          <li>Using an arrow function for a method that needs <code>this</code> — arrow functions don't bind <code>this</code> to the object the way a regular <code>function() {}</code> does, so it silently reads the wrong value (or none).</li>
+          <li>Expecting a missing property to throw an error — <code>obj.doesNotExist</code> quietly returns <code>undefined</code> instead, which can hide bugs until you try to use that <code>undefined</code> value later.</li>
+          <li>Trying to <code>for</code>-loop over an object directly like it's an array — objects have no numeric index, so reach for <code>Object.keys()</code>/<code>Object.values()</code>/<code>Object.entries()</code> first.</li>
+          <li>Forgetting that copying an object with <code>=</code> copies a <em>reference</em>, not a duplicate — changing the copy changes the original too, since both variables point at the same object in memory.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — <code>const stats = { "hull integrity": 100 };</code> Which line correctly reads that property?</p>
+        <button class="quiz-btn" data-correct="false">stats.hull integrity</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the key contains a space, so dot notation can't parse it; bracket notation with the key as a quoted string is required.">stats["hull integrity"]</button>
+        <button class="quiz-btn" data-correct="false">stats.hull_integrity</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// Build the ship object, then hit RUN
+const ship = {
+  name: "Voyager-9",
+  fuel: 84,
+  crew: [
+    { name: "Nova", role: "Pilot" },
+    { name: "Kip", role: "Engineer" }
+  ],
+  systems: {
+    shields: true,
+    engines: "warp",
+    checkStatus: function() {
+      return this.shields ? "SHIELDS UP" : "SHIELDS DOWN";
+    }
+  }
+};
+
+// dot notation
+console.log(ship.name);
+
+// bracket notation with a nested array + object
+console.log(ship.crew[0].name + " — " + ship.crew[0].role);
+
+// calling a method — uses "this" inside systems
+console.log(ship.systems.checkStatus());
+
+// iterate over the systems object
+for (const [key, value] of Object.entries(ship.systems)) {
+  if (typeof value !== "function") {
+    console.log(key + ": " + value);
+  }
+}
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = ship.name + " — " + ship.systems.checkStatus();
+display.style.color = "#4dffb4";`;
+
+  const EXAMPLE_DYNAMIC_KEY = `const ship = {
+  name: "Voyager-9",
+  fuel: 84,
+  destination: "Kepler-442b"
+};
+
+// the key comes from a variable — bracket notation is required
+const fields = ["name", "fuel", "destination"];
+
+for (const field of fields) {
+  console.log(field + " -> " + ship[field]);
+}
+
+const display = document.querySelector("#shipDisplay");
+let chosen = fields[1];
+display.textContent = chosen.toUpperCase() + ": " + ship[chosen];
+display.style.color = "#4ee1ff";`;
+
+  const EXAMPLE_ENTRIES = `const systems = {
+  shields: true,
+  engines: "warp",
+  hull: 97,
+  lifeSupport: "nominal"
+};
+
+console.log("Keys:", Object.keys(systems));
+console.log("Values:", Object.values(systems));
+
+const display = document.querySelector("#shipDisplay");
+let lines = [];
+
+for (const [key, value] of Object.entries(systems)) {
+  console.log(key + " => " + value);
+  lines.push(key + ": " + value);
+}
+
+display.textContent = lines.join(" | ");
+display.style.color = "#ffe66d";`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_DYNAMIC_KEY },
+        { btnId: "btnExample2", code: EXAMPLE_ENTRIES },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

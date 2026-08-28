@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.8: Design Track — Visual Hierarchy & Accessibility — Color, Type, Spacing, A11y Basics | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Contrast Checker + Before/After ---------- */
+  .contrast-lab { display: grid; grid-template-columns: 260px 1fr; gap: 18px; margin-top: 16px; }
+  @media (max-width: 760px) { .contrast-lab { grid-template-columns: 1fr; } }
+
+  .lab-controls { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 16px; }
+  .color-field { margin-bottom: 18px; }
+  .color-field:last-child { margin-bottom: 0; }
+  .color-field label { display: block; font-family: var(--font-display); font-size: 11px; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+  .color-row { display: flex; align-items: center; gap: 10px; }
+  .color-row input[type="color"] {
+    width: 42px; height: 34px; padding: 2px; border: 1px solid var(--border-glow);
+    border-radius: 6px; background: var(--bg-panel); cursor: pointer;
+  }
+  .hex-input {
+    flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--border-glow);
+    color: var(--text-primary); font-family: var(--font-code); font-size: 13px;
+    padding: 7px 9px; border-radius: 6px;
+  }
+  .hex-input:focus, .color-row input[type="color"]:focus { outline: 1px solid var(--accent); }
+  .preset-btn {
+    display: flex; align-items: center; gap: 9px; width: 100%; margin-bottom: 6px;
+    background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 6px;
+    padding: 7px 9px; cursor: pointer; font-family: var(--font-code); font-size: 11.5px;
+    color: var(--text-secondary); text-align: left; transition: border-color 0.15s ease;
+  }
+  .preset-btn:last-child { margin-bottom: 0; }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .preset-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+
+  .lab-preview {
+    background: #05070d; border: 1px solid var(--border-glow); border-radius: 10px;
+    box-shadow: var(--glow-shadow); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .lab-sample {
+    flex: 1; min-height: 170px; display: flex; align-items: center; justify-content: center;
+    padding: 30px; text-align: center; transition: background-color 0.15s ease;
+  }
+  .lab-sample .sample-line.large { font-size: 24px; font-weight: 700; margin-bottom: 10px; font-family: var(--font-display); }
+  .lab-sample .sample-line.normal { font-size: 16px; line-height: 1.5; max-width: 360px; }
+  .lab-readout {
+    padding: 14px 18px; border-top: 1px solid var(--border-glow); background: rgba(255,255,255,0.03);
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  }
+  .ratio-value { font-family: var(--font-code); font-size: 22px; color: var(--text-primary); }
+  .ratio-value .ratio-unit { font-size: 12px; color: var(--text-muted); font-family: var(--font-body); margin-left: 4px; }
+  .aa-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .aa-badge {
+    font-family: var(--font-display); font-size: 10.5px; letter-spacing: 0.04em; padding: 6px 10px;
+    border-radius: 6px; border: 1px solid var(--border-glow); color: var(--text-muted); white-space: nowrap;
+  }
+  .aa-badge.pass { color: var(--success); border-color: rgba(77,255,180,0.4); background: rgba(77,255,180,0.08); }
+  .aa-badge.fail { color: var(--danger); border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+
+  .ba-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 32px 0 14px; }
+  .ba-header h3 { margin: 0; font-size: 16px; color: var(--accent); font-family: var(--font-display); }
+  .view-toggle { display: flex; gap: 6px; }
+  .view-toggle button {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    font-family: var(--font-code); font-size: 11.5px; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .view-toggle button.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+
+  .before-after-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .before-after-grid.mode-before .demo-good,
+  .before-after-grid.mode-after .demo-bad { display: none; }
+  @media (max-width: 760px) { .before-after-grid { grid-template-columns: 1fr; } }
+
+  .demo-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border-glow); }
+  .demo-card-label {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; padding: 9px 14px;
+    background: rgba(255,255,255,0.04);
+  }
+  .demo-bad .demo-card-label { color: var(--danger); }
+  .demo-good .demo-card-label { color: var(--success); }
+  .demo-card-label .ratio-tag { font-family: var(--font-code); letter-spacing: 0; font-size: 11px; }
+  .demo-card-label .ratio-tag.pass { color: var(--success); }
+  .demo-card-label .ratio-tag.fail { color: var(--danger); }
+
+  .demo-bad-body { padding: 6px; background: #b3b3b3; }
+  .bad-eyebrow { font-size: 17px; color: #8c8c8c; margin: 0 0 3px; font-family: var(--font-body); }
+  .bad-title { font-size: 13px; font-weight: 400; color: #8c8c8c; margin: 0 0 9px; font-family: var(--font-body); }
+  .bad-sub { font-size: 21px; color: #8c8c8c; margin: 0 0 2px; font-weight: 700; }
+  .bad-text { font-size: 15px; color: #8c8c8c; margin: 7px 0 5px; line-height: 1.05; }
+  .bad-btn { font-size: 11px; padding: 3px 5px; background: #8c8c8c; color: #b3b3b3; border: none; margin-top: 4px; cursor: default; }
+
+  .demo-good-body { padding: 24px; background: var(--bg-panel-alt); }
+  .good-eyebrow { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.08em; color: var(--text-secondary); margin: 0 0 8px; }
+  .good-title { font-size: 22px; font-weight: 700; color: var(--accent-cyan); margin: 0 0 8px; font-family: var(--font-display); }
+  .good-sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 16px; }
+  .good-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin: 0 0 16px; }
+  .good-btn { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.05em; padding: 8px 16px; background: var(--accent-cyan); color: var(--bg-void); border: none; border-radius: 6px; font-weight: 700; cursor: default; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m08">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.8: DESIGN TRACK — VISUAL HIERARCHY & ACCESSIBILITY</h1>
+    <div class="subtitle">Color, Type, Spacing, A11y Basics</div>
+    <p class="briefing-line">You already know how to write CSS — selectors, the box model, Flexbox. This mission is different. It's not about new syntax; it's about judgment. Given a blank stylesheet, what type sizes do you actually pick? What colors are safe to put text on? How much space goes between things, and why? This is the layer of decisions that separates a page that merely renders from one that actually works — for everyone looking at it, not just you, on your monitor, in good light.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A ship's dashboard doesn't label everything the same size in the same color and let the pilot sort it out. In an emergency, the hull-breach warning is enormous, red, and dead center. The current stardate is tiny, gray, and tucked in a corner. Nobody reads either label to know which one matters — the dashboard tells you before you read a single word, using nothing but size, color, weight, and position. That's <strong>visual hierarchy</strong>: the deliberate use of design properties to communicate importance before comprehension even starts.</p>
+      <p>Now imagine that same dashboard rendered in pale gray text on a slightly-less-pale gray background, because it looked "clean" on the design studio's calibrated monitor. Put a pilot in bright sunlight, or hand it to someone with low vision, and that dashboard has failed — not aesthetically, functionally. It doesn't matter how elegant the layout was in the mockup if the person who needs it can't actually read it under real conditions. That's <strong>accessibility</strong>, and it is not a separate, optional checkbox bolted onto "real" design — it's the same job. A design that only works for the designer, on the designer's screen, isn't finished.</p>
+      <p>Sectors 1.3 through 1.7 taught you the mechanics: how to select things, how the box model works, how to arrange boxes with Flexbox, how to animate them. All of that is <em>how</em>. This mission is about <em>what</em> — the small set of decisions (type scale, contrast, spacing rhythm) that, made well, quietly make every page you build from here on look and feel intentional instead of accidental.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="scalearrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/>
+            </marker>
+          </defs>
+          <line x1="30" y1="215" x2="650" y2="215" stroke="#2e3d63" stroke-width="1.5"/>
+
+          <rect x="60" y="165" width="110" height="50" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="115" y="202" text-anchor="middle" font-family="Fira Code, monospace" font-size="16" fill="#4ee1ff">Aa</text>
+          <text x="115" y="232" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#a8b3d1">body</text>
+          <text x="115" y="246" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">16px</text>
+
+          <rect x="210" y="152" width="110" height="63" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="265" y="200" text-anchor="middle" font-family="Fira Code, monospace" font-size="20" fill="#4ee1ff">Aa</text>
+          <text x="265" y="232" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#a8b3d1">subhead</text>
+          <text x="265" y="246" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">20px</text>
+
+          <rect x="360" y="137" width="110" height="78" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="415" y="198" text-anchor="middle" font-family="Fira Code, monospace" font-size="25" fill="#4ee1ff">Aa</text>
+          <text x="415" y="232" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#a8b3d1">heading</text>
+          <text x="415" y="246" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">25px</text>
+
+          <rect x="510" y="117" width="110" height="98" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="565" y="197" text-anchor="middle" font-family="Fira Code, monospace" font-size="31" fill="#4ee1ff">Aa</text>
+          <text x="565" y="232" text-anchor="middle" font-family="Fira Code, monospace" font-size="11" fill="#a8b3d1">display</text>
+          <text x="565" y="246" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">31px</text>
+
+          <path d="M172,160 L207,148" fill="none" stroke="#6b7699" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scalearrow)"/>
+          <text x="190" y="140" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">×1.25</text>
+          <path d="M322,147 L357,133" fill="none" stroke="#6b7699" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scalearrow)"/>
+          <text x="340" y="125" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">×1.25</text>
+          <path d="M472,132 L507,113" fill="none" stroke="#6b7699" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scalearrow)"/>
+          <text x="490" y="105" text-anchor="middle" font-family="Fira Code, monospace" font-size="10" fill="#6b7699">×1.25</text>
+        </svg>
+        <div class="diagram-caption">A type scale with four steps and one consistent ratio (here, ×1.25) beats a dozen arbitrary font-sizes nobody could explain if you asked them.</div>
+      </div>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="scanarrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#ff6ec7"/>
+            </marker>
+          </defs>
+          <rect x="30" y="20" width="500" height="210" rx="12" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5"/>
+          <text x="55" y="52" font-family="Fira Code, monospace" font-size="11" letter-spacing="1" fill="#6b7699">MISSION LOG · SECTOR 4</text>
+          <text x="55" y="92" font-family="Orbitron, sans-serif" font-size="25" font-weight="bold" fill="#4ee1ff">REACTOR STATUS: NOMINAL</text>
+          <text x="55" y="118" font-family="Fira Code, monospace" font-size="14" fill="#a8b3d1">Updated 2 minutes ago</text>
+          <text x="55" y="148" font-family="Fira Code, monospace" font-size="13" fill="#a8b3d1">All systems reporting normal</text>
+          <text x="55" y="166" font-family="Fira Code, monospace" font-size="13" fill="#a8b3d1">parameters across both cores.</text>
+          <rect x="55" y="188" width="150" height="32" rx="6" fill="#4ee1ff"/>
+          <text x="130" y="209" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="12" font-weight="bold" fill="#0a0e1a">VIEW DETAILS</text>
+
+          <circle cx="600" cy="92" r="15" fill="#0a0e1a" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="600" y="97" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" fill="#ff6ec7">1</text>
+          <circle cx="618" cy="204" r="15" fill="#0a0e1a" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="618" y="209" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" fill="#ff6ec7">2</text>
+          <circle cx="600" cy="118" r="15" fill="#0a0e1a" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="600" y="123" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" fill="#ff6ec7">3</text>
+          <circle cx="608" cy="157" r="15" fill="#0a0e1a" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="608" y="162" text-anchor="middle" font-family="Fira Code, monospace" font-size="13" fill="#ff6ec7">4</text>
+
+          <path d="M600,107 L618,189" fill="none" stroke="#ff6ec7" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scanarrow)"/>
+          <path d="M618,189 L600,133" fill="none" stroke="#ff6ec7" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scanarrow)"/>
+          <path d="M600,133 L608,142" fill="none" stroke="#ff6ec7" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#scanarrow)"/>
+        </svg>
+        <div class="diagram-caption">Hierarchy isn't reading order — it's scan order. A bold cyan heading, a high-contrast button, then the subhead, then the body copy: four different visual weights pulling the eye in a deliberate sequence, not the order they happen to sit in the HTML.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Visual Hierarchy — Deciding What Gets Noticed First</h3>
+        <p>Hierarchy is built from a small toolbox of signals, used together: <strong>size</strong> (bigger draws the eye first), <strong>weight</strong> (bold reads as "more important" even at the same size), <strong>color</strong> (a saturated accent against a muted background jumps out), <strong>spacing</strong> (isolated elements read as significant), and <strong>position</strong> (top-left, in most reading directions, gets scanned first). One signal alone is weak. Stack two or three on the same element, and the hierarchy becomes unmistakable — even to someone glancing at the page for half a second.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".card-title {&#10;  font-size: 1.75rem;&#10;  font-weight: 700;&#10;  color: var(--accent);&#10;}&#10;&#10;.card-meta {&#10;  font-size: 0.85rem;&#10;  font-weight: 400;&#10;  color: var(--text-muted);&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.card-title</span> {
+  <span class="prop">font-size</span>: <span class="val">1.75rem</span>;
+  <span class="prop">font-weight</span>: <span class="val">700</span>;
+  <span class="prop">color</span>: <span class="val">var(--accent)</span>;
+}
+
+<span class="sel">.card-meta</span> {
+  <span class="prop">font-size</span>: <span class="val">0.85rem</span>;
+  <span class="prop">font-weight</span>: <span class="val">400</span>;
+  <span class="prop">color</span>: <span class="val">var(--text-muted)</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.card-title</code> and <code>.card-meta</code> stack three signals in the same direction — the title is bigger, bolder, <em>and</em> more colorful, while the meta text is smaller, lighter, and muted. None of these properties do the job alone; together, they make the hierarchy obvious without a single word being read yet.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Simple Type Scale</h3>
+        <p>A page with a dozen different font-sizes — 13px here, 15px there, 22px somewhere else — usually didn't get designed; it accumulated. A <strong>type scale</strong> fixes that: pick a small handful of sizes (3-4 is plenty for most pages), related by a consistent ratio, and use only those. Every size on the page should be explainable — "this is a subheading, so it uses the subhead size" — not a one-off guess.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=":root {&#10;  --text-sm: 0.875rem;   /* 14px - captions, fine print */&#10;  --text-base: 1rem;     /* 16px - body copy, the default */&#10;  --text-md: 1.25rem;    /* 20px - subheadings */&#10;  --text-lg: 1.75rem;    /* 28px - section headings */&#10;  --text-xl: 2.5rem;     /* 40px - page title / hero */&#10;}&#10;&#10;h2 { font-size: var(--text-lg); }&#10;p  { font-size: var(--text-base); }">COPY</button></div>
+          <pre><code><span class="sel">:root</span> {
+  <span class="prop">--text-sm</span>: <span class="val">0.875rem</span>;   <span class="comment">/* 14px - captions, fine print */</span>
+  <span class="prop">--text-base</span>: <span class="val">1rem</span>;     <span class="comment">/* 16px - body copy, the default */</span>
+  <span class="prop">--text-md</span>: <span class="val">1.25rem</span>;    <span class="comment">/* 20px - subheadings */</span>
+  <span class="prop">--text-lg</span>: <span class="val">1.75rem</span>;    <span class="comment">/* 28px - section headings */</span>
+  <span class="prop">--text-xl</span>: <span class="val">2.5rem</span>;     <span class="comment">/* 40px - page title / hero */</span>
+}
+
+<span class="sel">h2</span> { <span class="prop">font-size</span>: <span class="val">var(--text-lg)</span>; }
+<span class="sel">p</span>  { <span class="prop">font-size</span>: <span class="val">var(--text-base)</span>; }</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Five custom properties define the <em>entire</em> vocabulary of sizes available on the page. Every element references one of them by name instead of a raw number — so if you ever want to nudge the whole scale, you change five lines, not five hundred.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Color Contrast & WCAG AA</h3>
+        <p>The <strong>Web Content Accessibility Guidelines (WCAG)</strong> define a "Level AA" standard most real products target, and its most important number for text is a <strong>4.5:1 contrast ratio</strong> between text and its background for normal-sized text (large text — roughly 24px, or 19px bold — only needs 3:1, since bigger shapes stay legible at lower contrast). This isn't an arbitrary bureaucratic hoop: it's the difference between text that's readable for someone with low vision, an older monitor, or a phone screen in direct sunlight, and text that just isn't.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="/* FAILS AA - ratio ~2.85:1, unreadable in bright light */&#10;.bad-label {&#10;  color: #999999;&#10;  background: #ffffff;&#10;}&#10;&#10;/* PASSES AA - ratio ~4.54:1, the standard &quot;safe gray&quot; on white */&#10;.good-label {&#10;  color: #767676;&#10;  background: #ffffff;&#10;}">COPY</button></div>
+          <pre><code><span class="comment">/* FAILS AA - ratio ~2.85:1, unreadable in bright light */</span>
+<span class="sel">.bad-label</span> {
+  <span class="prop">color</span>: <span class="val">#999999</span>;
+  <span class="prop">background</span>: <span class="val">#ffffff</span>;
+}
+
+<span class="comment">/* PASSES AA - ratio ~4.54:1, the standard "safe gray" on white */</span>
+<span class="sel">.good-label</span> {
+  <span class="prop">color</span>: <span class="val">#767676</span>;
+  <span class="prop">background</span>: <span class="val">#ffffff</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Both grays might look "fine" side by side in a color picker. Only one of them actually clears the 4.5:1 bar. This is exactly why you check contrast with a real calculation instead of eyeballing it — your eyes, on a bright calibrated monitor, are the least representative test available. Try both pairs in the Contrast Checker in the Command Console below.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: How is "contrast ratio" actually calculated?</summary>
+          <p>Contrast ratio isn't a vibe, it's real math on real numbers. First, each color's <strong>relative luminance</strong> is calculated — a 0-to-1 number for how bright it is to the human eye. Each of the R, G, and B channels (0-255) is normalized to 0-1, then "linearized" with a gamma-correction formula (because sRGB values aren't stored in a way that's linear with perceived brightness), then combined with weights that reflect how sensitive human vision is to each color: <code>L = 0.2126·R + 0.7152·G + 0.0722·B</code> — notice green is weighted over ten times heavier than blue, because our eyes are simply far more sensitive to green light. Once you have both colors' luminance (L1 for the lighter one, L2 for the darker one), the ratio is: <code>(L1 + 0.05) / (L2 + 0.05)</code>. The <code>+0.05</code> accounts for a small amount of ambient light scatter even in "pure" black. Plug in pure black and pure white and you get exactly 21:1 — the maximum possible contrast on a screen, and the number the Contrast Checker's JavaScript computes for real, live, as you drag the sliders.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Spacing Rhythm</h3>
+        <p>Spacing that "looks off" almost always turns out to be inconsistent — 13px here, 22px there, 7px somewhere else — with no relationship between the numbers. A <strong>spacing scale</strong> fixes this the same way a type scale fixes font sizes: define a small set of values, all multiples of a base unit (4px and 8px are the most common bases), and use only those everywhere. The eye can't consciously name why evenly-rhythmed spacing "feels" more polished, but it reliably notices when it isn't.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=":root {&#10;  --space-1: 4px;&#10;  --space-2: 8px;&#10;  --space-3: 16px;&#10;  --space-4: 24px;&#10;  --space-5: 32px;&#10;  --space-6: 48px;&#10;}&#10;&#10;.card {&#10;  padding: var(--space-4);&#10;}&#10;.card > * + * {&#10;  margin-top: var(--space-3);&#10;}">COPY</button></div>
+          <pre><code><span class="sel">:root</span> {
+  <span class="prop">--space-1</span>: <span class="val">4px</span>;
+  <span class="prop">--space-2</span>: <span class="val">8px</span>;
+  <span class="prop">--space-3</span>: <span class="val">16px</span>;
+  <span class="prop">--space-4</span>: <span class="val">24px</span>;
+  <span class="prop">--space-5</span>: <span class="val">32px</span>;
+  <span class="prop">--space-6</span>: <span class="val">48px</span>;
+}
+
+<span class="sel">.card</span> {
+  <span class="prop">padding</span>: <span class="val">var(--space-4)</span>;
+}
+<span class="sel">.card > * + *</span> {
+  <span class="prop">margin-top</span>: <span class="val">var(--space-3)</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.card > * + *</code> is a neat trick: it selects any element that immediately follows another element inside <code>.card</code>, adding consistent space between siblings without touching the first or last child. Combined with the spacing scale, every gap on the page traces back to one of six numbers — never a one-off guess.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Hierarchy Needs More Than One Signal</h3>
+        <p>The most common design mistake isn't picking bad values — it's changing only <em>one</em> property and expecting it to carry the whole hierarchy. Making a heading bigger without also making it bolder or a different color is a weak signal; making it bigger, bolder, <em>and</em> colored is unmistakable. The same logic applies to a primary action button: it should look important before anyone reads what it says.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".btn-primary {&#10;  background: var(--accent);&#10;  color: var(--bg-void);&#10;  font-weight: 700;&#10;  padding: var(--space-2) var(--space-4);&#10;  border-radius: 8px;&#10;}&#10;&#10;.btn-secondary {&#10;  background: transparent;&#10;  color: var(--text-secondary);&#10;  border: 1px solid var(--border-glow);&#10;  padding: var(--space-2) var(--space-4);&#10;  border-radius: 8px;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.btn-primary</span> {
+  <span class="prop">background</span>: <span class="val">var(--accent)</span>;
+  <span class="prop">color</span>: <span class="val">var(--bg-void)</span>;
+  <span class="prop">font-weight</span>: <span class="val">700</span>;
+  <span class="prop">padding</span>: <span class="val">var(--space-2) var(--space-4)</span>;
+  <span class="prop">border-radius</span>: <span class="val">8px</span>;
+}
+
+<span class="sel">.btn-secondary</span> {
+  <span class="prop">background</span>: <span class="val">transparent</span>;
+  <span class="prop">color</span>: <span class="val">var(--text-secondary)</span>;
+  <span class="prop">border</span>: <span class="val">1px solid var(--border-glow)</span>;
+  <span class="prop">padding</span>: <span class="val">var(--space-2) var(--space-4)</span>;
+  <span class="prop">border-radius</span>: <span class="val">8px</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Both buttons are the exact same size and shape — the padding values are identical. The entire hierarchy between "the important one" and "the other one" is carried by fill color, text color, and weight. That's the tell of a deliberately-designed UI: importance is signaled on purpose, not left to chance.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>First, the <strong>Contrast Checker</strong> — pick a foreground and background color (or click a preset) and watch the real WCAG contrast ratio compute live, along with a PASS/FAIL verdict against the AA thresholds. Then, the <strong>Before/After</strong> comparison — the exact same content, styled two different ways, so you can see hierarchy, spacing, and contrast fail or succeed side by side instead of just reading about it.</p>
+
+      <div class="contrast-lab">
+        <div class="lab-controls">
+          <div class="color-field">
+            <label for="fgColor">FOREGROUND (TEXT)</label>
+            <div class="color-row">
+              <input type="color" id="fgColor" value="#e8ecfb">
+              <input type="text" id="fgHex" class="hex-input" value="#E8ECFB" maxlength="7" spellcheck="false" autocomplete="off">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="bgColor">BACKGROUND</label>
+            <div class="color-row">
+              <input type="color" id="bgColor" value="#1b2540">
+              <input type="text" id="bgHex" class="hex-input" value="#1B2540" maxlength="7" spellcheck="false" autocomplete="off">
+            </div>
+          </div>
+          <div class="color-field">
+            <label>QUICK PRESETS</label>
+            <button type="button" class="preset-btn" data-fg="#0a0e1a" data-bg="#4dffb4">
+              <span class="preset-swatch" style="background:linear-gradient(90deg,#0a0e1a 50%,#4dffb4 50%);"></span>High contrast (safe)
+            </button>
+            <button type="button" class="preset-btn" data-fg="#767676" data-bg="#ffffff">
+              <span class="preset-swatch" style="background:linear-gradient(90deg,#767676 50%,#ffffff 50%);"></span>Borderline gray (~4.5:1)
+            </button>
+            <button type="button" class="preset-btn" data-fg="#999999" data-bg="#ffffff">
+              <span class="preset-swatch" style="background:linear-gradient(90deg,#999999 50%,#ffffff 50%);"></span>Too-light gray (fails)
+            </button>
+            <button type="button" class="preset-btn" data-fg="#ff9d4d" data-bg="#ffe66d">
+              <span class="preset-swatch" style="background:linear-gradient(90deg,#ff9d4d 50%,#ffe66d 50%);"></span>Bad color pairing
+            </button>
+          </div>
+        </div>
+
+        <div class="lab-preview">
+          <div class="lab-sample" id="labSample">
+            <div>
+              <div class="sample-line large" id="sampleLarge">Bridge Log</div>
+              <div class="sample-line normal" id="sampleNormal">Reactor pressure nominal, all systems reporting green across the board.</div>
+            </div>
+          </div>
+          <div class="lab-readout">
+            <div class="ratio-value"><span id="ratioOut">1.00</span><span class="ratio-unit">: 1 contrast ratio</span></div>
+            <div class="aa-badges">
+              <span class="aa-badge" id="badgeNormal">AA NORMAL TEXT · 4.5:1</span>
+              <span class="aa-badge" id="badgeLarge">AA LARGE TEXT · 3:1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ba-header">
+        <h3>Before / After: Same Content, Different Decisions</h3>
+        <div class="view-toggle" id="viewToggle">
+          <button type="button" class="active" data-view="both">BOTH</button>
+          <button type="button" data-view="before">BEFORE ONLY</button>
+          <button type="button" data-view="after">AFTER ONLY</button>
+        </div>
+      </div>
+
+      <div class="before-after-grid" id="baGrid">
+        <div class="demo-card demo-bad">
+          <div class="demo-card-label"><span>BEFORE</span><span class="ratio-tag" id="beforeRatio"></span></div>
+          <div class="demo-body demo-bad-body">
+            <div class="bad-eyebrow">mission log</div>
+            <div class="bad-title">Reactor Status</div>
+            <div class="bad-sub">updated 2 min ago</div>
+            <p class="bad-text">All systems reporting normal parameters across primary and backup reactor cores, no anomalies detected.</p>
+            <button class="bad-btn">view details</button>
+          </div>
+        </div>
+        <div class="demo-card demo-good">
+          <div class="demo-card-label"><span>AFTER</span><span class="ratio-tag" id="afterRatio"></span></div>
+          <div class="demo-body demo-good-body">
+            <div class="good-eyebrow">MISSION LOG · SECTOR 4</div>
+            <h4 class="good-title">Reactor Status: Nominal</h4>
+            <div class="good-sub">Updated 2 minutes ago</div>
+            <p class="good-text">All systems reporting normal parameters across primary and backup reactor cores. No anomalies detected.</p>
+            <button class="good-btn">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Take a badly-designed card of your own (reuse the "BEFORE" card's problems, or grab any messy component from an earlier mission) and redesign it applying everything from this mission.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Run every text/background pair through the Contrast Checker above and fix any that fail 4.5:1 (normal text) or 3:1 (large text)
+          <span class="sub">Gray-on-gray is the usual offender</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Define a type scale of no more than 4 sizes as CSS custom properties, and use only those — no arbitrary <code>font-size</code> values
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Define a spacing scale (multiples of 4px or 8px) and replace every random margin/padding value with one of those numbers
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Give your heading a clear hierarchy over its subheading and body text using at least two signals together — e.g. size <em>and</em> weight, or size <em>and</em> color
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Make the card's one primary action (a button or link) visually obvious as "the important one" before anyone reads its label
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Compare your redesign next to the original — confirm hierarchy, spacing, and contrast all visibly improved, not just one of the three
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Start with the numbers, not the vibe. Write your type scale and spacing scale as CSS custom properties first — like the Field Manual's examples — <em>then</em> go back and replace every raw value in your messy card with a reference to one of those variables. If a value doesn't fit the scale, that's the value that needs to change, not the scale.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Mission 1.9 is your capstone personal site. Before you build it, sketch (even on paper) the type scale, spacing scale, and color pairs you plan to use — and run every planned text color against its planned background through the Contrast Checker above. Arriving at 1.9 with these decisions already made will save you from redesigning mid-build.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>4.5:1</code><span>WCAG AA minimum contrast ratio for normal text</span></div>
+        <div class="cheat-card"><code>3:1</code><span>WCAG AA minimum for large text (~24px, or 19px bold)</span></div>
+        <div class="cheat-card"><code>Type scale</code><span>3-4 font sizes max, related by one consistent ratio</span></div>
+        <div class="cheat-card"><code>Spacing scale</code><span>Every margin/padding is a multiple of 4px or 8px</span></div>
+        <div class="cheat-card"><code>Visual hierarchy</code><span>Size + weight + color + position, stacked together</span></div>
+        <div class="cheat-card"><code>Relative luminance</code><span>The brightness math underneath every contrast ratio</span></div>
+        <div class="cheat-card"><code>WCAG AA</code><span>The accessibility standard most real products target</span></div>
+        <div class="cheat-card"><code>Verify, don't eyeball</code><span>A calibrated monitor lies about real-world readability</span></div>
+        <div class="cheat-card"><code>White space</code><span>Not empty space — it's a hierarchy and grouping tool</span></div>
+        <div class="cheat-card"><code>One primary action</code><span>Every screen should have one obvious "most important" element</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Light-gray-on-white text that looks crisp on a bright designer monitor and fails 4.5:1 for everyone else.</li>
+          <li>Making a heading bigger without also making it bolder or recoloring it — size alone is a weak hierarchy signal.</li>
+          <li>Spacing values that "feel off" because they're copy-pasted one-offs (13px, 22px, 7px) instead of a defined scale.</li>
+          <li>Picking colors first and checking contrast never — treating accessibility as a last-minute pass instead of a design constraint from the start.</li>
+          <li>Using five or more font sizes on one page because nobody defined a scale before styling began — the "ransom note" effect.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — per WCAG AA, what's the minimum contrast ratio required for normal-sized body text?</p>
+        <button class="quiz-btn" data-correct="false">3:1</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — 4.5:1 is the AA threshold for normal text. 3:1 only applies to large text (roughly 24px or 19px bold), and 7:1 is the stricter AAA level.">4.5:1</button>
+        <button class="quiz-btn" data-correct="false">7:1</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Real WCAG 2.x contrast math ---------------- */
+  function hexToRgb(hex) {
+    hex = hex.trim().replace(/^#/, "");
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var num = parseInt(hex, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function isValidHex(hex) {
+    return /^#?[0-9A-Fa-f]{6}$/.test(hex.trim()) || /^#?[0-9A-Fa-f]{3}$/.test(hex.trim());
+  }
+
+  function srgbChannelToLinear(c) {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }
+
+  function relativeLuminance(rgb) {
+    var r = srgbChannelToLinear(rgb.r);
+    var g = srgbChannelToLinear(rgb.g);
+    var b = srgbChannelToLinear(rgb.b);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function contrastRatio(hex1, hex2) {
+    var l1 = relativeLuminance(hexToRgb(hex1));
+    var l2 = relativeLuminance(hexToRgb(hex2));
+    var lighter = Math.max(l1, l2);
+    var darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  /* ---------------- Contrast Checker widget ---------------- */
+  var fgColor = document.getElementById("fgColor");
+  var bgColor = document.getElementById("bgColor");
+  var fgHex = document.getElementById("fgHex");
+  var bgHex = document.getElementById("bgHex");
+  var labSample = document.getElementById("labSample");
+  var ratioOut = document.getElementById("ratioOut");
+  var badgeNormal = document.getElementById("badgeNormal");
+  var badgeLarge = document.getElementById("badgeLarge");
+
+  function setBadge(el, passed, label) {
+    el.classList.remove("pass", "fail");
+    el.classList.add(passed ? "pass" : "fail");
+    el.textContent = (passed ? "PASS · " : "FAIL · ") + label;
+  }
+
+  function updateLab() {
+    var fg = fgHex.value.trim();
+    var bg = bgHex.value.trim();
+    if (!isValidHex(fg) || !isValidHex(bg)) return;
+    if (fg.charAt(0) !== "#") fg = "#" + fg;
+    if (bg.charAt(0) !== "#") bg = "#" + bg;
+
+    labSample.style.backgroundColor = bg;
+    labSample.style.color = fg;
+
+    var ratio = contrastRatio(fg, bg);
+    ratioOut.textContent = ratio.toFixed(2);
+    setBadge(badgeNormal, ratio >= 4.5, "AA NORMAL TEXT · 4.5:1");
+    setBadge(badgeLarge, ratio >= 3, "AA LARGE TEXT · 3:1");
+  }
+
+  function syncFromColorInput(colorInput, hexInput) {
+    hexInput.value = colorInput.value.toUpperCase();
+    updateLab();
+  }
+
+  function syncFromHexInput(hexInput, colorInput) {
+    var v = hexInput.value.trim();
+    if (!isValidHex(v)) return;
+    if (v.charAt(0) !== "#") v = "#" + v;
+    if (v.length === 4) v = "#" + v.slice(1).split("").map(function (c) { return c + c; }).join("");
+    colorInput.value = v.toLowerCase();
+    updateLab();
+  }
+
+  fgColor.addEventListener("input", function () { syncFromColorInput(fgColor, fgHex); });
+  bgColor.addEventListener("input", function () { syncFromColorInput(bgColor, bgHex); });
+  fgHex.addEventListener("input", function () { syncFromHexInput(fgHex, fgColor); });
+  bgHex.addEventListener("input", function () { syncFromHexInput(bgHex, bgColor); });
+
+  document.querySelectorAll(".preset-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var fg = btn.getAttribute("data-fg");
+      var bg = btn.getAttribute("data-bg");
+      fgColor.value = fg; fgHex.value = fg.toUpperCase();
+      bgColor.value = bg; bgHex.value = bg.toUpperCase();
+      updateLab();
+    });
+  });
+
+  updateLab();
+
+  /* ---------------- Before/After: live-computed ratio labels ---------------- */
+  var BEFORE_FG = "#8c8c8c", BEFORE_BG = "#b3b3b3";
+  var AFTER_FG = "#4ee1ff", AFTER_BG = "#1b2540";
+
+  function labelRatio(elId, fg, bg) {
+    var ratio = contrastRatio(fg, bg);
+    var passes = ratio >= 4.5;
+    var el = document.getElementById(elId);
+    el.textContent = "~" + ratio.toFixed(1) + ":1 " + (passes ? "PASS" : "FAIL");
+    el.classList.add(passes ? "pass" : "fail");
+  }
+
+  labelRatio("beforeRatio", BEFORE_FG, BEFORE_BG);
+  labelRatio("afterRatio", AFTER_FG, AFTER_BG);
+
+  /* ---------------- Before/After view toggle ---------------- */
+  var baGrid = document.getElementById("baGrid");
+  document.querySelectorAll("#viewToggle button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#viewToggle button").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      var view = btn.getAttribute("data-view");
+      baGrid.classList.remove("mode-before", "mode-after");
+      if (view === "before") baGrid.classList.add("mode-before");
+      if (view === "after") baGrid.classList.add("mode-after");
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

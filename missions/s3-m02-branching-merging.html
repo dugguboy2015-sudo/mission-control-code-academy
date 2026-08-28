@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 3.2: Branching & Merging Deep-Dive — Parallel Timelines, Conflict Resolution | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Command Console (bespoke terminal + branch graph + Conflict Simulator) ---------- */
+  /* Terminal chrome matches Mission 3.1's simulator so the two missions feel like one product. */
+  .terminal {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--glow-shadow);
+  }
+  .terminal-header {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.red { background: #ff6b6b; }
+  .dot.yellow { background: #ffcf4d; }
+  .dot.green { background: #4dffb4; }
+
+  .terminal-body {
+    padding: 16px;
+    font-family: var(--font-code);
+    font-size: 13.5px;
+    min-height: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .terminal-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-word; }
+  .terminal-line.echo { color: var(--accent); }
+  .terminal-line.out { color: var(--text-secondary); }
+  .terminal-line.err { color: var(--danger); }
+  .terminal-line.file { color: #d7dcf0; }
+  .terminal-line.marker { color: var(--danger); font-weight: 600; }
+  .terminal-prompt { color: var(--accent-green); }
+
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-glow);
+    background: rgba(255,255,255,0.02);
+  }
+  .terminal-input-row span { color: var(--accent-green); font-family: var(--font-code); }
+  #termInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13.5px;
+  }
+  .term-hint-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 16px 16px;
+  }
+  .term-hint-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .term-hint-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .term-hint-btn.step-conflict { border-color: rgba(255,107,107,0.5); color: #ff9d9d; }
+
+  /* Conflict banner + resolution panel — bespoke to this mission's widget */
+  .conflict-banner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.4);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    color: var(--danger);
+  }
+  .conflict-banner.active { display: flex; }
+
+  .resolve-panel {
+    margin-top: 14px;
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .resolve-panel h4 {
+    margin: 0 0 4px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+  }
+  .resolve-panel p { margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); }
+  .resolve-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .resolve-btn {
+    background: rgba(78, 225, 255, 0.06);
+    border: 1px solid var(--border-glow);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .resolve-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s3-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 3</div>
+    <h1>MISSION 3.2: BRANCHING & MERGING DEEP-DIVE</h1>
+    <div class="subtitle">Parallel Timelines, Conflict Resolution</div>
+    <p class="briefing-line">You've already split a timeline and merged it back. Now we go deeper: how to name and organize branches like a real engineering team, why Git sometimes just slides a pointer forward and sometimes builds a whole new commit to join two histories, and — the part every cadet dreads until they've done it once — what to do when Git looks you dead in the eye and says it can't decide for you.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 TERMINAL REQUIRED</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Imagine two engineering teams both working from the same panel schematic. Team A is upgrading the thruster wiring. Team B is rerouting the coolant lines. As long as they're editing different corners of the blueprint, someone can tape both sets of changes onto the master copy with zero problems — the changes don't overlap, so combining them is mechanical, almost boring. That's most merges. Git does the taping-together automatically and you barely notice it happened.</p>
+      <p>But every so often, both teams need to change the <em>exact same wire</em> on the <em>exact same panel</em> — and they don't agree on what it should become. Now taping both versions on top of each other makes no sense. Somebody — a human, not the photocopier — has to look at both proposals and decide the final wiring. That is a <strong>merge conflict</strong>. It is not an error, it is not something you broke, and it is not rare. It is Git being honest that it hit a decision it isn't allowed to make for you.</p>
+      <p>This mission covers three things: choosing <em>when</em> and <em>how</em> to branch like a professional, understanding why Git sometimes merges quietly (a <strong>fast-forward</strong>) and sometimes builds a visible junction (a <strong>merge commit</strong>), and — the main event — reading and resolving a real conflict, markers and all.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;">
+          <defs>
+            <marker id="arrowA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/>
+            </marker>
+          </defs>
+
+          <!-- main timeline -->
+          <line x1="40" y1="170" x2="660" y2="170" stroke="#2e3d63" stroke-width="2"/>
+          <text x="20" y="175" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="end">main</text>
+
+          <!-- shared ancestor commit -->
+          <circle cx="90" cy="170" r="10" fill="#ff9d4d"/>
+          <text x="90" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">c1</text>
+          <text x="90" y="216" fill="#6b7699" font-family="Rubik, sans-serif" font-size="10" text-anchor="middle">THRUST_LIMIT=100</text>
+
+          <!-- branch A: fix/raise-thrust-limit, above -->
+          <path d="M90,170 Q160,100 230,100" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+          <circle cx="230" cy="100" r="9" fill="#4ee1ff"/>
+          <text x="150" y="80" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11">fix/raise-thrust-limit</text>
+          <text x="230" y="122" fill="#6b7699" font-family="Rubik, sans-serif" font-size="10" text-anchor="middle">sets 150</text>
+
+          <!-- branch B: feature/safety-cap, below -->
+          <path d="M90,170 Q160,240 230,240" fill="none" stroke="#b083ff" stroke-width="2"/>
+          <circle cx="230" cy="240" r="9" fill="#b083ff"/>
+          <text x="150" y="266" fill="#b083ff" font-family="Fira Code, monospace" font-size="11">feature/safety-cap</text>
+          <text x="230" y="220" fill="#6b7699" font-family="Rubik, sans-serif" font-size="10" text-anchor="middle">sets 80</text>
+
+          <!-- A merges into main first: fast-forward (dashed straight line, no new node needed) -->
+          <path d="M230,100 Q310,170 380,170" fill="none" stroke="#4ee1ff" stroke-width="2" stroke-dasharray="4 4"/>
+          <text x="300" y="150" fill="#4ee1ff" font-family="Rubik, sans-serif" font-size="10">fast-forward</text>
+          <circle cx="380" cy="170" r="10" fill="#4ee1ff"/>
+          <text x="380" y="200" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">main = 150</text>
+
+          <!-- B converges onto main's new tip -->
+          <path d="M230,240 Q320,240 380,170" fill="none" stroke="#b083ff" stroke-width="2"/>
+
+          <!-- conflict point -->
+          <polygon points="470,170 490,150 510,170 490,190" fill="#ff6b6b" stroke="#ffb3b3" stroke-width="1.5"/>
+          <text x="490" y="175" fill="#05070d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle" font-weight="bold">!</text>
+          <text x="490" y="122" fill="#ff9d9d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">CONFLICT</text>
+          <text x="490" y="212" fill="#6b7699" font-family="Rubik, sans-serif" font-size="10" text-anchor="middle">both changed THRUST_LIMIT</text>
+
+          <path d="M380,170 L470,170" fill="none" stroke="#2e3d63" stroke-width="2"/>
+
+          <!-- resolution -->
+          <path d="M510,170 L580,170" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#arrowA)"/>
+          <circle cx="620" cy="170" r="12" fill="#4dffb4"/>
+          <text x="620" y="200" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">merge commit</text>
+          <text x="620" y="145" fill="#6b7699" font-family="Rubik, sans-serif" font-size="10" text-anchor="middle">human resolves</text>
+        </svg>
+        <div class="diagram-caption">Branch A merges into main quietly (fast-forward — main hadn't moved). Branch B converges on the same line main just changed, so Git stops at a conflict. A human picks the final value; the merge completes as a real merge commit.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Branch Strategy & Naming</h3>
+        <p>Any time you're about to do something that could temporarily break the project — a new feature, a risky fix, an experiment you're not sure will work — branch first. The rule of thumb: <strong>if you'd be embarrassed to have <code>main</code> in this state during a demo, you're on the wrong branch.</strong> Keep branches short-lived — the longer a branch lives apart from <code>main</code>, the more both timelines drift, and the more likely a merge turns into a conflict.</p>
+        <p>Git doesn't enforce branch names, but real teams do, by convention — it keeps a busy branch list scannable and often drives automation (like which branches trigger a deploy).</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git checkout -b feature/shield-recalibration&#10;git checkout -b fix/thruster-overheat&#10;git checkout -b chore/update-flight-docs">COPY</button></div>
+          <pre><code><span class="comment"># A new capability</span>
+git checkout -b feature/shield-recalibration
+
+<span class="comment"># A bug fix</span>
+git checkout -b fix/thruster-overheat
+
+<span class="comment"># Non-functional housekeeping — docs, deps, config</span>
+git checkout -b chore/update-flight-docs</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Nothing Git-mechanical — <code>feature/</code>, <code>fix/</code>, and <code>chore/</code> are just text before a slash. But that text tells every other engineer (and often your CI pipeline) what kind of change lives here before they open a single file.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Fast-Forward vs. Merge Commits</h3>
+        <p>When you run <code>git merge</code>, Git first checks one thing: <em>has the branch you're merging <u>into</u> moved at all since you split off?</em> If <code>main</code> hasn't gained a single new commit since your branch was created, Git doesn't need to combine anything — it just slides the <code>main</code> pointer forward to your branch's tip. This is a <strong>fast-forward</strong>: no new commit is created, and the history stays perfectly linear.</p>
+        <p>If <code>main</code> <em>has</em> moved — someone else merged something, or you committed directly on <code>main</code> too — Git can no longer just slide the pointer. It performs a real <strong>three-way merge</strong> and creates a new <strong>merge commit</strong> with two parents: one pointing back into <code>main</code>'s history, one pointing back into your branch's history. That's the visible "junction" you see in a commit graph.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git merge feature/shield-recalibration&#10;&#10;git merge --no-ff feature/shield-recalibration">COPY</button></div>
+          <pre><code><span class="comment"># Default: fast-forwards automatically when possible</span>
+git merge feature/shield-recalibration
+
+<span class="comment"># Force a real merge commit even if a fast-forward was possible</span>
+<span class="comment"># (some teams do this on every feature branch, to keep a visible record)</span>
+git merge --no-ff feature/shield-recalibration</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Neither outcome is "better" — fast-forward keeps history tidy and linear; <code>--no-ff</code> preserves the fact that a feature branch existed at all, which some teams want for traceability. Either way, <em>you</em> didn't create a conflict just by having two branches — a conflict only shows up in the three-way-merge path, and only when both sides touched the same lines.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>What Causes a Conflict</h3>
+        <p>A three-way merge compares three snapshots: the <strong>base</strong> (the common ancestor commit both branches split from), <strong>ours</strong> (the tip of the branch you're on), and <strong>theirs</strong> (the tip of the branch you're merging in). For every region of every file, Git asks: did only one side change this since the base? If so, take that side — easy, automatic, silent. Did <em>both</em> sides change the same region, to the <em>same</em> new content? Also fine, no real disagreement. Did both sides change the same region to <em>different</em> content? That's the only case Git refuses to guess on. That's a conflict.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>TEXT</span><button class="copy-btn" data-copy="base:    THRUST_LIMIT = 100&#10;ours:    THRUST_LIMIT = 150   (fix/raise-thrust-limit, already merged into main)&#10;theirs:  THRUST_LIMIT = 80    (feature/safety-cap)&#10;&#10;-> both changed the same line to different values -> CONFLICT">COPY</button></div>
+          <pre><code>base:    THRUST_LIMIT = 100
+ours:    THRUST_LIMIT = 150   <span class="comment">(fix/raise-thrust-limit, already merged into main)</span>
+theirs:  THRUST_LIMIT = 80    <span class="comment">(feature/safety-cap)</span>
+
+<span class="comment">-> both changed the same line to different values -> CONFLICT</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice it's about <em>lines</em>, not files or "how big" a change is. Two branches can rewrite an entire file each and merge cleanly if they touched different sections. Two branches can each change a single character on the same line and conflict. Overlap is the only thing that matters.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Reading Conflict Markers</h3>
+        <p>When a conflict happens, Git doesn't refuse to touch the file — it edits it and drops both versions directly into the text, wrapped in markers, so you can see exactly what disagreed:</p>
+        <div class="code-block">
+          <div class="code-tab"><span>mission-config.txt</span><button class="copy-btn" data-copy="THRUST_CEILING = 500&#10;<<<<<<< HEAD&#10;THRUST_LIMIT = 150&#10;=======&#10;THRUST_LIMIT = 80&#10;>>>>>>> feature/safety-cap">COPY</button></div>
+          <pre><code>THRUST_CEILING = 500
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+THRUST_LIMIT = 150
+=======
+THRUST_LIMIT = 80
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/safety-cap</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> opens <strong>your</strong> current branch's version — everything down to the <code>=======</code> divider is "ours." Everything between <code>=======</code> and <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/safety-cap</code> is "theirs" — the incoming branch's version, and Git labels it with that branch's name so you know exactly whose change you're looking at. The unmarked line above (<code>THRUST_CEILING = 500</code>) didn't conflict, so Git left it alone entirely.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Resolving & Completing the Merge</h3>
+        <p>Resolving a conflict is manual, ordinary text editing — there's no special "conflict mode" tool required, though editors often add nice highlighting for it. The workflow is always the same four steps:</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git status&#10;&#10;&#10;git add mission-config.txt&#10;git commit">COPY</button></div>
+          <pre><code><span class="comment"># 1. See which files are still unmerged</span>
+git status
+
+<span class="comment"># 2. Open the file, decide the real final content, and DELETE all three
+#    marker lines (<<<<<<<, =======, >>>>>>>) — they are not part of the file</span>
+
+<span class="comment"># 3. Tell Git you've resolved this file</span>
+git add mission-config.txt
+
+<span class="comment"># 4. Complete the merge — Git pre-fills a merge commit message for you</span>
+git commit</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>git add</code> mid-conflict means something slightly different than usual: it's not just staging a change, it's telling Git "I've looked at this file and decided its final form." Once every conflicted file has been added, <code>git commit</code> seals the three-way merge — it already knows both parent commits, so it just needs your green light.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: I'm mid-conflict and I want out. What now?</summary>
+          <p>Not every conflict needs solving right this second. If you're not ready — need to check with a teammate, ran out of time, or realize you branched from the wrong place — you can cancel the entire merge attempt and go back to exactly how things were before you ran <code>git merge</code>:</p>
+          <pre><code>git merge --abort</code></pre>
+          <p>This restores your working file (markers and all, gone) and clears the in-progress merge state. Nothing is lost — the branch you tried to merge is untouched, and you can try again whenever you're ready.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Same simulated Git console as Mission 3.1 — no real files touched — but this time the script is rigged to produce a genuine merge conflict on <code>mission-config.txt</code>. Work through the hint buttons left to right, or type the commands yourself. When the conflict hits, you have to actually resolve it — type a <code>resolve</code> command or use the panel — before <code>git add</code> and <code>git commit</code> will let you finish.</p>
+
+      <div class="diagram-box" style="text-align:left;">
+        <svg id="graphSvg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;display:block;margin:0 auto;"></svg>
+        <div class="diagram-caption">Live commit graph — the red diamond marks a conflict in progress; it becomes a green merge commit once you resolve it for real.</div>
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        </div>
+        <div class="terminal-body" id="termBody">
+          <div class="terminal-line out">Simulated Git Console v1.1 — repo initialized on branch <span class="terminal-prompt">main</span>, tracking mission-config.txt</div>
+          <div class="terminal-line out">THRUST_CEILING = 500 / THRUST_LIMIT = 100</div>
+          <div class="terminal-line out">Try the hint buttons in order, or type your own commands.</div>
+        </div>
+        <div class="terminal-input-row">
+          <span id="termBranchLabel">main $</span>
+          <input type="text" id="termInput" autocomplete="off" spellcheck="false" placeholder="git status">
+        </div>
+        <div class="term-hint-row">
+          <button class="term-hint-btn" data-cmd="git checkout -b fix/raise-thrust-limit">1. git checkout -b fix/raise-thrust-limit</button>
+          <button class="term-hint-btn" data-cmd="set THRUST_LIMIT=150">2. set THRUST_LIMIT=150</button>
+          <button class="term-hint-btn" data-cmd="git commit -m 'raise thrust limit to 150'">3. git commit -m 'raise thrust limit to 150'</button>
+          <button class="term-hint-btn" data-cmd="git checkout main">4. git checkout main</button>
+          <button class="term-hint-btn" data-cmd="git checkout -b feature/safety-cap">5. git checkout -b feature/safety-cap</button>
+          <button class="term-hint-btn" data-cmd="set THRUST_LIMIT=80">6. set THRUST_LIMIT=80</button>
+          <button class="term-hint-btn" data-cmd="git commit -m 'cap thrust for safety at 80'">7. git commit -m 'cap thrust for safety at 80'</button>
+          <button class="term-hint-btn" data-cmd="git checkout main">8. git checkout main</button>
+          <button class="term-hint-btn" data-cmd="git merge fix/raise-thrust-limit">9. git merge fix/raise-thrust-limit</button>
+          <button class="term-hint-btn step-conflict" data-cmd="git merge feature/safety-cap">10. git merge feature/safety-cap (conflict!)</button>
+          <button class="term-hint-btn step-conflict" data-cmd="cat mission-config.txt">11. cat mission-config.txt</button>
+          <button class="term-hint-btn step-conflict" data-cmd="resolve THRUST_LIMIT=80">12. resolve THRUST_LIMIT=80</button>
+          <button class="term-hint-btn step-conflict" data-cmd="git add mission-config.txt">13. git add mission-config.txt</button>
+          <button class="term-hint-btn step-conflict" data-cmd="git commit -m 'resolve thrust limit conflict, safety wins'">14. git commit -m 'resolve...'</button>
+          <button class="term-hint-btn" data-cmd="git log">git log</button>
+          <button class="term-hint-btn" data-cmd="git status">git status</button>
+          <button class="term-hint-btn" data-cmd="reset">reset simulation</button>
+        </div>
+      </div>
+
+      <div class="conflict-banner" id="conflictBanner">⚠ MERGE CONFLICT — mission-config.txt has unresolved markers. Resolve it to continue.</div>
+
+      <div class="resolve-panel">
+        <h4>RESOLUTION PANEL</h4>
+        <p>Only does anything while a conflict is active — picks the final value and removes the markers, same as editing the file by hand.</p>
+        <div class="resolve-options">
+          <button class="resolve-btn" data-resolve="150">Keep 150 — performance (HEAD / fix branch)</button>
+          <button class="resolve-btn" data-resolve="80">Keep 80 — safety (incoming branch)</button>
+          <button class="resolve-btn" data-resolve="80, burst override to 150 for 5s">Combine — 80 normal, burst to 150 allowed</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Leave the simulator behind. Do this for real, in an actual folder on your machine, with a real terminal.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">In a repo with at least one commit, create two branches off the <em>same</em> commit — e.g. <code>feature/a</code> and <code>fix/b</code>
+          <span class="sub">Both should start from the same place; use <code>git checkout -b</code> from <code>main</code> for each</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">On each branch, edit the <em>exact same line</em> of the <em>same file</em> to something different, and commit on each branch</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Merge the first branch into <code>main</code> and read what Git prints
+          <span class="sub">Was it a "Fast-forward"? Why — had <code>main</code> moved since you branched?</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Merge the second branch into <code>main</code> and trigger a real conflict
+          <span class="sub">Git will tell you exactly which file is unmerged</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Open the conflicted file, read <em>both</em> marker blocks fully, decide the real final content, and delete all three marker lines</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6"><code>git add</code> the resolved file and <code>git commit</code> to complete the merge, then run <code>git log --oneline --graph</code> to see the merge commit you just made</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If <code>git commit</code> refuses with "Committing is not possible because you have unmerged files," run <code>git status</code> — it lists exactly which file still needs a <code>git add</code>. That almost always means either you haven't finished editing out the markers, or you edited the file but forgot the <code>git add</code> step afterward.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Trigger the conflict again, but this time run <code>git diff</code> before resolving anything — Git will show you the conflicted region inline. Then abandon it with <code>git merge --abort</code> and confirm the file goes back to having no markers at all, as if the merge never happened.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>feature/ · fix/ · chore/</code><span>Branch naming conventions</span></div>
+        <div class="cheat-card"><code>git merge &lt;branch&gt;</code><span>Fast-forwards if possible, else 3-way merges</span></div>
+        <div class="cheat-card"><code>git merge --no-ff &lt;branch&gt;</code><span>Force a real merge commit</span></div>
+        <div class="cheat-card"><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code><span>Start of "ours" — your current branch</span></div>
+        <div class="cheat-card"><code>=======</code><span>Divider between the two versions</span></div>
+        <div class="cheat-card"><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; branch-name</code><span>End of "theirs" — the incoming branch</span></div>
+        <div class="cheat-card"><code>git status</code><span>Lists unmerged files mid-conflict</span></div>
+        <div class="cheat-card"><code>git add &lt;file&gt;</code><span>Marks a conflict as resolved</span></div>
+        <div class="cheat-card"><code>git commit</code><span>Completes the merge (message pre-filled)</span></div>
+        <div class="cheat-card"><code>git merge --abort</code><span>Cancel the merge, restore pre-merge state</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Leaving a conflict marker (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, or <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>) in the file by accident — Git will happily commit it, and now your code has a syntax error hiding in plain sight.</li>
+          <li>Panicking and assuming a conflict means something is broken — it's a normal, expected outcome of two branches touching the same lines, not a failure state.</li>
+          <li>Resolving a conflict without actually reading <em>both</em> versions first — you can only pick (or combine) correctly if you understand what each side was trying to do.</li>
+          <li>Forgetting <code>git add</code> after editing the file, then being confused why <code>git commit</code> still refuses to finish the merge.</li>
+          <li>Working directly on <code>main</code> instead of branching first — the more people commit straight to <code>main</code>, the more often everyone's changes collide there.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in a conflicted file, what does the section between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> and <code>=======</code> represent?</p>
+        <button class="quiz-btn" data-correct="false">The incoming branch's version ("theirs")</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — HEAD is always your current branch, so that block is 'ours.'">Your current branch's version ("ours")</button>
+        <button class="quiz-btn" data-correct="false">A syntax error Git wants you to delete without reading</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Simulated Git Console + Conflict Simulator ---------------- */
+  const termBody = document.getElementById('termBody');
+  const termInput = document.getElementById('termInput');
+  const termBranchLabel = document.getElementById('termBranchLabel');
+  const graphSvg = document.getElementById('graphSvg');
+  const conflictBanner = document.getElementById('conflictBanner');
+
+  const FILE_NAME = 'mission-config.txt';
+  const CEILING_LINE = 'THRUST_CEILING = 500';
+
+  let branches, currentBranch, commitCounter, workingValue, mergeConflict;
+
+  function resetRepo() {
+    commitCounter = 1;
+    branches = { main: [{ id: 'c1', label: 'initial commit', value: '100' }] };
+    currentBranch = 'main';
+    workingValue = { main: '100' };
+    mergeConflict = null;
+  }
+  resetRepo();
+
+  function printLine(text, cls) {
+    const line = document.createElement('div');
+    line.className = 'terminal-line ' + (cls || 'out');
+    line.textContent = text;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+
+  function printEcho(cmd) {
+    const line = document.createElement('div');
+    line.className = 'terminal-line echo';
+    line.textContent = currentBranch + ' $ ' + cmd;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+
+  function updateBranchLabel() {
+    termBranchLabel.textContent = currentBranch + ' $';
+  }
+
+  function updateConflictBanner() {
+    conflictBanner.classList.toggle('active', !!mergeConflict);
+  }
+
+  function isPrefix(a, b) {
+    if (a.length > b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i].id !== b[i].id) return false;
+    }
+    return true;
+  }
+
+  function commonPrefixLen(a, b) {
+    let n = 0;
+    while (n < a.length && n < b.length && a[n].id === b[n].id) n++;
+    return n;
+  }
+
+  function blockedByConflict() {
+    if (mergeConflict) {
+      printLine('error: you have not concluded your merge (MERGE_HEAD exists).', 'err');
+      printLine('fatal: Exiting because of unfinished merge.', 'err');
+      return true;
+    }
+    return false;
+  }
+
+  function currentEffectiveValue() {
+    if (mergeConflict && mergeConflict.resolvedValue !== null) return mergeConflict.resolvedValue;
+    return workingValue[currentBranch];
+  }
+
+  function attemptMerge(sourceName) {
+    if (!branches[sourceName]) {
+      printLine(`merge: ${sourceName} - not something we can merge`, 'err');
+      return;
+    }
+    const target = branches[currentBranch];
+    const source = branches[sourceName];
+
+    if (isPrefix(target, source)) {
+      if (target.length === source.length) {
+        printLine('Already up to date.', 'out');
+        return;
+      }
+      const oldTip = target[target.length - 1].id;
+      branches[currentBranch] = source.slice();
+      workingValue[currentBranch] = source[source.length - 1].value;
+      printLine(`Updating ${oldTip}..${source[source.length - 1].id}`, 'out');
+      printLine('Fast-forward', 'out');
+      renderGraph();
+      return;
+    }
+    if (isPrefix(source, target)) {
+      printLine('Already up to date.', 'out');
+      return;
+    }
+
+    const k = commonPrefixLen(target, source);
+    const base = target[k - 1];
+    const oursTip = target[target.length - 1];
+    const theirsTip = source[source.length - 1];
+    const newFromSource = source.slice(k);
+
+    const oursChanged = oursTip.value !== base.value;
+    const theirsChanged = theirsTip.value !== base.value;
+
+    if (oursChanged && theirsChanged && oursTip.value !== theirsTip.value) {
+      mergeConflict = {
+        source: sourceName,
+        base: base.value,
+        ours: oursTip.value,
+        theirs: theirsTip.value,
+        resolvedValue: null,
+        added: false,
+        newFromSource: newFromSource
+      };
+      printLine(`Auto-merging ${FILE_NAME}`, 'out');
+      printLine(`CONFLICT (content): Merge conflict in ${FILE_NAME}`, 'err');
+      printLine('Automatic merge failed; fix conflicts and then commit the result.', 'err');
+      updateConflictBanner();
+      renderGraph();
+      return;
+    }
+
+    const mergedValue = oursChanged ? oursTip.value : theirsTip.value;
+    commitCounter++;
+    const mergeId = 'c' + commitCounter;
+    branches[currentBranch] = target.concat(newFromSource, [{ id: mergeId, label: `Merge branch '${sourceName}' into ${currentBranch}`, value: mergedValue }]);
+    workingValue[currentBranch] = mergedValue;
+    printLine(`Merge made by the 'ort' strategy.`, 'out');
+    printLine(` ${newFromSource.length} commit(s) incorporated from ${sourceName}`, 'out');
+    renderGraph();
+  }
+
+  function printFileContents() {
+    if (mergeConflict && mergeConflict.resolvedValue === null) {
+      printLine(CEILING_LINE, 'file');
+      printLine('<<<<<<< HEAD', 'marker');
+      printLine('THRUST_LIMIT = ' + mergeConflict.ours, 'file');
+      printLine('=======', 'marker');
+      printLine('THRUST_LIMIT = ' + mergeConflict.theirs, 'file');
+      printLine('>>>>>>> ' + mergeConflict.source, 'marker');
+    } else {
+      printLine(CEILING_LINE, 'file');
+      printLine('THRUST_LIMIT = ' + currentEffectiveValue(), 'file');
+    }
+  }
+
+  function resolveConflict(text) {
+    if (!mergeConflict) {
+      printLine('error: no merge conflict in progress — nothing to resolve.', 'err');
+      return;
+    }
+    mergeConflict.resolvedValue = text;
+    printLine(`Marked ${FILE_NAME} as resolved in the working tree. Conflict markers removed.`, 'out');
+    printFileContents();
+  }
+
+  function runCommand(raw) {
+    const cmd = raw.trim();
+    if (!cmd) return;
+    printEcho(cmd);
+
+    if (cmd === 'reset') {
+      resetRepo();
+      termBody.innerHTML = '';
+      printLine('Simulation reset. Back on branch main, THRUST_LIMIT = 100.', 'out');
+      updateBranchLabel();
+      updateConflictBanner();
+      renderGraph();
+      return;
+    }
+
+    if (cmd === 'git merge --abort') {
+      if (!mergeConflict) {
+        printLine('fatal: There is no merge to abort (MERGE_HEAD missing).', 'err');
+        return;
+      }
+      mergeConflict = null;
+      printLine(`Merge aborted. ${FILE_NAME} restored, working tree clean.`, 'out');
+      updateConflictBanner();
+      renderGraph();
+      return;
+    }
+
+    if (cmd === 'git status') {
+      if (mergeConflict) {
+        printLine(`On branch ${currentBranch}`, 'out');
+        printLine('You have unmerged paths.', 'out');
+        printLine('  (fix conflicts and run "git commit")', 'out');
+        printLine('  (use "git merge --abort" to abort the merge)', 'out');
+        printLine('', 'out');
+        printLine('Unmerged paths:', 'out');
+        printLine('  (use "git add <file>..." to mark resolution)', 'out');
+        printLine(`\tboth modified:   ${FILE_NAME}`, 'err');
+      } else {
+        printLine(`On branch ${currentBranch}`, 'out');
+        printLine('nothing to commit, working tree clean', 'out');
+      }
+      return;
+    }
+
+    if (cmd === 'git log') {
+      const commits = branches[currentBranch];
+      commits.slice().reverse().forEach(c => {
+        printLine(`commit ${c.id}  ${c.label}  [THRUST_LIMIT=${c.value}]`, 'out');
+      });
+      return;
+    }
+
+    if (cmd === 'cat ' + FILE_NAME || cmd === 'cat') {
+      printFileContents();
+      return;
+    }
+
+    let m = cmd.match(/^set THRUST_LIMIT=(.+)$/);
+    if (m) {
+      if (mergeConflict) {
+        printLine("You're mid-merge with unresolved markers — use `resolve THRUST_LIMIT=<value>` (or the resolution panel) instead of `set`.", 'err');
+        return;
+      }
+      workingValue[currentBranch] = m[1].trim();
+      printLine(`Edited ${FILE_NAME} (uncommitted) — THRUST_LIMIT now ${m[1].trim()} in the working tree.`, 'out');
+      return;
+    }
+
+    m = cmd.match(/^resolve THRUST_LIMIT=(.+)$/) || cmd.match(/^resolve (.+)$/);
+    if (m) {
+      resolveConflict(m[1].trim());
+      return;
+    }
+
+    m = cmd.match(/^git commit(?:\s+-m\s+['"](.+)['"])?$/);
+    if (m) {
+      if (mergeConflict) {
+        if (!mergeConflict.added) {
+          printLine('error: Committing is not possible because you have unmerged files.', 'err');
+          printLine('hint: Fix them up in the work tree, and then use "git add"', 'out');
+          printLine('hint: as appropriate to mark resolution and make a commit.', 'out');
+          return;
+        }
+        commitCounter++;
+        const mergeId = 'c' + commitCounter;
+        const label = m[1] || `Merge branch '${mergeConflict.source}' into ${currentBranch}`;
+        const value = mergeConflict.resolvedValue;
+        branches[currentBranch] = branches[currentBranch].concat(mergeConflict.newFromSource, [{ id: mergeId, label: label, value: value }]);
+        workingValue[currentBranch] = value;
+        printLine(`[${currentBranch} ${mergeId}] ${label}`, 'out');
+        printLine('Merge conflict resolved and committed.', 'out');
+        mergeConflict = null;
+        updateConflictBanner();
+        renderGraph();
+        return;
+      }
+      if (!m[1]) {
+        printLine('Aborting commit due to empty commit message.', 'err');
+        return;
+      }
+      if (workingValue[currentBranch] === branches[currentBranch][branches[currentBranch].length - 1].value) {
+        printLine('nothing to commit, working tree clean', 'out');
+        return;
+      }
+      commitCounter++;
+      const newId = 'c' + commitCounter;
+      branches[currentBranch].push({ id: newId, label: m[1], value: workingValue[currentBranch] });
+      printLine(`[${currentBranch} ${newId}] ${m[1]}`, 'out');
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git checkout -b ([\w\-\/]+)$/);
+    if (m) {
+      if (blockedByConflict()) return;
+      const name = m[1];
+      if (branches[name]) {
+        printLine(`fatal: a branch named '${name}' already exists`, 'err');
+        return;
+      }
+      branches[name] = branches[currentBranch].slice();
+      workingValue[name] = workingValue[currentBranch];
+      currentBranch = name;
+      printLine(`Switched to a new branch '${name}'`, 'out');
+      updateBranchLabel();
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git checkout ([\w\-\/]+)$/);
+    if (m) {
+      if (blockedByConflict()) return;
+      const name = m[1];
+      if (!branches[name]) {
+        printLine(`error: pathspec '${name}' did not match any branch known to git`, 'err');
+        return;
+      }
+      currentBranch = name;
+      printLine(`Switched to branch '${name}'`, 'out');
+      updateBranchLabel();
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git branch ([\w\-\/]+)$/);
+    if (m) {
+      if (blockedByConflict()) return;
+      const name = m[1];
+      if (branches[name]) {
+        printLine(`fatal: a branch named '${name}' already exists`, 'err');
+        return;
+      }
+      branches[name] = branches[currentBranch].slice();
+      workingValue[name] = workingValue[currentBranch];
+      printLine(`Created branch '${name}' (still on ${currentBranch})`, 'out');
+      renderGraph();
+      return;
+    }
+
+    m = cmd.match(/^git merge ([\w\-\/]+)$/);
+    if (m) {
+      if (blockedByConflict()) return;
+      attemptMerge(m[1]);
+      return;
+    }
+
+    m = cmd.match(/^git add (.+)$/);
+    if (m) {
+      if (mergeConflict) {
+        if (mergeConflict.resolvedValue === null) {
+          printLine(`warning: ${FILE_NAME} still contains conflict markers (<<<<<<<, =======, >>>>>>>).`, 'err');
+          printLine('Remove them and decide the final content before staging — real Git will let you stage a broken file, which is exactly how markers accidentally end up committed.', 'out');
+          return;
+        }
+        mergeConflict.added = true;
+        printLine(`Changes staged. ${FILE_NAME} marked as resolved.`, 'out');
+        return;
+      }
+      printLine('Changes staged.', 'out');
+      return;
+    }
+
+    if (cmd === 'git diff') {
+      if (mergeConflict && mergeConflict.resolvedValue === null) {
+        printLine(`diff --cc ${FILE_NAME}`, 'out');
+        printFileContents();
+      } else {
+        printLine('No differences to show.', 'out');
+      }
+      return;
+    }
+
+    printLine(`command not recognized in simulator: ${cmd}`, 'err');
+  }
+
+  function renderGraph() {
+    const branchNames = Object.keys(branches);
+    const mainCommits = branches.main;
+    const width = 720, height = 240;
+    const marginX = 50, spacingX = Math.min(80, (width - 2 * marginX) / Math.max(mainCommits.length, 1));
+    const mainY = 170;
+
+    let svgParts = [];
+    svgParts.push(`<line x1="${marginX - 10}" y1="${mainY}" x2="${marginX + (mainCommits.length - 1) * spacingX + 10}" y2="${mainY}" stroke="#2e3d63" stroke-width="2"/>`);
+    svgParts.push(`<text x="${marginX - 20}" y="${mainY + 5}" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="end">main</text>`);
+
+    mainCommits.forEach((c, i) => {
+      const x = marginX + i * spacingX;
+      const isLast = i === mainCommits.length - 1;
+      const color = isLast ? '#4dffb4' : '#ff9d4d';
+      svgParts.push(`<circle cx="${x}" cy="${mainY}" r="${isLast ? 9 : 7}" fill="${color}"/>`);
+      svgParts.push(`<text x="${x}" y="${mainY + 24}" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">${c.id}</text>`);
+    });
+
+    const conflictX = marginX + mainCommits.length * spacingX;
+
+    let branchRow = 0;
+    branchNames.filter(n => n !== 'main').forEach((name) => {
+      branchRow++;
+      const y = mainY - branchRow * 55;
+      const commits = branches[name];
+      const commonLen = commonPrefixLen(commits, mainCommits);
+      const startX = marginX + Math.min(commonLen - 1, mainCommits.length - 1) * spacingX;
+      const uniqueCommits = commits.slice(commonLen);
+      const branchColor = branchRow === 1 ? '#4ee1ff' : '#b083ff';
+
+      if (uniqueCommits.length > 0) {
+        let pathX = startX, pathY = mainY;
+        uniqueCommits.forEach((c, i) => {
+          const x = startX + (i + 1) * spacingX;
+          svgParts.push(`<path d="M${pathX},${pathY} L${x},${y}" fill="none" stroke="${branchColor}" stroke-width="2"/>`);
+          svgParts.push(`<circle cx="${x}" cy="${y}" r="7" fill="${branchColor}"/>`);
+          svgParts.push(`<text x="${x}" y="${y - 14}" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">${c.id}</text>`);
+          pathX = x; pathY = y;
+        });
+        svgParts.push(`<text x="${startX + spacingX}" y="${y - 26}" fill="${branchColor}" font-family="Fira Code, monospace" font-size="11">${name}</text>`);
+
+        if (mergeConflict && mergeConflict.source === name) {
+          svgParts.push(`<path d="M${pathX},${pathY} L${conflictX},${mainY}" fill="none" stroke="${branchColor}" stroke-width="2" stroke-dasharray="4 3"/>`);
+          svgParts.push(`<path d="M${marginX + (mainCommits.length - 1) * spacingX},${mainY} L${conflictX},${mainY}" fill="none" stroke="#2e3d63" stroke-width="2" stroke-dasharray="4 3"/>`);
+          svgParts.push(`<polygon points="${conflictX},${mainY - 12} ${conflictX + 12},${mainY} ${conflictX},${mainY + 12} ${conflictX - 12},${mainY}" fill="#ff6b6b" stroke="#ffb3b3" stroke-width="1.5"/>`);
+          svgParts.push(`<text x="${conflictX}" y="${mainY + 4}" fill="#05070d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle" font-weight="bold">!</text>`);
+          svgParts.push(`<text x="${conflictX}" y="${mainY - 24}" fill="#ff9d9d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">CONFLICT</text>`);
+        }
+      } else {
+        svgParts.push(`<text x="${startX + 10}" y="${y}" fill="${branchColor}" font-family="Fira Code, monospace" font-size="11">${name} (no new commits — already merged)</text>`);
+      }
+    });
+
+    graphSvg.innerHTML = svgParts.join('');
+  }
+
+  termInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = termInput.value;
+      termInput.value = '';
+      runCommand(val);
+    }
+  });
+
+  document.querySelectorAll('.term-hint-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      runCommand(btn.getAttribute('data-cmd'));
+    });
+  });
+
+  document.querySelectorAll('.resolve-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      runCommand('resolve THRUST_LIMIT=' + btn.getAttribute('data-resolve'));
+    });
+  });
+
+  renderGraph();
+  updateConflictBanner();
+
+})();
+</script>
+
+</body>
+</html>

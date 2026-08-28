@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.8: Events & Interactivity In Depth — Bubbling, Delegation, Real Apps | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Bubbling & Delegation Visualizer ---------- */
+  .bd-widget {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .bd-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .bd-toggle-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .bd-toggle-caption {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+  .bd-toggle-row { display: flex; gap: 6px; }
+  .bd-toggle-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bd-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bd-toggle-btn.active.on { background: var(--accent-green); color: #05130d; border-color: var(--accent-green); font-weight: 600; }
+  .bd-toggle-btn.active.off { background: #ff6b6b; color: #2a0a0a; border-color: #ff6b6b; font-weight: 600; }
+  .bd-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .bd-ship {
+    position: relative;
+    border: 2px solid var(--accent-cyan);
+    border-radius: 12px;
+    padding: 18px;
+    background: rgba(78, 225, 255, 0.03);
+  }
+  .bd-list {
+    position: relative;
+    border: 2px dashed var(--accent-purple);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 16px;
+    background: rgba(176, 131, 255, 0.04);
+  }
+  .bd-items { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .bd-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .bd-label .bd-tag { color: var(--text-muted); opacity: 0.65; font-family: var(--font-code); text-transform: none; letter-spacing: normal; }
+  .bd-item {
+    background: var(--bg-panel-alt);
+    border: 1.5px solid var(--border-glow);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .bd-item:hover { border-color: var(--accent-pink); }
+  .bd-item:active { transform: scale(0.96); }
+  .bd-item[data-original="false"] { border-style: dashed; }
+
+  @keyframes bdPulseCyan {
+    0% { box-shadow: 0 0 0 rgba(78,225,255,0); border-color: var(--accent-cyan); }
+    35% { box-shadow: 0 0 26px 4px rgba(78,225,255,0.55); }
+    100% { box-shadow: 0 0 0 rgba(78,225,255,0); border-color: var(--accent-cyan); }
+  }
+  @keyframes bdPulsePurple {
+    0% { box-shadow: 0 0 0 rgba(176,131,255,0); border-color: var(--accent-purple); }
+    35% { box-shadow: 0 0 22px 4px rgba(176,131,255,0.5); }
+    100% { box-shadow: 0 0 0 rgba(176,131,255,0); border-color: var(--accent-purple); }
+  }
+  .bd-ship.bd-pulse { animation: bdPulseCyan 0.6s ease; }
+  .bd-list.bd-pulse { animation: bdPulsePurple 0.6s ease; }
+
+  @keyframes bdItemHandled {
+    0% { background: var(--bg-panel-alt); border-color: var(--border-glow); }
+    30% { background: rgba(77,255,180,0.35); border-color: var(--accent-green); }
+    100% { background: var(--bg-panel-alt); border-color: var(--border-glow); }
+  }
+  .bd-item.bd-handled { animation: bdItemHandled 0.65s ease; }
+
+  .bd-log {
+    margin-top: 16px;
+    background: #0c1120;
+    border: 1px solid var(--border-glow);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    max-height: 190px;
+    overflow-y: auto;
+  }
+  .bd-log-line { padding: 2px 0; color: var(--text-secondary); }
+  .bd-log-line.ok { color: var(--accent-green); }
+  .bd-log-line.bad { color: #ff8080; }
+  .bd-log-line.muted { color: var(--text-muted); font-style: italic; }
+  .bd-log-placeholder { color: var(--text-muted); font-style: italic; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m08">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.8: EVENTS & INTERACTIVITY IN DEPTH</h1>
+    <div class="subtitle">Bubbling, Delegation, Real Apps</div>
+    <p class="briefing-line">Mission 2.1 taught you <code>addEventListener</code> as "attach a function, wait for a click." That's true, but it's the shallow version. Every event carries a full object of information, travels through the page in a very specific order, and can be caught by more than one listener at once. Understanding that mechanism is what separates a page that barely works from one that scales — because the professional pattern for handling lists, dynamic content, and forms depends entirely on it.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture an alarm going off on the lowest deck of a starship. It doesn't stay there. It echoes upward — deck by deck, through every level of the command structure — until it reaches someone (or something) positioned to actually handle it. Nobody had to wire a separate alarm line from that one deck straight to the bridge; the ship's structure itself carries the signal upward automatically. That's <strong>event bubbling</strong>, and it's not a special trick — it's simply how every event in the DOM behaves by default.</p>
+      <p>When a cadet clicks a button nested three layers deep in your page, the click doesn't just happen on that button and vanish. It fires there first — that exact element is called the <strong>target</strong> — and then the same event travels upward, layer by layer, through every single ancestor element, all the way up to <code>document</code> itself. Any of those ancestors can have a listener that hears it.</p>
+      <p>Once you really understand that, a hugely useful pattern falls out almost for free: instead of attaching a separate listener to every single button in a list (tedious, and impossible for buttons that don't exist yet), you can attach <strong>one listener to the parent</strong> and let bubbling carry every click up to it. That's called <strong>event delegation</strong>, and it's how real, professional interfaces handle dynamic lists, tables, and menus — including the DOM-manipulation techniques from Mission 2.7, where elements get added and removed constantly.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="bubblearrow" markerWidth="9" markerHeight="9" refX="4.5" refY="0.5" orient="auto">
+              <path d="M0,9 L4.5,0.5 L9,9 Z" fill="#4dffb4"/>
+            </marker>
+          </defs>
+
+          <rect x="30" y="16" width="580" height="268" rx="12" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="46" y="38" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12">document</text>
+
+          <rect x="100" y="62" width="440" height="196" rx="10" fill="#1b2540" stroke="#b083ff" stroke-width="2"/>
+          <text x="116" y="84" fill="#b083ff" font-family="Fira Code, monospace" font-size="12">#crewList (ancestor)</text>
+
+          <rect x="190" y="160" width="260" height="70" rx="8" fill="#0c1120" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="320" y="190" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">button.crew-item</text>
+          <text x="320" y="207" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">(event.target)</text>
+
+          <circle cx="320" cy="160" r="5" fill="#ffe66d"/>
+          <text x="320" y="140" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">1. click fires here first</text>
+
+          <path d="M320,155 L320,90" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#bubblearrow)"/>
+          <text x="332" y="122" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11">2. bubbles up</text>
+
+          <path d="M320,60 L320,22" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#bubblearrow)"/>
+          <text x="332" y="46" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11">3. bubbles up</text>
+        </svg>
+        <div class="diagram-caption">A click always fires on the exact element under the cursor first (the <strong>target</strong>) — then the identical event travels upward through every ancestor in order. Any ancestor with a listener can hear it, all the way up to <code>document</code>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The Event Object</h3>
+        <p>Every listener function automatically receives one argument: the <strong>event object</strong>. It's a detailed report of exactly what just happened, and it's how your code reacts precisely instead of guessing.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const panel = document.querySelector(&quot;#controlPanel&quot;);&#10;&#10;panel.addEventListener(&quot;click&quot;, function(event) {&#10;  console.log(event.type);          // &quot;click&quot;&#10;  console.log(event.target);        // the exact element that was clicked&#10;  console.log(event.currentTarget); // the element the listener is attached to&#10;});">COPY</button></div>
+          <pre><code><span class="kw">const</span> panel = document.<span class="fn">querySelector</span>(<span class="str">"#controlPanel"</span>);
+
+panel.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>(event) {
+  console.<span class="fn">log</span>(event.type);          <span class="comment">// "click"</span>
+  console.<span class="fn">log</span>(event.target);        <span class="comment">// the exact element that was clicked</span>
+  console.<span class="fn">log</span>(event.currentTarget); <span class="comment">// the element the listener is attached to</span>
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>event.currentTarget</code> is always <code>panel</code> here — whatever element the listener is physically attached to. <code>event.target</code> is different: it's whichever element the cadet <em>actually</em> clicked, which might be a button, an icon inside that button, or a stray bit of text — anything nested inside <code>panel</code>. When those two are the same element, it's easy to miss the distinction. It stops being optional the moment you start using delegation, below.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Event Bubbling</h3>
+        <p>Bubbling means an event doesn't just fire once on its target — it fires again on every ancestor, in order, as it climbs the tree. This is the default behavior for almost every event type, with no extra code required.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="document.querySelector(&quot;#child&quot;).addEventListener(&quot;click&quot;, function() {&#10;  console.log(&quot;1. child was clicked directly&quot;);&#10;});&#10;&#10;document.querySelector(&quot;#parent&quot;).addEventListener(&quot;click&quot;, function() {&#10;  console.log(&quot;2. parent heard it too — the event bubbled up&quot;);&#10;});">COPY</button></div>
+          <pre><code>document.<span class="fn">querySelector</span>(<span class="str">"#child"</span>).<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>() {
+  console.<span class="fn">log</span>(<span class="str">"1. child was clicked directly"</span>);
+});
+
+document.<span class="fn">querySelector</span>(<span class="str">"#parent"</span>).<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>() {
+  console.<span class="fn">log</span>(<span class="str">"2. parent heard it too — the event bubbled up"</span>);
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Clicking <code>#child</code> logs <em>both</em> lines, in that exact order. The click fires on <code>#child</code> first (it's the target), and then the same click event continues upward and fires again on <code>#parent</code>, because <code>#parent</code> is an ancestor with its own <code>"click"</code> listener. Neither listener knows about the other — bubbling is happening automatically underneath both of them.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Event Delegation — The Professional Pattern</h3>
+        <p>Once you know clicks bubble upward, a better strategy appears: don't attach a listener to every child. Attach <strong>one</strong> listener to their shared parent, and use <code>event.target</code> inside it to figure out which child actually got clicked.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// Fragile: only covers items that exist right now&#10;document.querySelectorAll(&quot;.crew-item&quot;).forEach(function(item) {&#10;  item.addEventListener(&quot;click&quot;, handleCrewClick);&#10;});&#10;&#10;// Delegation: ONE listener, works for items added later too&#10;document.querySelector(&quot;#crewList&quot;).addEventListener(&quot;click&quot;, function(event) {&#10;  const item = event.target.closest(&quot;.crew-item&quot;);&#10;  if (!item) return; // click landed somewhere else in the list&#10;  handleCrewClick.call(item, event);&#10;});">COPY</button></div>
+          <pre><code><span class="comment">// Fragile: only covers items that exist right now</span>
+document.<span class="fn">querySelectorAll</span>(<span class="str">".crew-item"</span>).<span class="fn">forEach</span>(<span class="kw">function</span>(item) {
+  item.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, handleCrewClick);
+});
+
+<span class="comment">// Delegation: ONE listener, works for items added later too</span>
+document.<span class="fn">querySelector</span>(<span class="str">"#crewList"</span>).<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>(event) {
+  <span class="kw">const</span> item = event.target.<span class="fn">closest</span>(<span class="str">".crew-item"</span>);
+  <span class="kw">if</span> (!item) <span class="kw">return</span>; <span class="comment">// click landed somewhere else in the list</span>
+  handleCrewClick.<span class="fn">call</span>(item, event);
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>event.target.closest(".crew-item")</code> starts at whatever was actually clicked and walks <em>upward</em> until it finds an element matching that selector (or returns <code>null</code> if it never does) — which matters because a cadet might click a bit of text or an icon <em>inside</em> the item, not the item element itself. Because this listener lives on <code>#crewList</code> and only reads <code>event.target</code> at the moment of the click, it doesn't matter whether a given <code>.crew-item</code> existed when the page loaded or got added by Mission 2.7's DOM code five minutes ago. Delegation checks at click-time, not at wiring-time — that's the entire benefit.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Other Event Types & <code>preventDefault()</code></h3>
+        <p>Clicks aren't the only event worth knowing. <code>"input"</code> fires as a text field's value changes (every keystroke), <code>"keydown"</code> fires when any key is pressed, and <code>"submit"</code> fires on a <code>&lt;form&gt;</code> right before the browser tries to send it off and reload the page — which is almost always the exact moment you want to step in.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const form = document.querySelector(&quot;#loginForm&quot;);&#10;&#10;form.addEventListener(&quot;submit&quot;, function(event) {&#10;  event.preventDefault(); // stop the default full-page reload&#10;  console.log(&quot;Handled with JavaScript instead of reloading.&quot;);&#10;});&#10;&#10;document.querySelector(&quot;#search&quot;).addEventListener(&quot;input&quot;, function(event) {&#10;  console.log(&quot;current value:&quot;, event.target.value);&#10;});">COPY</button></div>
+          <pre><code><span class="kw">const</span> form = document.<span class="fn">querySelector</span>(<span class="str">"#loginForm"</span>);
+
+form.<span class="fn">addEventListener</span>(<span class="str">"submit"</span>, <span class="kw">function</span>(event) {
+  event.<span class="fn">preventDefault</span>(); <span class="comment">// stop the default full-page reload</span>
+  console.<span class="fn">log</span>(<span class="str">"Handled with JavaScript instead of reloading."</span>);
+});
+
+document.<span class="fn">querySelector</span>(<span class="str">"#search"</span>).<span class="fn">addEventListener</span>(<span class="str">"input"</span>, <span class="kw">function</span>(event) {
+  console.<span class="fn">log</span>(<span class="str">"current value:"</span>, event.target.value);
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A plain HTML form's default behavior — the one baked into browsers since the 1990s — is to package up its fields and reload the page to submit them. That reload wipes out every bit of JavaScript state you had. <code>event.preventDefault()</code> tells the browser "I've got this one" and cancels only that default action; everything else about the event (including bubbling) still works normally. It has to be called <em>inside</em> the handler, synchronously — there's no way to prevent a default after the fact.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: <code>event.stopPropagation()</code></summary>
+          <p>If bubbling always happens, is there a way to stop it? Yes — <code>event.stopPropagation()</code>, called inside a handler, prevents the event from continuing to bubble any further up the tree. A real use case: a delegated listener on a list closes a details panel whenever you click anywhere in it, but each list item also has its own small "delete" button that should <em>only</em> delete — not also trigger the "open details" behavior on its way up. Calling <code>stopPropagation()</code> inside the delete button's own click handler stops that specific click from reaching the list's listener at all.</p>
+          <p>Use it sparingly. It's easy to reach for it defensively and then be baffled later when some completely unrelated, perfectly legitimate listener further up the page — a "click anywhere to close this menu" handler, for example — mysteriously stops firing. Only stop propagation when you have a specific ancestor listener in mind that you deliberately don't want to hear this particular click.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Two live instruments. The first is a bubbling-and-delegation visualizer: three nested boxes represent an ancestor chain, and clicking an item traces the real path an event takes through the DOM, live. The second is a full JavaScript sandbox for practicing <code>event.target</code> and <code>preventDefault()</code> yourself.</p>
+
+      <div class="subsection" style="border-bottom:none;padding-bottom:0;">
+        <h3>Bubbling & Delegation Visualizer</h3>
+        <p>Click any item below and watch the pulse travel outward through its ancestors while the log traces exactly what fired and why. The three original items each have their own individually-attached listener — that part never changes. What <em>does</em> change is the single delegated listener on the outer container: toggle it off, add a new item, and click it. Nothing happens — nobody ever wired it. Toggle delegation back on and click it again: now it works, instantly, because delegation checks <code>event.target</code> at the moment of the click, not when the item was created.</p>
+
+        <div class="bd-widget">
+          <div class="bd-controls">
+            <div class="bd-toggle-group">
+              <span class="bd-toggle-caption">DELEGATED LISTENER ON #bdOuter</span>
+              <div class="bd-toggle-row">
+                <button class="bd-toggle-btn on" id="bdOnBtn">ON</button>
+                <button class="bd-toggle-btn off" id="bdOffBtn">OFF</button>
+              </div>
+            </div>
+            <div class="bd-action-row">
+              <button class="console-btn" id="bdAddBtn">+ add item</button>
+              <button class="console-btn" id="bdResetBtn">reset</button>
+            </div>
+          </div>
+
+          <div class="bd-ship" id="bdOuter">
+            <div class="bd-label">OUTER CONTAINER <span class="bd-tag">#bdOuter</span></div>
+            <div class="bd-list" id="bdList">
+              <div class="bd-label">CREW ROSTER (ancestor) <span class="bd-tag">#bdList</span></div>
+              <div class="bd-items" id="bdItems">
+                <button type="button" class="bd-item" data-original="true">Item 1</button>
+                <button type="button" class="bd-item" data-original="true">Item 2</button>
+                <button type="button" class="bd-item" data-original="true">Item 3</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bd-log" id="bdLog">
+            <div class="bd-log-placeholder">Click an item above to trace the event path…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection" style="margin-top:30px;border-bottom:none;padding-bottom:0;">
+        <h3>Live Sandbox</h3>
+        <p>Write code on the left and hit Run. Try building your own tiny delegated list or a form that uses <code>preventDefault()</code> — your code can reach into the "ship display" panel exactly like it would a real page.</p>
+
+        <div class="sandbox-grid">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+            <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+          </div>
+          <div class="right-stack">
+            <div class="sandbox-pane">
+              <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+              <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+            </div>
+            <div class="sandbox-pane">
+              <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+              <div id="consoleOutput" class="sandbox-output"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="console-controls">
+          <button class="console-btn" id="btnReset">reset starter code</button>
+          <button class="console-btn" id="btnExample1">try: one delegated listener</button>
+          <button class="console-btn" id="btnExample2">try: a form with preventDefault</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above (or a real HTML file with a <code>&lt;script&gt;</code> tag), build a small dynamic list and a form that both handle events the professional way.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Build a parent container with at least 3 child items inside it, plus a button that adds a new item to the container when clicked</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Attach exactly <strong>one</strong> delegated listener to the parent container — not one listener per item
+          <span class="sub">The listener goes on the container, once, outside of any loop</span></label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Inside that listener, use <code>event.target</code> (with <code>.matches()</code> or <code>.closest()</code>) to identify exactly which child was clicked</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Confirm an item you added <em>after</em> the listener was attached still responds correctly — with zero new listener code written for it</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Build a small form (at least one input and a submit button) and attach a <code>"submit"</code> listener that calls <code>event.preventDefault()</code></label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">Read the input's current value using <code>event.target.value</code> inside an <code>"input"</code> listener, and log it as the cadet types</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your delegated listener seems to "miss" clicks, check what <code>event.target</code> actually is — a cadet might click an icon or a span <em>inside</em> your item rather than the item itself, and a strict <code>===</code> comparison will fail. <code>event.target.closest(".your-item-class")</code> is more forgiving: it walks upward from whatever was actually clicked until it finds a match.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Give each list item its own small "remove" button nested inside it. Make clicking "remove" delete just that item without also triggering whatever your delegated listener does for a normal item click — using <code>event.stopPropagation()</code> inside the remove button's own handler.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>event.target</code><span>The exact element that triggered the event</span></div>
+        <div class="cheat-card"><code>event.currentTarget</code><span>The element the listener is actually attached to</span></div>
+        <div class="cheat-card"><code>event.preventDefault()</code><span>Cancels the browser's default action (e.g. a form reload)</span></div>
+        <div class="cheat-card"><code>event.stopPropagation()</code><span>Stops the event bubbling further up — use sparingly</span></div>
+        <div class="cheat-card"><code>Bubbling</code><span>An event fires on its target, then every ancestor, in order</span></div>
+        <div class="cheat-card"><code>Event delegation</code><span>One listener on a parent, using <code>event.target</code> to find the child</span></div>
+        <div class="cheat-card"><code>.closest(selector)</code><span>Walks upward from an element to the nearest match</span></div>
+        <div class="cheat-card"><code>"submit"</code><span>Fires on a form right before it would reload the page</span></div>
+        <div class="cheat-card"><code>"input"</code><span>Fires on every value change — every keystroke, live</span></div>
+        <div class="cheat-card"><code>"keydown"</code><span>Fires on any key press — check <code>event.key</code> for which one</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Attaching a listener to an element that doesn't exist yet — the script ran before that part of the page was created.</li>
+          <li>Forgetting that elements added <em>after</em> page load need delegation, or their own brand-new listener — an old listener never retroactively covers new elements.</li>
+          <li>Confusing <code>event.target</code> (what was actually clicked) with <code>event.currentTarget</code> (what the listener is attached to) — they're only the same element when there's no nesting involved.</li>
+          <li>Forgetting <code>event.preventDefault()</code> on a form's <code>"submit"</code> listener and getting a jarring full-page reload that wipes out every bit of JavaScript state.</li>
+          <li>Reaching for <code>stopPropagation()</code> defensively and accidentally breaking an unrelated, perfectly legitimate listener further up the page.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — you attach <strong>one</strong> delegated listener to <code>#crewList</code> to catch clicks on any <code>.crew-item</code> inside it, present or future. Inside that listener, which property tells you exactly which child element was actually clicked?</p>
+        <button class="quiz-btn" data-correct="false">event.currentTarget — it always points to #crewList</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — event.target is whatever the cadet's cursor actually landed on; currentTarget would just tell you #crewList, which you already knew.">event.target</button>
+        <button class="quiz-btn" data-correct="false">event.type</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// Try me — then hit RUN
+const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const btn = document.createElement("button");
+btn.textContent = "Report status";
+display.appendChild(btn);
+
+btn.addEventListener("click", function(event) {
+  console.log("event.target:", event.target.tagName);
+  display.textContent = "STATUS REPORTED";
+});
+
+console.log("Click the button in the ship display.");`;
+
+  const EXAMPLE_DELEGATION = `const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+function addCrewButton(name) {
+  const btn = document.createElement("button");
+  btn.textContent = name;
+  btn.style.margin = "4px";
+  display.appendChild(btn);
+}
+
+["Nova", "Kip", "Zed"].forEach(addCrewButton);
+
+// ONE delegated listener on the parent — not one per button
+display.addEventListener("click", function(event) {
+  if (event.target.tagName === "BUTTON") {
+    console.log("Clicked:", event.target.textContent);
+  }
+});
+
+// simulate a crew member showing up later
+setTimeout(function() {
+  addCrewButton("Rho (added later)");
+  console.log("Rho was just added — click it. Delegation still catches it.");
+}, 1500);`;
+
+  const EXAMPLE_FORM = `const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const form = document.createElement("form");
+const input = document.createElement("input");
+input.placeholder = "Cadet name";
+const button = document.createElement("button");
+button.type = "submit";
+button.textContent = "Log in";
+form.appendChild(input);
+form.appendChild(button);
+display.appendChild(form);
+
+form.addEventListener("submit", function(event) {
+  event.preventDefault(); // no page reload
+  display.textContent = "LOGGED: " + (input.value || "unknown cadet");
+  console.log("Submitted without a reload:", input.value);
+});
+
+console.log("Type a name and press Enter or click Log in.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_DELEGATION },
+        { btnId: "btnExample2", code: EXAMPLE_FORM },
+      ],
+    });
+
+    /* ---------------- Bubbling & Delegation Visualizer ---------------- */
+    const bdOuter = document.getElementById("bdOuter");
+    const bdList = document.getElementById("bdList");
+    const bdItems = document.getElementById("bdItems");
+    const bdLog = document.getElementById("bdLog");
+    const bdOnBtn = document.getElementById("bdOnBtn");
+    const bdOffBtn = document.getElementById("bdOffBtn");
+    const bdAddBtn = document.getElementById("bdAddBtn");
+    const bdResetBtn = document.getElementById("bdResetBtn");
+
+    let nextItemNum = 4;
+
+    function bdLogLine(text, cls) {
+      const placeholder = bdLog.querySelector(".bd-log-placeholder");
+      if (placeholder) placeholder.remove();
+      const line = document.createElement("div");
+      line.className = "bd-log-line" + (cls ? " " + cls : "");
+      line.textContent = text;
+      bdLog.appendChild(line);
+      bdLog.scrollTop = bdLog.scrollHeight;
+    }
+
+    function bdPulseAncestors() {
+      bdList.classList.remove("bd-pulse");
+      bdOuter.classList.remove("bd-pulse");
+      setTimeout(function () { bdList.classList.add("bd-pulse"); }, 150);
+      setTimeout(function () { bdOuter.classList.add("bd-pulse"); }, 300);
+      setTimeout(function () { bdList.classList.remove("bd-pulse"); }, 150 + 600);
+      setTimeout(function () { bdOuter.classList.remove("bd-pulse"); }, 300 + 600);
+    }
+
+    function bdFlashItem(item) {
+      item.classList.remove("bd-handled");
+      void item.offsetWidth; // restart the animation if it's already running
+      item.classList.add("bd-handled");
+      setTimeout(function () { item.classList.remove("bd-handled"); }, 700);
+    }
+
+    // Fires when one of the 3 ORIGINAL items is clicked — each got its own
+    // listener directly, back when the page loaded. This never changes,
+    // regardless of the delegation toggle below.
+    function bdDirectHandler(event) {
+      const item = event.currentTarget;
+      bdLogLine('● event.target -> "' + item.textContent + '"', "muted");
+      bdFlashItem(item);
+      bdPulseAncestors();
+      setTimeout(function () { bdLogLine("  bubbled to #bdList"); }, 150);
+      setTimeout(function () { bdLogLine("  bubbled to #bdOuter"); }, 300);
+      setTimeout(function () {
+        bdLogLine("HANDLED (individual listener attached directly to this item)", "ok");
+      }, 420);
+    }
+
+    // The ONE delegated listener. Attached to / removed from #bdOuter as a
+    // real DOM listener when the toggle flips — nothing here is faked.
+    function bdDelegatedHandler(event) {
+      const item = event.target.closest(".bd-item");
+      if (!item || !bdItems.contains(item)) return;
+      bdLogLine('● event.target -> "' + item.textContent + '"', "muted");
+      bdFlashItem(item);
+      bdPulseAncestors();
+      setTimeout(function () { bdLogLine("  bubbled to #bdList"); }, 150);
+      setTimeout(function () {
+        bdLogLine("HANDLED (caught here by the delegated listener on #bdOuter)", "ok");
+      }, 300);
+    }
+
+    function bdWireOriginalItems() {
+      bdItems.querySelectorAll('.bd-item[data-original="true"]').forEach(function (item) {
+        item.addEventListener("click", bdDirectHandler);
+      });
+    }
+
+    let delegationOn = false;
+    function bdSetDelegation(on) {
+      delegationOn = on;
+      bdOnBtn.classList.toggle("active", on);
+      bdOffBtn.classList.toggle("active", !on);
+      bdOuter.removeEventListener("click", bdDelegatedHandler);
+      if (on) bdOuter.addEventListener("click", bdDelegatedHandler);
+      bdLogLine(
+        on
+          ? "-- Delegation ON: #bdOuter now catches clicks on any item, old or new. --"
+          : "-- Delegation OFF: only the 3 original items (wired individually) still respond. --",
+        "muted"
+      );
+    }
+
+    bdOnBtn.addEventListener("click", function () { bdSetDelegation(true); });
+    bdOffBtn.addEventListener("click", function () { bdSetDelegation(false); });
+
+    bdAddBtn.addEventListener("click", function () {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bd-item";
+      btn.dataset.original = "false";
+      btn.textContent = "Item " + nextItemNum++;
+      bdItems.appendChild(btn);
+      bdLogLine('+ added "' + btn.textContent + '" -- no individual listener was attached to it', "muted");
+    });
+
+    bdResetBtn.addEventListener("click", function () {
+      bdItems.querySelectorAll('.bd-item[data-original="false"]').forEach(function (el) { el.remove(); });
+      nextItemNum = 4;
+      bdLog.innerHTML = '<div class="bd-log-placeholder">Click an item above to trace the event path…</div>';
+    });
+
+    bdWireOriginalItems();
+    bdSetDelegation(true);
+  });
+})();
+</script>
+
+</body>
+</html>

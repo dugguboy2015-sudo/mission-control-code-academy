@@ -22,14 +22,14 @@ window.MISSION_MANIFEST = {
       "accent": "cyan",
       "missions": [
         { "id": "s1-m01", "num": "1.1", "title": "HTML Structure & Semantics", "subtitle": "The Document Skeleton", "file": "missions/s1-m01-html-structure.html", "status": "live", "difficulty": "cadet", "estMinutes": 45, "source": "mission-02-html-basics.html" },
-        { "id": "s1-m02", "num": "1.2", "title": "Forms, Inputs & Media", "subtitle": "Taking Input from the Cadet", "file": "missions/s1-m02-forms-and-media.html", "status": "planned", "difficulty": "cadet", "estMinutes": 40 },
-        { "id": "s1-m03", "num": "1.3", "title": "CSS Fundamentals & the Box Model", "subtitle": "Selectors, the Cascade, Box Model", "file": "missions/s1-m03-css-fundamentals.html", "status": "planned", "difficulty": "cadet", "estMinutes": 45, "note": "mission-03 partially covers selectors/cascade/typography; this mission still needs a dedicated box-model deep-dive" },
+        { "id": "s1-m02", "num": "1.2", "title": "Forms, Inputs & Media", "subtitle": "Taking Input from the Cadet", "file": "missions/s1-m02-forms-and-media.html", "status": "live", "difficulty": "cadet", "estMinutes": 40 },
+        { "id": "s1-m03", "num": "1.3", "title": "CSS Fundamentals & the Box Model", "subtitle": "Selectors, the Cascade, Box Model", "file": "missions/s1-m03-css-fundamentals.html", "status": "live", "difficulty": "cadet", "estMinutes": 45, "note": "mission-03 partially covers selectors/cascade/typography; this mission still needs a dedicated box-model deep-dive" },
         { "id": "s1-m04", "num": "1.4", "title": "Flexbox Layout", "subtitle": "Arranging the Bridge — Styling and Positioning Every Station", "file": "missions/s1-m04-css-flexbox.html", "status": "live", "difficulty": "officer", "estMinutes": 55, "source": "mission-03-css-flexbox.html" },
-        { "id": "s1-m05", "num": "1.5", "title": "CSS Grid Layout", "subtitle": "Two-Dimensional Layout", "file": "missions/s1-m05-css-grid.html", "status": "planned", "difficulty": "cadet", "estMinutes": 50 },
-        { "id": "s1-m06", "num": "1.6", "title": "Positioning & Responsive Design", "subtitle": "Mobile-First, Media Queries", "file": "missions/s1-m06-responsive-design.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
-        { "id": "s1-m07", "num": "1.7", "title": "Transitions, Animation & Polish", "subtitle": "Making It Feel Alive", "file": "missions/s1-m07-transitions-animation.html", "status": "planned", "difficulty": "officer", "estMinutes": 40 },
-        { "id": "s1-m08", "num": "1.8", "title": "Design Track: Visual Hierarchy & Accessibility", "subtitle": "Color, Type, Spacing, A11y Basics", "file": "missions/s1-m08-design-fundamentals.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
-        { "id": "s1-m09", "num": "1.9", "title": "Capstone: Your Personal Site", "subtitle": "Design & Build a Multi-Section Site", "file": "missions/s1-m09-capstone-personal-site.html", "status": "planned", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L1" }
+        { "id": "s1-m05", "num": "1.5", "title": "CSS Grid Layout", "subtitle": "Two-Dimensional Layout", "file": "missions/s1-m05-css-grid.html", "status": "live", "difficulty": "cadet", "estMinutes": 50 },
+        { "id": "s1-m06", "num": "1.6", "title": "Positioning & Responsive Design", "subtitle": "Mobile-First, Media Queries", "file": "missions/s1-m06-responsive-design.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s1-m07", "num": "1.7", "title": "Transitions, Animation & Polish", "subtitle": "Making It Feel Alive", "file": "missions/s1-m07-transitions-animation.html", "status": "live", "difficulty": "officer", "estMinutes": 40 },
+        { "id": "s1-m08", "num": "1.8", "title": "Design Track: Visual Hierarchy & Accessibility", "subtitle": "Color, Type, Spacing, A11y Basics", "file": "missions/s1-m08-design-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s1-m09", "num": "1.9", "title": "Capstone: Your Personal Site", "subtitle": "Design & Build a Multi-Section Site", "file": "missions/s1-m09-capstone-personal-site.html", "status": "live", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L1" }
       ]
     },
     {
@@ -40,16 +40,16 @@ window.MISSION_MANIFEST = {
       "accent": "cyan",
       "missions": [
         { "id": "s2-m01", "num": "2.1", "title": "Variables, Types & Operators", "subtitle": "Bringing the Ship to Life", "file": "missions/s2-m01-js-foundations.html", "status": "live", "difficulty": "cadet", "estMinutes": 65, "source": "mission-04-javascript-interactivity.html", "note": "broad first-contact JS mission (vars/functions/conditionals/DOM/events); deeper dedicated missions below still needed" },
-        { "id": "s2-m02", "num": "2.2", "title": "Conditionals & Control Flow", "subtitle": "Teaching the Ship to Decide", "file": "missions/s2-m02-conditionals.html", "status": "planned", "difficulty": "cadet", "estMinutes": 35 },
-        { "id": "s2-m03", "num": "2.3", "title": "Loops & Iteration", "subtitle": "Doing Things Again, On Purpose", "file": "missions/s2-m03-loops.html", "status": "planned", "difficulty": "cadet", "estMinutes": 40 },
-        { "id": "s2-m04", "num": "2.4", "title": "Functions in Depth", "subtitle": "Parameters, Return Values, Scope", "file": "missions/s2-m04-functions-in-depth.html", "status": "planned", "difficulty": "cadet", "estMinutes": 45 },
-        { "id": "s2-m05", "num": "2.5", "title": "Arrays & Array Methods", "subtitle": "map / filter / reduce", "file": "missions/s2-m05-arrays.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
-        { "id": "s2-m06", "num": "2.6", "title": "Objects & Structured Data", "subtitle": "Modeling the Real World in Code", "file": "missions/s2-m06-objects.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
-        { "id": "s2-m07", "num": "2.7", "title": "The DOM In Depth", "subtitle": "Finding & Changing the Page", "file": "missions/s2-m07-dom-in-depth.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
-        { "id": "s2-m08", "num": "2.8", "title": "Events & Interactivity In Depth", "subtitle": "Bubbling, Delegation, Real Apps", "file": "missions/s2-m08-events-in-depth.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
-        { "id": "s2-m09", "num": "2.9", "title": "Debugging & DevTools", "subtitle": "Reading Errors Like a Professional", "file": "missions/s2-m09-debugging-devtools.html", "status": "planned", "difficulty": "officer", "estMinutes": 40 },
-        { "id": "s2-m10", "num": "2.10", "title": "Thinking Like a Programmer", "subtitle": "Problem-Solving & Simple Algorithms", "file": "missions/s2-m10-algorithmic-thinking.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
-        { "id": "s2-m11", "num": "2.11", "title": "Capstone: Interactive Game or Quiz App", "subtitle": "Everything, Combined", "file": "missions/s2-m11-capstone-game.html", "status": "planned", "difficulty": "officer", "estMinutes": 100, "capstone": true, "ladderLevel": "L1" }
+        { "id": "s2-m02", "num": "2.2", "title": "Conditionals & Control Flow", "subtitle": "Teaching the Ship to Decide", "file": "missions/s2-m02-conditionals.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 },
+        { "id": "s2-m03", "num": "2.3", "title": "Loops & Iteration", "subtitle": "Doing Things Again, On Purpose", "file": "missions/s2-m03-loops.html", "status": "live", "difficulty": "cadet", "estMinutes": 40 },
+        { "id": "s2-m04", "num": "2.4", "title": "Functions in Depth", "subtitle": "Parameters, Return Values, Scope", "file": "missions/s2-m04-functions-in-depth.html", "status": "live", "difficulty": "cadet", "estMinutes": 45 },
+        { "id": "s2-m05", "num": "2.5", "title": "Arrays & Array Methods", "subtitle": "map / filter / reduce", "file": "missions/s2-m05-arrays.html", "status": "live", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s2-m06", "num": "2.6", "title": "Objects & Structured Data", "subtitle": "Modeling the Real World in Code", "file": "missions/s2-m06-objects.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m07", "num": "2.7", "title": "The DOM In Depth", "subtitle": "Finding & Changing the Page", "file": "missions/s2-m07-dom-in-depth.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m08", "num": "2.8", "title": "Events & Interactivity In Depth", "subtitle": "Bubbling, Delegation, Real Apps", "file": "missions/s2-m08-events-in-depth.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s2-m09", "num": "2.9", "title": "Debugging & DevTools", "subtitle": "Reading Errors Like a Professional", "file": "missions/s2-m09-debugging-devtools.html", "status": "live", "difficulty": "officer", "estMinutes": 40 },
+        { "id": "s2-m10", "num": "2.10", "title": "Thinking Like a Programmer", "subtitle": "Problem-Solving & Simple Algorithms", "file": "missions/s2-m10-algorithmic-thinking.html", "status": "live", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s2-m11", "num": "2.11", "title": "Capstone: Interactive Game or Quiz App", "subtitle": "Everything, Combined", "file": "missions/s2-m11-capstone-game.html", "status": "live", "difficulty": "officer", "estMinutes": 100, "capstone": true, "ladderLevel": "L1" }
       ]
     },
     {
@@ -60,8 +60,8 @@ window.MISSION_MANIFEST = {
       "accent": "orange",
       "missions": [
         { "id": "s3-m01", "num": "3.1", "title": "Git & GitHub Fundamentals", "subtitle": "Commits, Branching, Merging, Remotes", "file": "missions/s3-m01-git-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 70, "source": "mission-01-git-branching.html", "note": "currently a broad single mission covering the log/staging/branching/merging/remotes together; splitting into 3.2 (dedicated branching/merging deep-dive) and 3.3 (GitHub/PRs deep-dive) is still planned" },
-        { "id": "s3-m02", "num": "3.2", "title": "Branching & Merging Deep-Dive", "subtitle": "Parallel Timelines, Conflict Resolution", "file": "missions/s3-m02-branching-merging.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
-        { "id": "s3-m03", "num": "3.3", "title": "GitHub, Remotes & Pull Requests", "subtitle": "Syncing with Mission Control", "file": "missions/s3-m03-github-pull-requests.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 }
+        { "id": "s3-m02", "num": "3.2", "title": "Branching & Merging Deep-Dive", "subtitle": "Parallel Timelines, Conflict Resolution", "file": "missions/s3-m02-branching-merging.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s3-m03", "num": "3.3", "title": "GitHub, Remotes & Pull Requests", "subtitle": "Syncing with Mission Control", "file": "missions/s3-m03-github-pull-requests.html", "status": "live", "difficulty": "officer", "estMinutes": 45 }
       ]
     },
     {
@@ -71,12 +71,12 @@ window.MISSION_MANIFEST = {
       "subtitle": "Async, APIs & Deployment",
       "accent": "cyan",
       "missions": [
-        { "id": "s4-m01", "num": "4.1", "title": "Organizing Code: Modules & Files", "subtitle": "Splitting the Ship into Systems", "file": "missions/s4-m01-modules.html", "status": "planned", "difficulty": "officer", "estMinutes": 35 },
-        { "id": "s4-m02", "num": "4.2", "title": "Async JavaScript", "subtitle": "Promises & async/await", "file": "missions/s4-m02-async-javascript.html", "status": "planned", "difficulty": "officer", "estMinutes": 55 },
-        { "id": "s4-m03", "num": "4.3", "title": "fetch, JSON & Public APIs", "subtitle": "Talking to Other Ships", "file": "missions/s4-m03-fetch-and-apis.html", "status": "planned", "difficulty": "officer", "estMinutes": 55, "threadNote": "Thread 4 (boxes & arrows): first mission to require a system diagram before code" },
-        { "id": "s4-m04", "num": "4.4", "title": "State & Storage", "subtitle": "localStorage — Remembering Between Visits", "file": "missions/s4-m04-state-and-storage.html", "status": "planned", "difficulty": "officer", "estMinutes": 35 },
+        { "id": "s4-m01", "num": "4.1", "title": "Organizing Code: Modules & Files", "subtitle": "Splitting the Ship into Systems", "file": "missions/s4-m01-modules.html", "status": "live", "difficulty": "officer", "estMinutes": 35 },
+        { "id": "s4-m02", "num": "4.2", "title": "Async JavaScript", "subtitle": "Promises & async/await", "file": "missions/s4-m02-async-javascript.html", "status": "live", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s4-m03", "num": "4.3", "title": "fetch, JSON & Public APIs", "subtitle": "Talking to Other Ships", "file": "missions/s4-m03-fetch-and-apis.html", "status": "live", "difficulty": "officer", "estMinutes": 55, "threadNote": "Thread 4 (boxes & arrows): first mission to require a system diagram before code" },
+        { "id": "s4-m04", "num": "4.4", "title": "State & Storage", "subtitle": "localStorage — Remembering Between Visits", "file": "missions/s4-m04-state-and-storage.html", "status": "live", "difficulty": "officer", "estMinutes": 35 },
         { "id": "s4-m05", "num": "4.5", "title": "Deploying to the Web", "subtitle": "GitHub Pages & Cloudflare Pages", "file": "missions/s4-m05-deployment.html", "status": "live", "difficulty": "officer", "accent": "orange", "estMinutes": 45, "source": "mission-06-deployment.html", "threadNote": "Thread 2 (ship it): first deploy mission" },
-        { "id": "s4-m06", "num": "4.6", "title": "Capstone: Live API App", "subtitle": "Consume a Real Public API, Deployed", "file": "missions/s4-m06-capstone-api-app.html", "status": "planned", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L2" }
+        { "id": "s4-m06", "num": "4.6", "title": "Capstone: Live API App", "subtitle": "Consume a Real Public API, Deployed", "file": "missions/s4-m06-capstone-api-app.html", "status": "live", "difficulty": "officer", "estMinutes": 90, "capstone": true, "ladderLevel": "L2" }
       ]
     },
     {

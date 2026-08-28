@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.3: CSS Fundamentals & the Box Model — Selectors, the Cascade, Box Model | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Box Model Inspector ---------- */
+  .bmi-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 760px) {
+    .bmi-grid { grid-template-columns: 1fr; }
+  }
+  .bmi-controls {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .bmi-control { margin-bottom: 20px; }
+  .bmi-control:last-child { margin-bottom: 0; }
+  .bmi-control label.bmi-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .bmi-control label.bmi-label span.bmi-readout {
+    font-family: var(--font-code);
+    font-size: 12px;
+    color: var(--accent-cyan);
+    letter-spacing: 0;
+  }
+  .bmi-control input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent-cyan);
+    cursor: pointer;
+  }
+  .bmi-toggle-row { display: flex; gap: 6px; }
+  .bmi-toggle-btn {
+    flex: 1;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 11.5px;
+    padding: 8px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bmi-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bmi-toggle-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+
+  .bmi-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .bmi-stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .bmi-diagram-wrap {
+    min-height: 300px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+  }
+  .bmi-margin-layer {
+    outline: 1.5px dashed var(--accent-orange);
+    outline-offset: -1px;
+    position: relative;
+    transition: padding 0.12s ease;
+  }
+  .bmi-margin-layer::before {
+    content: "MARGIN";
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-family: var(--font-code);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--accent-orange);
+  }
+  .bmi-border-layer {
+    position: relative;
+    background: #ffe66d;
+    border-style: solid;
+    border-color: var(--accent-cyan);
+    transition: width 0.12s ease, height 0.12s ease, padding 0.12s ease, border-width 0.12s ease;
+  }
+  .bmi-border-layer::after {
+    content: "PADDING";
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-family: var(--font-code);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: #6b5f1f;
+  }
+  .bmi-content-layer {
+    width: 100%;
+    height: 100%;
+    background: var(--accent-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #06251b;
+    font-family: var(--font-code);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .bmi-dims {
+    padding: 12px 16px;
+    background: var(--bg-panel-alt);
+    border-top: 1px solid var(--border-glow);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    text-align: center;
+  }
+  .bmi-dims .bmi-dim-item { font-family: var(--font-code); font-size: 12px; }
+  .bmi-dims .bmi-dim-item .bmi-dim-label { display: block; font-size: 9px; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 3px; }
+  #bmiCode {
+    margin: 0;
+    padding: 14px 16px;
+    background: #05070d;
+    border-top: 1px solid var(--border-glow);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--accent-cyan);
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.3: CSS FUNDAMENTALS & THE BOX MODEL</h1>
+    <div class="subtitle">Selectors, the Cascade, Box Model</div>
+    <p class="briefing-line">You've already met CSS selectors and a light touch of the cascade back in Mission 1.4's detour through Flexbox. This mission goes deeper on both — and then spends most of its time on something every single element on every page you'll ever build has to obey: the box model. Once you can predict exactly how big a box actually is on screen, and exactly which rule wins when two fight over the same property, a huge category of "why is this broken" mysteries stops being mysterious.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of CSS <strong>selectors</strong> as the ship's addressing system. Mission Control doesn't broadcast "hey, everyone" when it needs one console recalibrated — it targets a precise address: a deck, a station, a specific piece of hardware. Selectors work the same way: they're how a style rule says exactly which element(s) on the page it's talking to, whether that's "every paragraph," "every element wearing this class badge," or "this one specific, unique component."</p>
+      <p>But addressing systems create a new problem: what happens when two different orders target the <em>same</em> station with conflicting instructions? That's where the <strong>cascade</strong> comes in — CSS's rank-and-seniority system for resolving conflicts. It's not random and it's not "whichever loads last always wins" (though source order is part of it). It's a scoring system called <strong>specificity</strong>, and once you know the ranks, you can always predict the winner instead of guessing.</p>
+      <p>Then there's the box model — arguably the single most load-bearing concept in all of CSS. Every element on a page, no matter how it looks, is secretly a rectangle, and every rectangle is built from the same four stacked layers: <strong>content</strong>, <strong>padding</strong>, <strong>border</strong>, and <strong>margin</strong>. This is literally how much physical deck space a component claims on your layout — get it wrong and things overlap, overflow, or mysteriously refuse to line up, no matter how correct your colors and fonts are.</p>
+      <p>Finally, there's a setting called <code>box-sizing</code> that changes what "width" even means for a box. Get this one concept solid and an enormous number of "my math doesn't add up" layout bugs simply stop happening.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <!-- margin -->
+          <rect x="10" y="10" width="660" height="280" rx="8" fill="none" stroke="#ff9d4d" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="20" y="28" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="12">margin</text>
+          <text x="660" y="28" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="10" text-anchor="end">pushes other boxes away</text>
+
+          <!-- border -->
+          <rect x="60" y="52" width="560" height="220" rx="6" fill="none" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="70" y="70" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12">border</text>
+          <text x="650" y="70" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10" text-anchor="end">the box's visible edge</text>
+
+          <!-- padding -->
+          <rect x="100" y="92" width="480" height="150" rx="4" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <text x="110" y="110" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12">padding</text>
+          <text x="580" y="110" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10" text-anchor="end">breathing room, inside the border</text>
+
+          <!-- content -->
+          <rect x="160" y="132" width="360" height="80" rx="3" fill="#4dffb4" opacity="0.22" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="340" y="176" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">content</text>
+          <text x="340" y="194" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">width × height</text>
+
+          <!-- dimension callouts -->
+          <line x1="60" y1="284" x2="620" y2="284" stroke="#ff9d4d" stroke-width="1"/>
+          <text x="340" y="298" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">margin box — total space this element claims on the page</text>
+        </svg>
+        <div class="diagram-caption">The box model, four layers deep: content sits inside padding, padding sits inside the border, and margin is empty space pushing every other box away. Every element you will ever style is built from these four nested rectangles.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Selectors Recap</h3>
+        <p>A quick refresher on the four selector types you'll use constantly, plus two ways to combine them so you can target elements based on where they sit in the page's structure.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="p {&#10;  color: #a8b3d1;&#10;}&#10;&#10;.status-card {&#10;  background: #1b2540;&#10;}&#10;&#10;#launch-button {&#10;  font-weight: bold;&#10;}&#10;&#10;.status-card p {&#10;  font-size: 14px; /* descendant: any p inside .status-card */&#10;}&#10;&#10;.status-card > h3 {&#10;  color: #4ee1ff; /* child: only a direct h3 child */&#10;}">COPY</button></div>
+          <pre><code><span class="sel">p</span> {
+  <span class="prop">color</span>: <span class="val">#a8b3d1</span>; <span class="comment">/* element selector — every &lt;p&gt; */</span>
+}
+
+<span class="sel">.status-card</span> {
+  <span class="prop">background</span>: <span class="val">#1b2540</span>; <span class="comment">/* class — reusable, any number of elements */</span>
+}
+
+<span class="sel">#launch-button</span> {
+  <span class="prop">font-weight</span>: <span class="val">bold</span>; <span class="comment">/* id — exactly one element on the page */</span>
+}
+
+<span class="sel">.status-card p</span> {
+  <span class="prop">font-size</span>: <span class="val">14px</span>; <span class="comment">/* descendant combinator: any p anywhere inside .status-card */</span>
+}
+
+<span class="sel">.status-card > h3</span> {
+  <span class="prop">color</span>: <span class="val">#4ee1ff</span>; <span class="comment">/* child combinator: only a direct h3 child, not grandchildren */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A space between two selectors means "descendant, no matter how deep" — <code>.status-card p</code> matches a paragraph nested five layers inside a status card. A <code>&gt;</code> means "direct child only" — <code>.status-card &gt; h3</code> skips any <code>h3</code> that isn't an immediate child. IDs should appear exactly once per page; classes are meant to be reused across many elements.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Specificity & the Cascade</h3>
+        <p>When two rules target the same element and disagree, CSS doesn't guess — it scores each selector's specificity and the higher score wins. From lowest to highest rank: <strong>element selectors</strong> (like <code>p</code>) score lowest, <strong>class selectors</strong> (like <code>.status-card</code>) beat them, <strong>ID selectors</strong> (like <code>#launch-button</code>) beat classes, and an <strong>inline <code>style="..."</code> attribute</strong> beats everything written in a stylesheet. If two rules have equal specificity, the one that appears <em>later</em> in the source wins — that's the actual "cascading" part.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".status-card {&#10;  color: white;&#10;}&#10;&#10;#launch-button {&#10;  color: yellow; /* wins: ID beats class */&#10;}&#10;&#10;.status-card {&#10;  color: cyan; /* still loses to the ID above, even though it's later */&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.status-card</span> {
+  <span class="prop">color</span>: <span class="val">white</span>;
+}
+
+<span class="sel">#launch-button</span> {
+  <span class="prop">color</span>: <span class="val">yellow</span>; <span class="comment">/* wins: ID beats class, regardless of order */</span>
+}
+
+<span class="sel">.status-card</span> {
+  <span class="prop">color</span>: <span class="val">cyan</span>; <span class="comment">/* loses to the ID above, even though it's written later */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The element with <code>id="launch-button"</code> ends up <code>yellow</code>, full stop — source order only breaks ties <em>between rules of equal specificity</em>. It never lets a later, lower-specificity rule beat an earlier, higher-specificity one. If a style you wrote "isn't applying," this is almost always the reason: something more specific is quietly winning.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: The exact specificity formula (and why to avoid <code>!important</code>)</summary>
+          <p>Specificity is usually written as three numbers, (IDs, classes, elements). Each ID selector adds 1 to the first slot, each class (and attribute selector, and pseudo-class like <code>:hover</code>) adds 1 to the second, and each element/tag selector (and pseudo-element like <code>::before</code>) adds 1 to the third. Compare left to right: <code>(1,0,0)</code> beats any number of classes, and <code>(0,1,0)</code> beats any number of elements. So <code>.status-card p</code> scores <code>(0,1,1)</code> — one class, one element — while <code>#launch-button</code> scores <code>(1,0,0)</code> and wins regardless.</p>
+          <p>There's a nuclear override: adding <code>!important</code> to a declaration makes it beat normal specificity rules almost entirely. It's tempting the first time you're stuck fighting a style — but avoid it. It doesn't fix the underlying specificity conflict, it just steamrolls it, and the next developer (often future-you) now has to fight an <code>!important</code> instead of a normal, readable rule. Reach for a more precise selector, or reorganize the CSS, before reaching for <code>!important</code>.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>The Box Model</h3>
+        <p>Every element is four nested rectangles. From the inside out:</p>
+        <ul>
+          <li><strong>content</strong> — where text and child elements actually live; sized by <code>width</code> and <code>height</code></li>
+          <li><strong>padding</strong> — transparent space between the content and the border; part of the element's own background</li>
+          <li><strong>border</strong> — a visible (or invisible) line wrapping the padding, set with <code>border-width</code>, <code>border-style</code>, <code>border-color</code></li>
+          <li><strong>margin</strong> — space <em>outside</em> the border that pushes neighboring elements away; transparent, and not part of the element's own background</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".status-card {&#10;  width: 240px;&#10;  padding: 20px;&#10;  border: 4px solid #4ee1ff;&#10;  margin: 16px;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.status-card</span> {
+  <span class="prop">width</span>: <span class="val">240px</span>;
+  <span class="prop">padding</span>: <span class="val">20px</span>;
+  <span class="prop">border</span>: <span class="val">4px solid #4ee1ff</span>;
+  <span class="prop">margin</span>: <span class="val">16px</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          By default (the classic <code>box-sizing: content-box</code> behavior), <code>width: 240px</code> sets only the <em>content</em> width. The padding and border get added <em>on top</em> of that — so this box's actual visible footprint is <code>240 + 20+20 + 4+4 = 288px</code> wide, and it claims <code>288 + 16+16 = 320px</code> of total horizontal space once margin is counted. That gap between "the number I typed" and "the size it actually is" is the single most common source of layout confusion in CSS — which is exactly what the next section fixes.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3><code>content-box</code> vs <code>border-box</code></h3>
+        <p>The <code>box-sizing</code> property changes what <code>width</code> and <code>height</code> actually measure. <code>content-box</code> (the historical CSS default) means width only describes the content — padding and border are added on top, growing the box. <code>border-box</code> means width describes the <em>entire visible box</em>, content-plus-padding-plus-border — so if you add padding, the content area shrinks to compensate, and the box's outer size never moves.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="*, *::before, *::after {&#10;  box-sizing: border-box;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">*, *::before, *::after</span> {
+  <span class="prop">box-sizing</span>: <span class="val">border-box</span>; <span class="comment">/* almost every real project sets this globally */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          With this reset applied, <code>width: 240px</code> on that same status card <em>always</em> renders as exactly 240px wide, no matter how much padding or border you add — the browser shrinks the content area to make room instead of growing the box. This is why nearly every real CSS project — and this academy's own stylesheet — starts with that universal selector reset. It makes width math predictable instead of something you have to recompute every time you touch padding.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The <strong>Box Model Inspector</strong>. Drag the sliders to change padding, border width, and margin, and flip the <code>box-sizing</code> toggle — watch the live diagram resize layer by layer, and the generated CSS (plus its computed sizes) update in the panel below it. This box has a declared <code>width: 240px; height: 120px;</code> the whole time — watch what changes and what doesn't when you flip the toggle.</p>
+
+      <div class="bmi-grid">
+        <div class="bmi-controls">
+          <div class="bmi-control">
+            <label class="bmi-label"><span>PADDING</span><span class="bmi-readout" id="bmiPaddingVal">16px</span></label>
+            <input type="range" id="bmiPadding" min="0" max="40" step="2" value="16">
+          </div>
+          <div class="bmi-control">
+            <label class="bmi-label"><span>BORDER WIDTH</span><span class="bmi-readout" id="bmiBorderVal">4px</span></label>
+            <input type="range" id="bmiBorder" min="0" max="16" step="1" value="4">
+          </div>
+          <div class="bmi-control">
+            <label class="bmi-label"><span>MARGIN</span><span class="bmi-readout" id="bmiMarginVal">16px</span></label>
+            <input type="range" id="bmiMargin" min="0" max="40" step="2" value="16">
+          </div>
+          <div class="bmi-control">
+            <label class="bmi-label"><span>BOX-SIZING</span></label>
+            <div class="bmi-toggle-row">
+              <button class="bmi-toggle-btn active" id="bmiContentBoxBtn" data-value="content-box">content-box</button>
+              <button class="bmi-toggle-btn" id="bmiBorderBoxBtn" data-value="border-box">border-box</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bmi-stage">
+          <div class="bmi-stage-header"><span>LIVE DIAGRAM</span><span>●</span></div>
+          <div class="bmi-diagram-wrap">
+            <div class="bmi-margin-layer" id="bmiMarginLayer">
+              <div class="bmi-border-layer" id="bmiBorderLayer">
+                <div class="bmi-content-layer" id="bmiContentLayer"></div>
+              </div>
+            </div>
+          </div>
+          <div class="bmi-dims">
+            <div class="bmi-dim-item"><span class="bmi-dim-label">CONTENT BOX</span><span id="bmiDimContent">—</span></div>
+            <div class="bmi-dim-item"><span class="bmi-dim-label">BORDER BOX</span><span id="bmiDimBorder">—</span></div>
+            <div class="bmi-dim-item"><span class="bmi-dim-label">MARGIN BOX</span><span id="bmiDimMargin">—</span></div>
+          </div>
+          <pre id="bmiCode"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>In a real HTML + CSS file (or the live editor from an earlier mission), build one "status card" component completely from scratch and put the box model and cascade to work.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a <code>&lt;div&gt;</code> with a class of <code>.status-card</code> containing a heading and a paragraph
+          <span class="sub">This is the element you'll style for every step below</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Give <code>.status-card</code> a specific <code>padding</code>, <code>border</code>, and <code>margin</code> (three different values, so you can see each layer distinctly)</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Set an explicit <code>width</code> on the card, then set <code>box-sizing: border-box</code> and confirm the card's outer size stops changing when you edit padding</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Style the card using only a <strong>class</strong> selector (<code>.status-card</code>) first</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Add an <code>id</code> to one specific card and write a more specific rule that overrides just one property (like <code>border-color</code>) on that one card only</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Add a descendant rule, like <code>.status-card p</code>, that styles only the paragraph inside the card, not text elsewhere on the page</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If step 3 doesn't seem to be doing anything, double-check you actually set <code>box-sizing: border-box</code> on the same selector as the <code>width</code> — and remember, without it, adding padding will keep growing the box past your declared width, which is the exact bug this property exists to prevent.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a global reset rule — <code>*, *::before, *::after { box-sizing: border-box; }</code> — at the very top of your stylesheet, then remove the <code>box-sizing</code> declaration from <code>.status-card</code> itself. Confirm the card still renders identically, proving the reset is now doing the work for every element on the page, not just this one.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>p</code> / <code>.class</code> / <code>#id</code><span>Element, class, and ID selectors — increasing specificity</span></div>
+        <div class="cheat-card"><code>.a .b</code><span>Descendant combinator — matches <code>.b</code> anywhere inside <code>.a</code></span></div>
+        <div class="cheat-card"><code>.a &gt; .b</code><span>Child combinator — matches <code>.b</code> only as a direct child</span></div>
+        <div class="cheat-card"><code>specificity</code><span>inline &gt; ID &gt; class &gt; element; ties break by source order</span></div>
+        <div class="cheat-card"><code>content</code><span>Where text/children live; sized by width and height</span></div>
+        <div class="cheat-card"><code>padding</code><span>Transparent space inside the border, part of the box's background</span></div>
+        <div class="cheat-card"><code>border</code><span>The visible edge, wrapping the padding</span></div>
+        <div class="cheat-card"><code>margin</code><span>Transparent space outside the border, pushing other boxes away</span></div>
+        <div class="cheat-card"><code>box-sizing: content-box</code><span>Width = content only; padding/border add on top (old default)</span></div>
+        <div class="cheat-card"><code>box-sizing: border-box</code><span>Width = the whole visible box; content shrinks to fit (modern default)</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting <code>box-sizing: border-box</code>, then being confused when a <code>width: 300px</code> box measures wider than 300px on screen once padding and border are added.</li>
+          <li>Reaching for an ID selector (or <code>!important</code>) to "win" a specificity fight instead of writing a more precise, reusable class — it works today and becomes a nightmare to override later.</li>
+          <li>Confusing padding and margin — padding is inside the border and part of the element's own background; margin is outside it and always transparent.</li>
+          <li>Two vertically stacked block elements' margins can <strong>collapse</strong> into a single margin (the larger of the two) instead of adding together — a surprising default worth knowing before it surprises you.</li>
+          <li>Assuming source order alone decides which rule wins — it only breaks ties between rules of <em>equal</em> specificity, never overrides a higher-specificity rule written earlier.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — an element has <code>box-sizing: border-box</code> and <code>width: 200px</code>. You increase its padding. What happens to the element's total on-screen width?</p>
+        <button class="quiz-btn" data-correct="false">It grows past 200px</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — with border-box, width describes the whole box. The content area shrinks to absorb the extra padding, so the outer 200px never moves.">It stays at 200px</button>
+        <button class="quiz-btn" data-correct="false">It shrinks below 200px</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------------- Box Model Inspector ---------------- */
+    const DECLARED_W = 240;
+    const DECLARED_H = 120;
+
+    const state = {
+      padding: 16,
+      border: 4,
+      margin: 16,
+      boxSizing: "content-box"
+    };
+
+    const paddingSlider = document.getElementById("bmiPadding");
+    const borderSlider = document.getElementById("bmiBorder");
+    const marginSlider = document.getElementById("bmiMargin");
+    const paddingVal = document.getElementById("bmiPaddingVal");
+    const borderVal = document.getElementById("bmiBorderVal");
+    const marginVal = document.getElementById("bmiMarginVal");
+    const contentBoxBtn = document.getElementById("bmiContentBoxBtn");
+    const borderBoxBtn = document.getElementById("bmiBorderBoxBtn");
+
+    const marginLayer = document.getElementById("bmiMarginLayer");
+    const borderLayer = document.getElementById("bmiBorderLayer");
+    const contentLayer = document.getElementById("bmiContentLayer");
+
+    const dimContent = document.getElementById("bmiDimContent");
+    const dimBorder = document.getElementById("bmiDimBorder");
+    const dimMargin = document.getElementById("bmiDimMargin");
+    const codeOutput = document.getElementById("bmiCode");
+
+    function render() {
+      const p = state.padding;
+      const b = state.border;
+      const m = state.margin;
+
+      /* ---- compute real box-model geometry (matches how the browser does it) ---- */
+      let contentW, contentH, borderBoxW, borderBoxH;
+      if (state.boxSizing === "border-box") {
+        borderBoxW = DECLARED_W;
+        borderBoxH = DECLARED_H;
+        contentW = Math.max(0, DECLARED_W - (p * 2) - (b * 2));
+        contentH = Math.max(0, DECLARED_H - (p * 2) - (b * 2));
+      } else {
+        contentW = DECLARED_W;
+        contentH = DECLARED_H;
+        borderBoxW = DECLARED_W + (p * 2) + (b * 2);
+        borderBoxH = DECLARED_H + (p * 2) + (b * 2);
+      }
+      const marginBoxW = borderBoxW + (m * 2);
+      const marginBoxH = borderBoxH + (m * 2);
+
+      /* ---- drive the live diagram: real CSS box-sizing/width/padding/border on the layers ---- */
+      marginLayer.style.padding = m + "px";
+      borderLayer.style.boxSizing = state.boxSizing;
+      borderLayer.style.width = DECLARED_W + "px";
+      borderLayer.style.height = DECLARED_H + "px";
+      borderLayer.style.padding = p + "px";
+      borderLayer.style.borderWidth = b + "px";
+
+      contentLayer.textContent = "CONTENT\n" + Math.round(contentW) + " × " + Math.round(contentH);
+
+      /* ---- readouts ---- */
+      paddingVal.textContent = p + "px";
+      borderVal.textContent = b + "px";
+      marginVal.textContent = m + "px";
+
+      dimContent.textContent = Math.round(contentW) + "×" + Math.round(contentH);
+      dimBorder.textContent = Math.round(borderBoxW) + "×" + Math.round(borderBoxH);
+      dimMargin.textContent = Math.round(marginBoxW) + "×" + Math.round(marginBoxH);
+
+      /* ---- generated code panel, synced to the same numbers ---- */
+      codeOutput.textContent =
+`.status-card {
+  box-sizing: ${state.boxSizing};
+  width: ${DECLARED_W}px;
+  height: ${DECLARED_H}px;
+  padding: ${p}px;
+  border: ${b}px solid #4ee1ff;
+  margin: ${m}px;
+}
+
+/* computed on screen:
+   content box:  ${Math.round(contentW)}px × ${Math.round(contentH)}px
+   border box:   ${Math.round(borderBoxW)}px × ${Math.round(borderBoxH)}px
+   margin box:   ${Math.round(marginBoxW)}px × ${Math.round(marginBoxH)}px  (total space claimed) */`;
+    }
+
+    paddingSlider.addEventListener("input", function () {
+      state.padding = parseInt(paddingSlider.value, 10);
+      render();
+    });
+    borderSlider.addEventListener("input", function () {
+      state.border = parseInt(borderSlider.value, 10);
+      render();
+    });
+    marginSlider.addEventListener("input", function () {
+      state.margin = parseInt(marginSlider.value, 10);
+      render();
+    });
+    contentBoxBtn.addEventListener("click", function () {
+      state.boxSizing = "content-box";
+      contentBoxBtn.classList.add("active");
+      borderBoxBtn.classList.remove("active");
+      render();
+    });
+    borderBoxBtn.addEventListener("click", function () {
+      state.boxSizing = "border-box";
+      borderBoxBtn.classList.add("active");
+      contentBoxBtn.classList.remove("active");
+      render();
+    });
+
+    render();
+  });
+
+})();
+</script>
+
+</body>
+</html>

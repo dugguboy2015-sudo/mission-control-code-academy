@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 3.3: GitHub, Remotes & Pull Requests — Syncing with Mission Control | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Command Console (bespoke PR Flow Stepper widget) ---------- */
+  .pr-stepper {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .pr-track {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px 14px;
+    overflow-x: auto;
+    gap: 4px;
+  }
+  .pr-track-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 108px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    font-family: var(--font-body);
+    padding: 4px 2px;
+  }
+  .pr-track-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--border-glow);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-code);
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .pr-track-label {
+    font-size: 10.5px;
+    text-align: center;
+    color: var(--text-muted);
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+  }
+  .pr-track-node.active .pr-track-dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px var(--glow-shadow); }
+  .pr-track-node.active .pr-track-label { color: var(--accent); }
+  .pr-track-node.done .pr-track-dot { border-color: var(--success); color: var(--success); background: rgba(77,255,180,0.08); }
+  .pr-track-node.done .pr-track-label { color: var(--text-secondary); }
+  .pr-track-connector { flex: 0 0 18px; height: 2px; background: var(--border-glow); margin-top: -18px; }
+  .pr-track-connector.done { background: var(--success); }
+
+  .pr-stage {
+    border-top: 1px solid var(--border-glow);
+    padding: 22px 24px 24px;
+  }
+  .pr-stage-title { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; text-transform: uppercase; }
+  .pr-stage-desc { color: var(--text-secondary); font-size: 14.5px; margin-bottom: 16px; }
+
+  .pr-visual {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  /* stage 1: local branch graph */
+  .pr-branch-graph { text-align: center; }
+
+  /* stage 2: terminal line */
+  .pr-term {
+    background: #05070d;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: var(--font-code);
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+  .pr-term .p { color: var(--accent-green); }
+  .pr-term .c { color: var(--text-primary); }
+  .pr-term .out { color: var(--text-muted); display: block; margin-top: 6px; }
+
+  /* stage 3: GitHub-style "open a PR" mock */
+  .gh-mock { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 8px; overflow: hidden; }
+  .gh-mock-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border-glow); font-size: 13px; color: var(--text-secondary); flex-wrap: wrap; }
+  .gh-branch-chip { background: rgba(255,157,77,0.12); border: 1px solid rgba(255,157,77,0.4); color: var(--accent-orange); font-family: var(--font-code); font-size: 12px; padding: 2px 9px; border-radius: 999px; }
+  .gh-mock-body { padding: 16px; }
+  .gh-mock-body input, .gh-mock-body textarea {
+    width: 100%;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+    resize: vertical;
+  }
+  .gh-btn {
+    background: var(--success);
+    color: #06110b;
+    border: none;
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    padding: 9px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+  .gh-btn:hover { filter: brightness(1.1); }
+  .gh-btn.merged { background: var(--accent-purple); color: #17102b; }
+  .gh-btn.clicked { opacity: 0.55; cursor: default; }
+
+  /* stage 4: diff view */
+  .diff-view { font-family: var(--font-code); font-size: 13px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-glow); }
+  .diff-file { padding: 8px 14px; background: rgba(255,255,255,0.03); color: var(--text-secondary); border-bottom: 1px solid var(--border-glow); font-size: 12.5px; }
+  .diff-line { padding: 3px 14px; white-space: pre; }
+  .diff-line.add { background: rgba(77,255,180,0.10); color: var(--accent-green); }
+  .diff-line.remove { background: rgba(255,107,107,0.10); color: var(--danger); }
+  .diff-line.ctx { color: var(--text-muted); }
+
+  /* stage 5: merge */
+  .gh-merge-status { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--text-secondary); }
+  .gh-merge-status .dot-ok { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-purple); display: inline-block; }
+
+  .pr-nav-row { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; }
+  .pr-nav-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pr-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pr-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s3-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 3</div>
+    <h1>MISSION 3.3: GITHUB, REMOTES & PULL REQUESTS</h1>
+    <div class="subtitle">Syncing with Mission Control</div>
+    <p class="briefing-line">Your local repo is a workshop copy of the blueprints. GitHub is Mission Control's shared master copy. Today you learn how the two stay in sync — <code>push</code>, <code>pull</code>, <code>fetch</code> — how to keep secrets and junk files out of the record with <code>.gitignore</code>, and how a <strong>Pull Request</strong> turns "I changed some code" into a reviewed, official part of the project.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 GITHUB ACCOUNT NEEDED</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every commit you've made so far has lived in one place: the hidden <code>.git</code> folder on your own machine. That's fine for solo experiments, but it's fragile — one dead hard drive and the whole mission log is gone. It's also useless for teamwork, since nobody else can see it.</p>
+      <p>The fix is a <strong>remote</strong>: another copy of the same repository, usually hosted on GitHub, that your local repo can talk to. Think of your machine as your own workshop — you can weld, test, and rewire in private. GitHub is <strong>Mission Control's shared master copy</strong>, the one everyone else reads from and trusts. A remote connection is the radio link between the two: you <code>push</code> your commits up to it, and <code>pull</code> or <code>fetch</code> commits down from it.</p>
+      <p>But engineers rarely push straight into the master copy. Instead, they finish work on a branch, push <em>that branch</em> to GitHub, and open a <strong>Pull Request (PR)</strong> — a formal request that says "here's what I changed, please review it before it becomes official." A PR shows a <strong>diff</strong> (exactly which lines were added or removed), lets teammates comment, and only becomes part of <code>main</code> once someone clicks <strong>Merge</strong>. It's the same merge you already know from the command line — GitHub just gives it a review step and a paper trail.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;">
+          <defs>
+            <marker id="prArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#a8b3d1"/>
+            </marker>
+          </defs>
+
+          <!-- your machine box -->
+          <rect x="40" y="60" width="220" height="150" rx="12" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5"/>
+          <text x="150" y="45" fill="#e8ecfb" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">YOUR MACHINE</text>
+          <circle cx="150" cy="110" r="9" fill="#ff9d4d"/>
+          <circle cx="150" cy="150" r="9" fill="#ff9d4d"/>
+          <circle cx="150" cy="190" r="10" fill="#4dffb4"/>
+          <line x1="150" y1="119" x2="150" y2="141" stroke="#2e3d63" stroke-width="2"/>
+          <line x1="150" y1="159" x2="150" y2="180" stroke="#2e3d63" stroke-width="2"/>
+          <text x="180" y="114" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">c1</text>
+          <text x="180" y="154" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">c2</text>
+          <text x="180" y="194" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11">local HEAD</text>
+
+          <!-- github box -->
+          <rect x="460" y="60" width="220" height="150" rx="12" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5"/>
+          <text x="570" y="45" fill="#e8ecfb" font-family="Orbitron, sans-serif" font-size="13" text-anchor="middle">ORIGIN (GITHUB)</text>
+          <circle cx="570" cy="110" r="9" fill="#4ee1ff"/>
+          <circle cx="570" cy="150" r="9" fill="#4ee1ff"/>
+          <circle cx="570" cy="190" r="10" fill="#4ee1ff"/>
+          <line x1="570" y1="119" x2="570" y2="141" stroke="#2e3d63" stroke-width="2"/>
+          <line x1="570" y1="159" x2="570" y2="180" stroke="#2e3d63" stroke-width="2"/>
+          <text x="600" y="114" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">c1</text>
+          <text x="600" y="154" fill="#6b7699" font-family="Fira Code, monospace" font-size="11">c2</text>
+          <text x="600" y="194" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11">c3 (teammate)</text>
+
+          <!-- push arrow -->
+          <path d="M270,110 L450,110" fill="none" stroke="#a8b3d1" stroke-width="2" marker-end="url(#prArrow)"/>
+          <text x="360" y="98" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">git push</text>
+
+          <!-- pull arrow -->
+          <path d="M450,190 L270,190" fill="none" stroke="#a8b3d1" stroke-width="2" marker-end="url(#prArrow)"/>
+          <text x="360" y="178" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">git pull</text>
+
+          <!-- fetch arrow -->
+          <path d="M450,150 L270,150" fill="none" stroke="#a8b3d1" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#prArrow)"/>
+          <text x="360" y="140" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">git fetch</text>
+
+          <text x="360" y="245" fill="#6b7699" font-family="Rubik, sans-serif" font-size="12.5" text-anchor="middle">fetch only downloads — pull downloads AND merges into your current branch</text>
+        </svg>
+        <div class="diagram-caption">Your local repo and the GitHub remote called "origin" — push sends commits up, fetch checks what's new without touching your files, pull fetches and merges in one step.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Remotes: origin & <code>git remote -v</code></h3>
+        <p>A remote is just a URL Git remembers a nickname for. When you clone or connect a repo to GitHub, that remote is almost always named <code>origin</code> by convention — it's not a special keyword, just the default name everyone uses so scripts and habits transfer between projects.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git remote -v&#10;git remote add origin https://github.com/yourname/your-repo.git">COPY</button></div>
+          <pre><code><span class="comment"># List remotes this repo knows about, with their URLs</span>
+git remote -v
+
+<span class="comment"># Connect a fresh local repo to a GitHub repo for the first time</span>
+git remote add origin https://github.com/yourname/your-repo.git</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>git remote -v</code> prints every remote and shows two URLs per name — one for fetching, one for pushing (they're almost always the same). <code>git remote add</code> registers a brand-new connection; you only run it once per repo, typically right after creating the GitHub repo.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3><code>push</code>, <code>pull</code> & <code>fetch</code></h3>
+        <p>These three commands move commits between your machine and the remote. They sound similar but do genuinely different things, and mixing them up is one of the most common early-career Git mistakes.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git push origin feature/shields&#10;git fetch origin&#10;git pull origin main">COPY</button></div>
+          <pre><code><span class="comment"># Upload your local commits on this branch to GitHub</span>
+git push origin feature/shields
+
+<span class="comment"># Download what's new on the remote, WITHOUT touching your files</span>
+git fetch origin
+
+<span class="comment"># Download what's new AND merge it into your current branch</span>
+git pull origin main</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>push</code> sends your commits up. <code>fetch</code> is the cautious move — it updates Git's memory of what's on the remote so you can look before you leap (<code>git log origin/main</code>, <code>git diff origin/main</code>) but leaves your working files untouched. <code>pull</code> is <code>fetch</code> immediately followed by <code>merge</code> — it downloads <em>and</em> updates your files in one motion.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why would I ever fetch instead of pull?</summary>
+          <p><code>git pull</code> is really shorthand for <code>git fetch</code> + <code>git merge origin/&lt;branch&gt;</code>. Most of the time that's exactly what you want. But if a teammate might have pushed something risky, or you have uncommitted work you're not ready to merge against, <code>fetch</code> lets you inspect the incoming changes first — <code>git log main..origin/main</code> shows what you're about to get — before deciding to merge. Professional teams on high-stakes codebases often fetch-then-review-then-merge deliberately instead of blindly pulling.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3><code>.gitignore</code> — Keeping Junk Out of the Record</h3>
+        <p>Not everything in your project folder belongs in version control. Dependency folders can be regenerated, build output is disposable, and secret keys should never exist in a shared history at all — once something is committed, it's in the log forever, even if you delete it in a later commit. A <code>.gitignore</code> file tells Git which files and folders to never track in the first place.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>TEXT</span><button class="copy-btn" data-copy=".env&#10;node_modules/&#10;dist/&#10;*.log&#10;.DS_Store">COPY</button></div>
+          <pre><code><span class="comment"># .gitignore — one pattern per line</span>
+.env
+node_modules/
+dist/
+*.log
+.DS_Store</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.env</code> keeps API keys and passwords out of the log entirely. <code>node_modules/</code> and <code>dist/</code> are generated — anyone can rebuild them, so tracking them just bloats the repo. <code>*.log</code> and <code>.DS_Store</code> are noise files your OS or tools create automatically. Create this file <em>before</em> your first commit whenever possible — <code>.gitignore</code> can't un-track something that's already been committed.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Pull Request Workflow</h3>
+        <p>A Pull Request is GitHub's review layer on top of an ordinary merge. The sequence: finish work on a branch, push that branch to GitHub, open a PR comparing it against <code>main</code>, let someone (or yourself, on a solo project) review the diff, then click <strong>Merge</strong>. GitHub performs the actual merge on the server — the exact same operation as <code>git merge</code>, just triggered by a button instead of a terminal command.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>BASH</span><button class="copy-btn" data-copy="git checkout -b feature/shields&#10;git push -u origin feature/shields">COPY</button></div>
+          <pre><code><span class="comment"># Do your work on a branch, never directly on main</span>
+git checkout -b feature/shields
+
+<span class="comment"># Push the branch so GitHub knows it exists</span>
+git push -u origin feature/shields
+
+<span class="comment"># Now open a Pull Request on github.com comparing this branch to main</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Pushing a branch doesn't merge anything — it just makes the branch visible on GitHub. Opening the PR is a separate, deliberate step on the GitHub website where you compare <code>feature/shields</code> against <code>main</code>, see every line changed, and only after that review does the merge actually happen.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Walk through a full Pull Request cycle, stage by stage — from a local branch all the way to a merged <code>main</code>. Click a stage on the track, or use Prev / Next. Nothing here touches a real GitHub account; it's a simulation of exactly what you'll do for real in the Mission Challenge below.</p>
+
+      <div class="pr-stepper">
+        <div class="pr-track" id="prTrack"></div>
+        <div class="pr-stage" id="prStage"></div>
+        <div style="padding: 0 24px 22px;">
+          <div class="pr-nav-row">
+            <button class="pr-nav-btn" id="prPrev">◂ PREV</button>
+            <button class="pr-nav-btn" id="prNext">NEXT ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>This one leaves the simulator entirely. You'll need a free GitHub account and a repo pushed there already (from Mission 3.1). Complete the full cycle for real.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Add a real <code>.gitignore</code> to one of your repos <em>before</em> committing anything else new
+          <span class="sub">Include at least one pattern for a generated folder and one for a secrets file</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Create a branch, make a small real change, commit it, and push the branch to GitHub
+          <span class="sub"><code>git checkout -b</code> then <code>git push -u origin &lt;branch&gt;</code></span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Open a real Pull Request on github.com comparing your branch to <code>main</code>
+          <span class="sub">Write an actual description of what changed and why</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Review your own diff on the "Files changed" tab before merging
+          <span class="sub">Confirm every line changed is one you actually intended</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Click "Merge pull request" on GitHub
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Back in your terminal, switch to <code>main</code> and <code>git pull</code> to bring the merged change down locally
+          <span class="sub">Confirm the change is now in your local <code>main</code>, not just on GitHub</span></label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If GitHub's "Merge pull request" button is greyed out or shows a warning, someone (maybe future-you on another machine) pushed a conflicting change to <code>main</code> since you branched. Fetch and merge <code>main</code> into your branch locally first, resolve any conflicts, push again, and the button will re-enable.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Open a second PR, but this time leave yourself a review comment directly on one of the changed lines before merging — GitHub lets you comment on individual diff lines, not just the PR as a whole. That's the exact mechanism real teams use to ask "why did you change this?" before approving.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>git remote -v</code><span>List remotes and their URLs</span></div>
+        <div class="cheat-card"><code>git remote add origin &lt;url&gt;</code><span>Connect a local repo to GitHub</span></div>
+        <div class="cheat-card"><code>git push -u origin &lt;branch&gt;</code><span>Upload a branch, remember the pairing</span></div>
+        <div class="cheat-card"><code>git fetch</code><span>Download remote changes, don't merge yet</span></div>
+        <div class="cheat-card"><code>git pull</code><span>Fetch + merge in one step</span></div>
+        <div class="cheat-card"><code>.gitignore</code><span>List of files Git should never track</span></div>
+        <div class="cheat-card"><code>Pull Request</code><span>A request to review + merge a branch into main</span></div>
+        <div class="cheat-card"><code>Diff</code><span>The exact lines added/removed, shown for review</span></div>
+        <div class="cheat-card"><code>Merge pull request</code><span>GitHub's button that runs the actual merge</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Committing a <code>.env</code> file or API key because <code>.gitignore</code> wasn't set up before the first commit — once it's in history, deleting it later isn't enough; it must be scrubbed or the key rotated.</li>
+          <li>Opening a PR and then remembering you forgot to push your latest commits — GitHub can only compare what's actually on the remote.</li>
+          <li>Force-pushing (<code>git push --force</code>) over a branch someone else is also working on, silently erasing their commits.</li>
+          <li>Clicking "Merge pull request" without actually reading the diff — the whole point of a PR is the review, not the click.</li>
+          <li>Confusing <code>fetch</code> and <code>pull</code>, then being surprised local files didn't change after a <code>fetch</code>.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the real difference between <code>git fetch</code> and <code>git pull</code>?</p>
+        <button class="quiz-btn" data-correct="false">fetch downloads commits from a different remote than pull does</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — pull is fetch immediately followed by a merge into your current branch.">fetch downloads changes but doesn't merge them; pull fetches and merges</button>
+        <button class="quiz-btn" data-correct="false">there is no difference, they're aliases</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- PR Flow Stepper ---------------- */
+  const trackEl = document.getElementById('prTrack');
+  const stageEl = document.getElementById('prStage');
+  const prevBtn = document.getElementById('prPrev');
+  const nextBtn = document.getElementById('prNext');
+
+  const stages = [
+    {
+      short: '1. Local branch',
+      title: 'STAGE 1 — LOCAL BRANCH',
+      desc: 'Work happens on a branch, never directly on main. Right now this branch exists only on your machine — GitHub has never heard of it.',
+      render: function() {
+        return (
+          '<div class="pr-visual pr-branch-graph">' +
+            '<svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:380px;height:auto;">' +
+              '<line x1="30" y1="90" x2="330" y2="90" stroke="#2e3d63" stroke-width="2"/>' +
+              '<text x="14" y="94" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="end">main</text>' +
+              '<circle cx="70" cy="90" r="8" fill="#ff9d4d"/>' +
+              '<circle cx="180" cy="90" r="8" fill="#ff9d4d"/>' +
+              '<path d="M180,90 Q220,40 270,40" fill="none" stroke="#4ee1ff" stroke-width="2"/>' +
+              '<circle cx="270" cy="40" r="8" fill="#4ee1ff"/>' +
+              '<circle cx="330" cy="40" r="9" fill="#4dffb4"/>' +
+              '<path d="M270,40 L330,40" stroke="#4ee1ff" stroke-width="2"/>' +
+              '<text x="270" y="24" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">feature/shields</text>' +
+              '<text x="330" y="60" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">local HEAD</text>' +
+            '</svg>' +
+            '<div style="margin-top:8px;color:var(--text-muted);font-size:12.5px;">Exists only on your machine — not pushed yet.</div>' +
+          '</div>'
+        );
+      }
+    },
+    {
+      short: '2. git push',
+      title: 'STAGE 2 — GIT PUSH',
+      desc: 'Pushing uploads the branch and its commits to GitHub. It does NOT open a Pull Request or touch main — it just makes the branch visible on the remote.',
+      render: function() {
+        return (
+          '<div class="pr-visual">' +
+            '<div class="pr-term">' +
+              '<span class="p">feature/shields $</span> <span class="c">git push -u origin feature/shields</span>' +
+              '<span class="out">Enumerating objects: 5, done.\n' +
+              'Writing objects: 100% (3/3), done.\n' +
+              'To github.com:yourname/your-repo.git\n' +
+              ' * [new branch]      feature/shields -&gt; feature/shields\n' +
+              'Branch \'feature/shields\' set up to track \'origin/feature/shields\'.</span>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+    },
+    {
+      short: '3. Open PR',
+      title: 'STAGE 3 — OPEN A PULL REQUEST',
+      desc: 'On github.com, you open a PR that compares feature/shields against main. This is a request for review — nothing has merged yet.',
+      render: function() {
+        return (
+          '<div class="pr-visual">' +
+            '<div class="gh-mock">' +
+              '<div class="gh-mock-header">' +
+                '<span class="gh-branch-chip">feature/shields</span>' +
+                '<span style="color:var(--text-muted);">compare →</span>' +
+                '<span class="gh-branch-chip" style="background:rgba(78,225,255,0.12);border-color:rgba(78,225,255,0.4);color:var(--accent-cyan);">main</span>' +
+              '</div>' +
+              '<div class="gh-mock-body">' +
+                '<input type="text" value="Raise deflector shields on docking sequence" readonly>' +
+                '<textarea rows="2" readonly>Adds shield activation before docking. Tested locally against the simulator.</textarea>' +
+                '<button class="gh-btn" id="prOpenBtn">Create pull request</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      },
+      afterRender: function() {
+        const btn = document.getElementById('prOpenBtn');
+        if (btn) {
+          btn.addEventListener('click', function() {
+            btn.textContent = 'Pull request #1 opened ✓';
+            btn.classList.add('clicked');
+          });
+        }
+      }
+    },
+    {
+      short: '4. Review & diff',
+      title: 'STAGE 4 — REVIEW & DIFF',
+      desc: 'GitHub shows exactly which lines changed on the "Files changed" tab — green for added, red for removed. This is what a reviewer (or future-you) actually reads before approving anything.',
+      render: function() {
+        return (
+          '<div class="pr-visual">' +
+            '<div class="diff-view">' +
+              '<div class="diff-file">docking.js</div>' +
+              '<div class="diff-line ctx">  function beginDocking() {</div>' +
+              '<div class="diff-line remove">-   thrusters.hold();</div>' +
+              '<div class="diff-line add">+   shields.raise();</div>' +
+              '<div class="diff-line add">+   thrusters.hold();</div>' +
+              '<div class="diff-line ctx">  }</div>' +
+            '</div>' +
+            '<div style="margin-top:10px;color:var(--text-muted);font-size:12.5px;">1 addition kept, 1 line reordered, 0 deletions of real logic — the kind of thing you only catch by actually reading the diff.</div>' +
+          '</div>'
+        );
+      }
+    },
+    {
+      short: '5. Merge PR',
+      title: 'STAGE 5 — MERGE PULL REQUEST',
+      desc: 'Once the diff looks good, clicking "Merge pull request" runs the exact same operation as a local git merge — GitHub just does it on the server, on main.',
+      render: function() {
+        return (
+          '<div class="pr-visual">' +
+            '<div class="gh-mock">' +
+              '<div class="gh-mock-header">' +
+                '<span class="gh-branch-chip">feature/shields</span>' +
+                '<span style="color:var(--text-muted);">→ merging into →</span>' +
+                '<span class="gh-branch-chip" style="background:rgba(78,225,255,0.12);border-color:rgba(78,225,255,0.4);color:var(--accent-cyan);">main</span>' +
+              '</div>' +
+              '<div class="gh-mock-body">' +
+                '<button class="gh-btn" id="prMergeBtn">Merge pull request</button>' +
+                '<div class="gh-merge-status" id="prMergeStatus"><span style="color:var(--text-muted);">Ready to merge — no conflicts detected.</span></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      },
+      afterRender: function() {
+        const btn = document.getElementById('prMergeBtn');
+        const status = document.getElementById('prMergeStatus');
+        if (btn) {
+          btn.addEventListener('click', function() {
+            btn.textContent = 'Merged!';
+            btn.classList.add('clicked', 'merged');
+            status.innerHTML = '<span class="dot-ok"></span><span>Pull request #1 merged into main. feature/shields can now be deleted.</span>';
+          });
+        }
+      }
+    },
+    {
+      short: '6. git pull',
+      title: 'STAGE 6 — GIT PULL ON MAIN',
+      desc: 'GitHub\'s main now has the merge, but your local main does not — merging on the server never touches your machine. One more pull closes the loop.',
+      render: function() {
+        return (
+          '<div class="pr-visual">' +
+            '<div class="pr-term">' +
+              '<span class="p">main $</span> <span class="c">git checkout main</span>' +
+              '<span class="out">Switched to branch \'main\'</span>' +
+              '<br><br>' +
+              '<span class="p">main $</span> <span class="c">git pull origin main</span>' +
+              '<span class="out">Updating 180a4f2..9c3e7bb\n' +
+              'Fast-forward\n' +
+              ' docking.js | 3 ++-\n' +
+              ' 1 file changed, 2 insertions(+), 1 deletion(-)</span>' +
+            '</div>' +
+            '<div style="margin-top:10px;color:var(--text-muted);font-size:12.5px;">Local main and GitHub\'s main are now identical. The cycle is complete.</div>' +
+          '</div>'
+        );
+      }
+    }
+  ];
+
+  let current = 0;
+
+  function renderTrack() {
+    let html = '';
+    stages.forEach((s, i) => {
+      if (i > 0) {
+        html += '<div class="pr-track-connector' + (i <= current ? ' done' : '') + '"></div>';
+      }
+      let cls = 'pr-track-node';
+      if (i === current) cls += ' active';
+      else if (i < current) cls += ' done';
+      html += '<button type="button" class="' + cls + '" data-idx="' + i + '">' +
+                '<span class="pr-track-dot">' + (i < current ? '✓' : (i + 1)) + '</span>' +
+                '<span class="pr-track-label">' + s.short + '</span>' +
+              '</button>';
+    });
+    trackEl.innerHTML = html;
+    trackEl.querySelectorAll('.pr-track-node').forEach((btn) => {
+      btn.addEventListener('click', function() {
+        current = parseInt(btn.getAttribute('data-idx'), 10);
+        renderAll();
+      });
+    });
+  }
+
+  function renderStage() {
+    const s = stages[current];
+    stageEl.innerHTML =
+      '<div class="pr-stage-title">' + s.title + '</div>' +
+      '<div class="pr-stage-desc">' + s.desc + '</div>' +
+      s.render();
+    if (typeof s.afterRender === 'function') s.afterRender();
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === stages.length - 1;
+    nextBtn.textContent = current === stages.length - 1 ? 'CYCLE COMPLETE' : 'NEXT ▸';
+  }
+
+  function renderAll() {
+    renderTrack();
+    renderStage();
+  }
+
+  prevBtn.addEventListener('click', function() {
+    if (current > 0) { current--; renderAll(); }
+  });
+  nextBtn.addEventListener('click', function() {
+    if (current < stages.length - 1) { current++; renderAll(); }
+  });
+
+  renderAll();
+
+})();
+</script>
+
+</body>
+</html>

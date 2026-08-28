@@ -35,9 +35,47 @@
     if (complete) progress[missionId] = true;
     else delete progress[missionId];
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    // Fire-and-forget sync to Supabase when a child profile is active — the
+    // localStorage write above already gave the UI its instant, synchronous
+    // update; this just persists it server-side so it follows the child
+    // across devices. Silently no-ops when Academy/Supabase isn't wired up.
+    if (window.Academy && window.Academy.progress.isRemote()) {
+      window.Academy.progress.markComplete(missionId, complete).catch((e) => console.error("[Academy] markComplete failed:", e));
+    }
   }
 
   window.MCCA = { flattenMissions, getProgress, setMissionComplete };
+
+  /* ---------------- Remote sync (Phase 2 — runs before the rest of boot) ----------------
+     If a Supabase-backed child profile is active, pull that child's progress/theme/
+     checklist-for-this-mission down into the SAME localStorage keys everything else
+     already reads synchronously. This makes the remote data show up correctly on
+     first paint without rewriting every read site to be async. Writes stay
+     write-through (see setMissionComplete above and the checklist/theme call sites
+     below) so the two stay in sync afterward. */
+  async function syncFromRemote(missionId) {
+    if (!window.Academy || !window.Academy.progress.isRemote()) return;
+    try {
+      const [remoteProgress, remoteTheme] = await Promise.all([
+        window.Academy.progress.all(),
+        window.Academy.progress.getTheme(),
+      ]);
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(remoteProgress));
+      localStorage.setItem(THEME_KEY, remoteTheme);
+
+      if (missionId) {
+        const remoteChecklist = await window.Academy.checklist.get(missionId);
+        localStorage.setItem("mcca_checklist_" + missionId, JSON.stringify(remoteChecklist));
+      }
+    } catch (e) {
+      console.error("[Academy] remote sync failed, continuing with local data:", e);
+    }
+  }
+  // Exposed so other scripts (e.g. index.html's own DOMContentLoaded listener)
+  // can explicitly await this themselves rather than relying on the order two
+  // independent async DOMContentLoaded listeners happen to run in — awaiting
+  // it twice is safe (idempotent, just re-fetches) and removes the race.
+  window.MCCA.syncFromRemote = syncFromRemote;
 
   /* ---------------- Starfield ---------------- */
   function initStarfield() {
@@ -156,6 +194,9 @@
         s[box.id] = box.checked;
         save(s);
         checkAllComplete();
+        if (window.Academy && window.Academy.progress.isRemote()) {
+          window.Academy.checklist.set(missionId, box.id, box.checked).catch((e) => console.error("[Academy] checklist sync failed:", e));
+        }
       });
     });
   }
@@ -232,6 +273,9 @@
     const next = getTheme() === "light" ? "dark" : "light";
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
     applyTheme(next);
+    if (window.Academy && window.Academy.progress.isRemote()) {
+      window.Academy.progress.setTheme(next).catch((e) => console.error("[Academy] theme sync failed:", e));
+    }
   }
   // Apply as early as possible to minimize flash.
   applyTheme(getTheme());
@@ -318,12 +362,16 @@
   }
 
   /* ---------------- Boot ---------------- */
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     initStarfield();
     initCopyButtons();
     initQuizzes();
 
     const missionId = document.body.getAttribute("data-mission-id");
+    // Pull remote progress/theme/checklist (if a child profile is active) into
+    // localStorage BEFORE the sync-only UI below reads it, so first paint is correct.
+    await syncFromRemote(missionId);
+
     if (missionId) {
       initChecklist(missionId);
       initStamp(missionId);

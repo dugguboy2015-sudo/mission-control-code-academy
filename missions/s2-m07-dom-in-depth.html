@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.7: The DOM In Depth — Finding & Changing the Page | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* Bespoke: the crew-list display needs to lay out multiple stacked <li> items
+     instead of the single centered status line most sandbox-display targets show. */
+  #crewList {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 14px;
+  }
+  #crewList li {
+    list-style: none;
+    background: rgba(78, 225, 255, 0.07);
+    border: 1px solid var(--border-glow);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: var(--font-code);
+    color: var(--text-primary);
+  }
+  #crewList li.highlight { border-color: var(--accent-green); color: var(--accent-green); }
+  #crewList:empty::after {
+    content: "(empty — nothing appended yet)";
+    color: var(--text-muted);
+    font-style: italic;
+    font-family: var(--font-body);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.7: THE DOM IN DEPTH</h1>
+    <div class="subtitle">Finding & Changing the Page — Querying, Building, and Tearing Down Live Elements</div>
+    <p class="briefing-line">Mission 2.1 taught you to flip switches that already existed on the panel — grab an element, change its text, toggle a class. That's most of what a beginner ever does to the DOM. But real pages don't ship with every element pre-built: chat apps create a new message bubble per message, to-do lists create a new row per task, dashboards remove cards when data disappears. This mission is about the DOM as something you <em>construct</em>, not just adjust — finding many elements at once, building brand-new ones from nothing, wiring them in, and cleanly pulling them back out.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of the DOM as the control panel of a ship that's already flying. In Mission 2.1 you learned to operate switches that were bolted onto the panel before launch — <code>querySelector</code> found one, and you flipped it. That covers a lot of real work, but it has a hard limit: it only touches what's already there.</p>
+      <p>Real interfaces grow and shrink while they run. A crew roster starts empty and fills up as people check in. A search results page throws away yesterday's list and builds a new one from this second's data. None of those elements existed when the page first loaded — the JavaScript itself had to manufacture them, install them into the tree, and later rip out the ones that no longer belong. That's a fundamentally different skill from flipping an existing switch: it's <em>building new hardware while the ship is running</em>, then decommissioning it cleanly when it's no longer needed.</p>
+      <p>This mission also finishes a piece Mission 2.1 only sampled: <code>querySelector</code> finds exactly one match and stops looking. Most real tasks — "highlight every overdue task," "disable every button while loading" — mean operating on <em>all</em> the matches at once. That's <code>querySelectorAll</code>, and it comes back with a whole batch of elements you loop over rather than a single one you use directly.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <defs>
+            <marker id="domarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- BEFORE -->
+          <text x="160" y="18" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" letter-spacing="0.08em" text-anchor="middle">BEFORE</text>
+          <rect x="90" y="30" width="140" height="44" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="160" y="57" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">ul#crewList</text>
+
+          <rect x="30" y="112" width="110" height="40" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="85" y="136" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">li · Nova</text>
+
+          <rect x="170" y="112" width="110" height="40" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="225" y="136" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">li · Kip</text>
+
+          <path d="M150,74 L88,112" fill="none" stroke="#4ee1ff" stroke-width="1.5"/>
+          <path d="M170,74 L222,112" fill="none" stroke="#4ee1ff" stroke-width="1.5"/>
+
+          <!-- Arrow between trees -->
+          <path d="M312,95 L368,95" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#domarrow)"/>
+          <text x="340" y="83" fill="#4dffb4" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">createElement("li")</text>
+          <text x="340" y="112" fill="#4dffb4" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">+ appendChild()</text>
+
+          <!-- AFTER -->
+          <text x="520" y="18" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" letter-spacing="0.08em" text-anchor="middle">AFTER</text>
+          <rect x="450" y="30" width="140" height="44" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="520" y="57" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">ul#crewList</text>
+
+          <rect x="385" y="112" width="90" height="40" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="430" y="136" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">li · Nova</text>
+
+          <rect x="485" y="112" width="90" height="40" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="530" y="136" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">li · Kip</text>
+
+          <rect x="585" y="112" width="90" height="40" rx="8" fill="#0f2b22" stroke="#4dffb4" stroke-width="2" stroke-dasharray="4 3"/>
+          <text x="630" y="136" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">li · Zed</text>
+          <circle cx="670" cy="106" r="9" fill="#4dffb4"/>
+          <text x="670" y="110" fill="#0c1120" font-family="Fira Code, monospace" font-size="11" font-weight="bold" text-anchor="middle">+</text>
+
+          <path d="M500,74 L430,112" fill="none" stroke="#4ee1ff" stroke-width="1.5"/>
+          <path d="M520,74 L530,112" fill="none" stroke="#4ee1ff" stroke-width="1.5"/>
+          <path d="M540,74 L630,112" fill="none" stroke="#4dffb4" stroke-width="1.5" stroke-dasharray="3 2"/>
+        </svg>
+        <div class="diagram-caption">The parent &lt;ul&gt; doesn't change — a brand-new &lt;li&gt; is manufactured in memory with <code>createElement</code>, then wired into the tree as a new child with <code>appendChild</code>. Nothing appears on screen until that second step.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>querySelectorAll & Iterating Many Elements</h3>
+        <p><code>querySelector</code> stops at the first match. <code>querySelectorAll</code> keeps going and hands back <strong>every</strong> match, bundled into a <strong>NodeList</strong> — an array-like collection you loop over, even if it only found one element, or none at all.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const allBadges = document.querySelectorAll(&quot;.crew-card&quot;);&#10;&#10;console.log(allBadges.length); // e.g. 4, even if only one class matches&#10;&#10;allBadges.forEach(function (badge) {&#10;  badge.classList.add(&quot;checked-in&quot;);&#10;});">COPY</button></div>
+          <pre><code><span class="kw">const</span> allBadges = document.<span class="fn">querySelectorAll</span>(<span class="str">".crew-card"</span>);
+
+console.<span class="fn">log</span>(allBadges.length); <span class="comment">// e.g. 4, even if only one class matches</span>
+
+allBadges.<span class="fn">forEach</span>(<span class="kw">function</span> (badge) {
+  badge.classList.<span class="fn">add</span>(<span class="str">"checked-in"</span>);
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>querySelectorAll</code> always returns a NodeList — never a single element, never <code>null</code>. If zero elements match, you get back an empty NodeList (length <code>0</code>), not an error. Modern NodeLists support <code>.forEach()</code> directly, which is the standard way to run the same logic against every match. It's also a <em>static snapshot</em> of what matched at the moment you called it — elements added to the page afterward won't magically appear in that same list.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Creating & Inserting Elements</h3>
+        <p><code>document.createElement(tag)</code> manufactures a brand-new element — entirely in memory, completely detached from the page. It doesn't appear anywhere until you explicitly insert it somewhere with <code>appendChild</code>, the shorthand <code>.append()</code>, <code>.prepend()</code>, or <code>insertBefore</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const list = document.querySelector(&quot;#crewList&quot;);&#10;&#10;const rookie = document.createElement(&quot;li&quot;);&#10;rookie.textContent = &quot;Talia&quot;;&#10;&#10;list.appendChild(rookie);          // added at the end&#10;&#10;const medic = document.createElement(&quot;li&quot;);&#10;medic.textContent = &quot;Rho (Med Officer)&quot;;&#10;list.prepend(medic);               // added at the front, ahead of everyone">COPY</button></div>
+          <pre><code><span class="kw">const</span> list = document.<span class="fn">querySelector</span>(<span class="str">"#crewList"</span>);
+
+<span class="kw">const</span> rookie = document.<span class="fn">createElement</span>(<span class="str">"li"</span>);
+rookie.textContent = <span class="str">"Talia"</span>;
+
+list.<span class="fn">appendChild</span>(rookie);          <span class="comment">// added at the end</span>
+
+<span class="kw">const</span> medic = document.<span class="fn">createElement</span>(<span class="str">"li"</span>);
+medic.textContent = <span class="str">"Rho (Med Officer)"</span>;
+list.<span class="fn">prepend</span>(medic);               <span class="comment">// added at the front, ahead of everyone</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>createElement</code> only builds the element — it's like machining a part on a bench, not yet bolted to anything. <code>appendChild</code>/<code>.append()</code> installs it as the last child of the container; <code>.prepend()</code> installs it as the first. Need it somewhere in the middle? <code>parent.insertBefore(newNode, referenceNode)</code> drops <code>newNode</code> immediately before a sibling you already have a reference to.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Removing Elements</h3>
+        <p>Pulling an element out of the page is a one-liner: call <code>.remove()</code> directly on the element you no longer want.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const list = document.querySelector(&quot;#crewList&quot;);&#10;const members = list.querySelectorAll(&quot;li&quot;);&#10;&#10;members[0].remove(); // the first crew member is gone from the page">COPY</button></div>
+          <pre><code><span class="kw">const</span> list = document.<span class="fn">querySelector</span>(<span class="str">"#crewList"</span>);
+<span class="kw">const</span> members = list.<span class="fn">querySelectorAll</span>(<span class="str">"li"</span>);
+
+members[0].<span class="fn">remove</span>(); <span class="comment">// the first crew member is gone from the page</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.remove()</code> detaches the element from the tree — it disappears from the page immediately. Older code you'll sometimes still see does the same job via the parent: <code>list.removeChild(members[0])</code>. Either way, removing an element doesn't erase your JavaScript variable pointing at it; that variable just now refers to an element that isn't on the page anymore, unless you reinsert it somewhere.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Attributes & textContent vs. innerHTML</h3>
+        <p>Attributes are the name/value pairs written inside a tag, like <code>data-rank="ensign"</code>. Read and write them with <code>getAttribute</code> and <code>setAttribute</code> — useful for custom data that doesn't need its own CSS class or JS variable. Separately, when it comes to setting an element's <em>contents</em>, <code>textContent</code> and <code>innerHTML</code> look similar but behave very differently.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const badge = document.querySelector(&quot;#crewList li&quot;);&#10;&#10;badge.setAttribute(&quot;data-rank&quot;, &quot;ensign&quot;);&#10;console.log(badge.getAttribute(&quot;data-rank&quot;)); // &quot;ensign&quot;&#10;&#10;badge.textContent = &quot;Nova &lt;ensign&gt;&quot;;      // shown as literal text, exactly as typed&#10;badge.innerHTML = &quot;Nova &lt;strong&gt;Ensign&lt;/strong&gt;&quot;; // parsed as real HTML — &lt;strong&gt; actually bolds it">COPY</button></div>
+          <pre><code><span class="kw">const</span> badge = document.<span class="fn">querySelector</span>(<span class="str">"#crewList li"</span>);
+
+badge.<span class="fn">setAttribute</span>(<span class="str">"data-rank"</span>, <span class="str">"ensign"</span>);
+console.<span class="fn">log</span>(badge.<span class="fn">getAttribute</span>(<span class="str">"data-rank"</span>)); <span class="comment">// "ensign"</span>
+
+badge.textContent = <span class="str">"Nova &lt;ensign&gt;"</span>;      <span class="comment">// shown as literal text, exactly as typed</span>
+badge.innerHTML = <span class="str">"Nova &lt;strong&gt;Ensign&lt;/strong&gt;"</span>; <span class="comment">// parsed as real HTML — &lt;strong&gt; actually bolds it</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>textContent</code> treats whatever you assign as plain text — even if it contains angle brackets, they're displayed literally, never turned into real tags. <code>innerHTML</code> instead <em>parses</em> the string as HTML and builds real elements from it, which is exactly why it can insert a whole chunk of structured markup in a single line.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: why professional code is careful with innerHTML</summary>
+          <p>If a string you hand to <code>innerHTML</code> came from somewhere you don't fully control — a text box someone typed into, a URL, another user's message — and that string happens to contain something like <code>&lt;img src=x onerror="doSomethingBad()"&gt;</code>, the browser will parse it as real HTML and actually run it. That's called <strong>Cross-Site Scripting (XSS)</strong>, and it's one of the most common real-world web vulnerabilities — attackers use it to steal login sessions or quietly run their own code inside someone else's page.</p>
+          <p>The fix isn't complicated: for anything that includes user-typed or otherwise dynamic content, prefer <code>textContent</code>, or build the structure yourself with <code>createElement</code> and set text on the pieces individually. Save <code>innerHTML</code> for content you wrote yourself, hardcoded, with nothing plugged in from outside. It's not that <code>innerHTML</code> is broken — it's that it will faithfully run whatever HTML you give it, so you have to be the one making sure that HTML is trustworthy.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A live sandbox again, but this time the "display" is a real container element — <code>#crewList</code> — that starts completely empty. Your code is responsible for building its contents from scratch: create elements, append them, tag them, and remove them, exactly like a real crew roster app would.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CREW LIST</span><span>●</span></div>
+            <div id="crewList" class="sandbox-display"></div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: querySelectorAll & tag everyone</button>
+        <button class="console-btn" id="btnExample2">try: remove, promote, prepend</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above, build out the crew roster from scratch and then manage it like a real app would.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Grab the crew list container with <code>document.querySelector("#crewList")</code> (or <code>getElementById</code>) and store it in a variable
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Starting from an array of at least 3 names, loop over it and use <code>document.createElement("li")</code> + <code>appendChild</code> (or <code>.append()</code>) to add each one to the container
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>querySelectorAll("li")</code> on the container to grab every crew member you just added, then loop over the NodeList with <code>.forEach()</code> to add a CSS class to each one
+          <span class="sub">Try the <code>highlight</code> class — it's already styled on this page</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Remove one crew member from the list using <code>.remove()</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Set a custom attribute on one remaining crew member with <code>setAttribute("data-rank", "...")</code>, then read it back with <code>getAttribute</code> and print it with <code>console.log</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Add one more new crew member using <code>.prepend()</code> or <code>insertBefore</code> so it lands somewhere other than the end of the list
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If a line throws <code>"...forEach is not a function"</code>, double-check what's on the left of the dot: <code>querySelector</code> (singular) hands back one element or <code>null</code>, while <code>querySelectorAll</code> (plural) hands back a NodeList — only the plural version has a built-in <code>.forEach()</code> to loop with.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Wire up a text input and an "Add Crew Member" button (both created with <code>createElement</code> or added to the HTML around the sandbox) so a cadet can type a name and click to append a real new <code>&lt;li&gt;</code> live. Then add a "Remove Last" button that deletes the most recently added member with <code>list.lastElementChild.remove()</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>querySelectorAll()</code><span>Find every matching element, as a NodeList</span></div>
+        <div class="cheat-card"><code>NodeList.forEach()</code><span>Loop over every element in a NodeList</span></div>
+        <div class="cheat-card"><code>document.createElement()</code><span>Build a new, detached element in memory</span></div>
+        <div class="cheat-card"><code>.appendChild() / .append()</code><span>Insert as the last child of a parent</span></div>
+        <div class="cheat-card"><code>.prepend()</code><span>Insert as the first child of a parent</span></div>
+        <div class="cheat-card"><code>.insertBefore(new, ref)</code><span>Insert immediately before a specific sibling</span></div>
+        <div class="cheat-card"><code>.remove()</code><span>Detach an element from the page entirely</span></div>
+        <div class="cheat-card"><code>.setAttribute() / .getAttribute()</code><span>Write or read an HTML attribute</span></div>
+        <div class="cheat-card"><code>.textContent</code><span>Plain text only — always safe, never parsed</span></div>
+        <div class="cheat-card"><code>.innerHTML</code><span>Parses real HTML — trusted content only</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Calling array methods like <code>.map()</code> or <code>.filter()</code> directly on a NodeList — it only ships with <code>.forEach()</code> built in; convert with <code>Array.from(list)</code> first if you need the rest.</li>
+          <li>Forgetting that <code>querySelectorAll</code> returns a collection, not a single element, and trying to read <code>.textContent</code> straight off it instead of looping over the matches.</li>
+          <li>Appending a freshly created element to the wrong container — easy to do when two variables have similar names, and the element silently lands somewhere you didn't intend.</li>
+          <li>Calling <code>querySelector</code>/<code>getElementById</code> before the target element actually exists in the page yet (script running too early, or a typo in the selector).</li>
+          <li>Using <code>innerHTML</code> to insert anything that includes user-typed or otherwise untrusted text, opening the door to XSS.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the key difference between <code>document.querySelector()</code> and <code>document.querySelectorAll()</code>?</p>
+        <button class="quiz-btn" data-correct="false">querySelectorAll only works with class selectors, never IDs</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — querySelector stops at the first hit; querySelectorAll always hands back a full NodeList, even if it's empty.">querySelector returns the first match (or null); querySelectorAll returns every match as a NodeList</button>
+        <button class="quiz-btn" data-correct="false">They're just two names for the exact same method</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// Try me — then hit RUN
+const list = document.getElementById("crewList");
+const names = ["Nova", "Kip", "Zed"];
+
+names.forEach(function (name) {
+  const item = document.createElement("li");
+  item.textContent = name;
+  list.appendChild(item);
+});
+
+console.log("Crew roster built:", names.length, "members");`;
+
+  const EXAMPLE_QUERYALL = `const list = document.getElementById("crewList");
+const names = ["Nova", "Kip", "Zed", "Rho"];
+
+names.forEach(function (name) {
+  const item = document.createElement("li");
+  item.textContent = name;
+  item.setAttribute("data-role", "crew");
+  list.appendChild(item);
+});
+
+// querySelectorAll on the CONTAINER (not on "document") returns every <li> inside it
+const members = list.querySelectorAll("li");
+
+members.forEach(function (member, index) {
+  if (index % 2 === 0) {
+    member.classList.add("highlight");
+  }
+});
+
+console.log("Tagged", members.length, "crew members. Every other one is highlighted.");`;
+
+  const EXAMPLE_REMOVE_PROMOTE = `const list = document.getElementById("crewList");
+const names = ["Nova", "Kip", "Zed"];
+
+names.forEach(function (name) {
+  const item = document.createElement("li");
+  item.textContent = name;
+  list.appendChild(item);
+});
+
+// Promote Zed to Captain and tag it with a real attribute
+const zed = list.querySelectorAll("li")[2];
+zed.setAttribute("data-rank", "captain");
+zed.textContent = zed.textContent + " (Captain)";
+
+// Kip transferred to another ship — remove them
+const kip = list.querySelectorAll("li")[1];
+kip.remove();
+
+// A new recruit joins at the FRONT of the line, not the end
+const rookie = document.createElement("li");
+rookie.textContent = "Vex (Recruit)";
+list.prepend(rookie);
+
+console.log("Zed's rank attribute:", zed.getAttribute("data-rank"));`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "crewList",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_QUERYALL },
+        { btnId: "btnExample2", code: EXAMPLE_REMOVE_PROMOTE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

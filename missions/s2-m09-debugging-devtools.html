@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.9: Debugging & DevTools — Reading Errors Like a Professional | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Buggy Code + Console widget ---------- */
+  .bug-select-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .bug-btn {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bug-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bug-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+  .bug-run-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 4px 0 16px; }
+  .bug-run-hint { color: var(--text-muted); font-size: 12px; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m09">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.9: DEBUGGING & DEVTOOLS</h1>
+    <div class="subtitle">Reading Errors Like a Professional</div>
+    <p class="briefing-line">Every programmer, at every skill level, spends a huge amount of time looking at code that doesn't work yet. The difference between someone who panics and someone who fixes it in ten seconds isn't talent — it's knowing how to read what the computer is actually telling you. This mission teaches you to read a stack trace fluently, use the browser's built-in tools on purpose instead of by accident, and freeze a running program mid-flight to see exactly what it's thinking.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER + DEVTOOLS</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>An error message is not the ship yelling at you. It's not an alarm designed to make you feel bad, and it's not a sign that you've broken something unfixable. It's a <strong>diagnostic readout</strong> — a system on your ship reporting, with surprising precision, exactly which subsystem failed and why. Every error a JavaScript engine throws carries the same three pieces of information every single time: a <strong>type</strong> (what category of problem this is), a <strong>message</strong> (the specific detail — what value, what operation), and a <strong>stack trace</strong> (the exact chain of function calls that led to the moment it broke). Once you know how to read those three things together, "the code is broken" stops being scary and starts being a puzzle with a printed hint sheet stapled to it.</p>
+      <p>You already met DevTools' Network tab back in Mission 0.2 — you watched the actual requests a page fires. This mission goes one level deeper, into the Console and Sources tabs, where you'll watch JavaScript itself run, break, and get fixed. And this time the practice below is a little different from the usual sandbox: instead of a free-form editor, you'll run three genuinely broken snippets and see the <em>real</em> error your browser's JavaScript engine actually throws for each one — not a scripted, pretend version of it.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <rect x="20" y="20" width="660" height="150" rx="10" fill="#05070d" stroke="#2e3d63" stroke-width="1.5"/>
+          <circle cx="40" cy="38" r="4" fill="#ff6b6b"/>
+          <circle cx="54" cy="38" r="4" fill="#ffe66d"/>
+          <circle cx="68" cy="38" r="4" fill="#4dffb4"/>
+          <text x="668" y="42" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="end">CONSOLE</text>
+
+          <text x="36" y="70" font-family="Fira Code, monospace" font-size="12.5"><tspan fill="#ff6b6b">Uncaught </tspan><tspan fill="#ff6ec7">TypeError</tspan><tspan fill="#ff6b6b">: Cannot read properties</tspan></text>
+          <text x="36" y="88" font-family="Fira Code, monospace" font-size="12.5" fill="#ff6b6b">of undefined (reading 'join')</text>
+          <text x="36" y="114" font-family="Fira Code, monospace" font-size="12"><tspan fill="#a8b3d1">    at </tspan><tspan fill="#4ee1ff">reportManifest</tspan><tspan fill="#a8b3d1"> (</tspan><tspan fill="#ffe66d">mission.js:14:19</tspan><tspan fill="#a8b3d1">)</tspan></text>
+          <text x="36" y="136" font-family="Fira Code, monospace" font-size="12"><tspan fill="#6b7699">    at (</tspan><tspan fill="#ffe66d">mission.js:19:9</tspan><tspan fill="#6b7699">)</tspan></text>
+
+          <g font-family="Fira Code, monospace" font-size="12" fill="#a8b3d1">
+            <rect x="30" y="192" width="10" height="10" fill="#ff6ec7"/>
+            <text x="48" y="201">ERROR TYPE — the category of bug (TypeError, ReferenceError, SyntaxError…)</text>
+
+            <rect x="30" y="220" width="10" height="10" fill="#ff6b6b"/>
+            <text x="48" y="229">ERROR MESSAGE — the specific detail: what value, what operation failed</text>
+
+            <rect x="30" y="248" width="10" height="10" fill="#4ee1ff"/>
+            <text x="48" y="257">TOP FRAME — the function &amp; file where the error was actually thrown</text>
+
+            <rect x="30" y="276" width="10" height="10" fill="#ffe66d"/>
+            <text x="48" y="285">file:line:column — the exact spot to open in the Sources panel</text>
+
+            <rect x="30" y="304" width="10" height="10" fill="#6b7699"/>
+            <text x="48" y="313">FRAMES BELOW — the call chain: read top (newest) → bottom (oldest caller)</text>
+          </g>
+        </svg>
+        <div class="diagram-caption">A stack trace reads top to bottom as "where it happened" → "who called it." The top frame is almost always where you should look first.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Anatomy of a Stack Trace</h3>
+        <p>Every uncaught error starts with one line combining its <strong>type</strong> and <strong>message</strong>, then a list of indented lines starting with <code>at</code> — that's the <strong>call stack</strong>. Each <code>at</code> line is one function that was "on the stack" (in the middle of running) at the moment things broke.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CONSOLE OUTPUT</span><button class="copy-btn" data-copy="Uncaught TypeError: Cannot read properties of undefined (reading 'toFixed')&#10;    at formatSpeed (dashboard.js:22:34)&#10;    at renderPanel (dashboard.js:41:18)&#10;    at dashboard.js:58:3">COPY</button></div>
+          <pre><code><span class="comment">Uncaught</span> <span class="fn">TypeError</span>: Cannot read properties of undefined (reading <span class="str">'toFixed'</span>)
+    at <span class="kw">formatSpeed</span> (dashboard.js:<span class="num">22</span>:<span class="num">34</span>)
+    at <span class="kw">renderPanel</span> (dashboard.js:<span class="num">41</span>:<span class="num">18</span>)
+    at dashboard.js:<span class="num">58</span>:<span class="num">3</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The <strong>top</strong> frame (<code>formatSpeed</code>) is where the error was actually thrown — start reading there, not at the bottom. Each frame below it is the function that called the one above — so <code>renderPanel</code> called <code>formatSpeed</code>, and something at line 58 called <code>renderPanel</code>. The bottom of the trace is the original trigger, usually furthest from the actual bug.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Common Error Types</h3>
+        <p>Almost every runtime bug you'll hit falls into one of three buckets. Learn to recognize them by name and you'll already know roughly where to look before you've read a single word of the message.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JS</span><button class="copy-btn" data-copy="// TypeError — used a value in a way its type doesn't support&#10;const readings = undefined;&#10;console.log(readings.length);&#10;// -> TypeError: Cannot read properties of undefined (reading 'length')&#10;&#10;// ReferenceError — referenced a name that doesn't exist anywhere in scope&#10;console.log(totalFuel);&#10;// -> ReferenceError: totalFuel is not defined&#10;&#10;// SyntaxError — the code isn't even valid JavaScript; nothing runs at all&#10;function launch( {&#10;  console.log('go');&#10;}&#10;// -> SyntaxError: missing ) after argument list">COPY</button></div>
+          <pre><code><span class="comment">// TypeError — used a value in a way its type doesn't support</span>
+<span class="kw">const</span> readings = undefined;
+console.log(readings.length);
+<span class="comment">// -> TypeError: Cannot read properties of undefined (reading 'length')</span>
+
+<span class="comment">// ReferenceError — referenced a name that doesn't exist anywhere in scope</span>
+console.log(totalFuel);
+<span class="comment">// -> ReferenceError: totalFuel is not defined</span>
+
+<span class="comment">// SyntaxError — the code isn't even valid JavaScript; nothing runs at all</span>
+<span class="kw">function</span> <span class="fn">launch</span>( {
+  console.log(<span class="str">'go'</span>);
+}
+<span class="comment">// -> SyntaxError: missing ) after argument list</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <strong>TypeError</strong> almost always means you called a method on, or read a property from, something that turned out to be <code>undefined</code> or <code>null</code> — usually because an earlier step didn't produce what you expected. <strong>ReferenceError</strong> means the name simply doesn't exist anywhere the engine can see — nearly always a typo or a missing declaration. <strong>SyntaxError</strong> is special: it's caught by the parser <em>before</em> any code runs, so its reported line is where the parser gave up, not necessarily where the real mistake is — often you have to look a line or two above it for the missing bracket or quote.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>console Methods as Real Debugging Tools</h3>
+        <p>The <code>console</code> object isn't just for stray leftover prints — each method is a deliberate signal, and DevTools renders them differently on purpose.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JS</span><button class="copy-btn" data-copy="console.log('fuel remaining:', fuelLevel);&#10;console.warn('fuel below 20% — refuel soon');&#10;console.error('engine ignition failed', { code: 12 });&#10;console.table(crewRoster);">COPY</button></div>
+          <pre><code>console.log(<span class="str">'fuel remaining:'</span>, fuelLevel);
+console.warn(<span class="str">'fuel below 20% — refuel soon'</span>);
+console.error(<span class="str">'engine ignition failed'</span>, { code: <span class="num">12</span> });
+console.table(crewRoster);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>console.log</code> is your general-purpose checkpoint. <code>console.warn</code> prints with a yellow triangle — use it for "this isn't broken yet, but it's suspicious." <code>console.error</code> prints in red with an X icon and, in most browsers, automatically attaches a full stack trace even though nothing was thrown — perfect for flagging a real problem you caught yourself, deliberately, in an <code>if</code> check. <code>console.table</code> turns an array of objects into an actual grid instead of a wall of nested brackets.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: console.table() for inspecting arrays of objects</summary>
+          <p>Compare scanning <code>[{name:"Rho",role:"Pilot"},{name:"Kade",role:"Engineer"}]</code> as raw text versus calling <code>console.table(crew)</code> — DevTools renders one column per property (<code>name</code>, <code>role</code>) and one row per object, sortable by clicking a column header. For any array of similarly-shaped objects — API results, a roster, a leaderboard — it's the fastest way to eyeball whether the data actually looks right. You can even pass a second argument, an array of property names, to show only specific columns: <code>console.table(crew, ["name"])</code>.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Breakpoints & Stepping Through Code (Sources Panel)</h3>
+        <p>The Console tells you what already happened. The <strong>Sources</strong> panel lets you freeze code mid-run and watch it happen, line by line, on a real page.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JS</span><button class="copy-btn" data-copy="function calculateTrajectory(velocity, angle) {&#10;  const radians = angle * (Math.PI / 180); // <- click this line's number to set a breakpoint&#10;  const range = (velocity ** 2 * Math.sin(2 * radians)) / 9.8;&#10;  return range;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">calculateTrajectory</span>(velocity, angle) {
+  <span class="kw">const</span> radians = angle * (Math.PI / <span class="num">180</span>); <span class="comment">// <- click this line's number to set a breakpoint</span>
+  <span class="kw">const</span> range = (velocity ** <span class="num">2</span> * Math.sin(<span class="num">2</span> * radians)) / <span class="num">9.8</span>;
+  <span class="kw">return</span> range;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED (describing the real workflow)</strong>
+          In DevTools' Sources tab: find the file in the tree on the left, open it, and click a line number in the gutter — a blue flag appears, marking a real <strong>breakpoint</strong>. Trigger that code path (reload, click a button, whatever calls it) and the entire page freezes right before that line executes. The Scope panel on the right now shows every variable's live value at that exact instant — no guessing. From there: <strong>Step Over</strong> runs the current line and stops at the next one without diving into functions it calls; <strong>Step Into</strong> follows execution down into a called function; <strong>Step Out</strong> finishes the current function and pops back to whoever called it; <strong>Resume</strong> (the blue play icon) lets the page run normally again until the next breakpoint.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Method for Reading Errors, Not Just Reacting to Them</h3>
+        <p>Panicking at an error and guessing a fix wastes more time than it saves. Use the same four steps every time: read the full message before anything else, find the top stack frame (where it actually happened), form <em>one</em> specific hypothesis about what value must be wrong to produce exactly that message, and verify the hypothesis before touching any code.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JS</span><button class="copy-btn" data-copy="// Hypothesis: manifest.item is undefined because of a typo (should be 'items')&#10;console.log(manifest.item);   // confirm: logs `undefined` — hypothesis confirmed&#10;manifest.items.join(', ');    // now apply the actual fix">COPY</button></div>
+          <pre><code><span class="comment">// Hypothesis: manifest.item is undefined because of a typo (should be 'items')</span>
+console.log(manifest.item);   <span class="comment">// confirm: logs `undefined` — hypothesis confirmed</span>
+manifest.items.join(<span class="str">', '</span>);    <span class="comment">// now apply the actual fix</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          Verify before you fix. It feels slower for a two-second bug, but it's the habit that saves you when the bug is subtle — and it's exactly what stops you from "fixing" the wrong thing, seeing the error change shape, and being no closer to done.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Three genuinely broken snippets. Pick one, read the code, then hit RUN — the code actually executes in your browser's real JavaScript engine, wrapped in a real <code>try/catch</code>, and you'll see the <em>real</em> <code>error.name</code> and <code>error.message</code> it throws. Nothing below is scripted or faked.</p>
+
+      <div class="bug-select-row" id="bugSelectRow">
+        <button class="bug-btn active" data-bug="typeerror">BUG A · TypeError</button>
+        <button class="bug-btn" data-bug="referenceerror">BUG B · ReferenceError</button>
+        <button class="bug-btn" data-bug="logic">BUG C · Logic Bug</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-tab"><span id="bugCodeLabel">MISSION.JS — BUG A</span><button class="copy-btn" id="bugCopyBtn" data-copy="">COPY</button></div>
+        <pre><code id="bugCodeDisplay"></code></pre>
+      </div>
+
+      <div class="bug-run-row">
+        <button class="run-btn" id="bugRunBtn">▶ RUN</button>
+        <span class="bug-run-hint">Executes the snippet above for real, in a try/catch.</span>
+      </div>
+
+      <div class="sandbox-pane">
+        <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+        <div class="sandbox-output" id="bugConsoleOutput">
+          <div class="out-line out-status">Pick a snippet above, then click ▶ RUN.</div>
+        </div>
+      </div>
+
+      <div class="whatjusthappened" style="margin-top:16px;">
+        <strong>WHAT'S REAL VS. SIMULATED HERE</strong>
+        The error type and message you see are exactly what a real JS engine throws for this exact code — not scripted. What's simulated: a real file/line number, because this code isn't loaded from an actual <code>.js</code> file the browser can point a Sources-panel breakpoint at. That's exactly what you'll get for free the moment you try this on a real page in the Mission Challenge below.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>This one happens entirely in a real browser, on a real page — DevTools open, no simulation.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Open real DevTools on any webpage (right-click → "Inspect") and switch to the <strong>Console</strong> tab</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Either find an error already logged there, or trigger one yourself — try typing <code>document.querySelector("#definitelyNotThere").textContent</code> straight into the console</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Read it out loud in plain English: what <strong>type</strong> is it, and what does the <strong>message</strong> actually say went wrong?</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Open the <strong>Sources</strong> panel, open any loaded JS file, and click a line number to set a real breakpoint</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Trigger that code path again so execution pauses at your breakpoint, then click <strong>Step Over</strong> at least once and watch a value in the Scope panel</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">Type <code>console.table(...)</code> on an array of at least 3 objects directly into the console and confirm it renders as a grid</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If Step Over seems to do nothing, make sure you triggered the code path <em>after</em> setting the breakpoint — a breakpoint can't pause code that already ran past that line before it existed. Stuck paused? Look for the blue "Resume script execution" (▶) button, usually top-right of the Sources panel, to let the page continue normally.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Deliberately type broken syntax into the console — an unmatched parenthesis or curly brace, like <code>if (true {</code> — and compare what comes back to a normal runtime error. Notice there's no call stack of function frames at all: a SyntaxError happens before anything runs, so there's nothing to have called anything yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>error.name</code><span>The error's type, e.g. "TypeError"</span></div>
+        <div class="cheat-card"><code>error.message</code><span>The specific detail of what went wrong</span></div>
+        <div class="cheat-card">Stack trace order<span>Top = where it happened, bottom = who called it</span></div>
+        <div class="cheat-card"><code>TypeError</code><span>Used a value in a way its type doesn't support</span></div>
+        <div class="cheat-card"><code>ReferenceError</code><span>Referenced a name that doesn't exist in scope</span></div>
+        <div class="cheat-card"><code>SyntaxError</code><span>Invalid JS — caught before anything runs</span></div>
+        <div class="cheat-card"><code>console.warn</code><span>Flags something suspicious, not yet broken</span></div>
+        <div class="cheat-card"><code>console.table</code><span>Renders an array of objects as a grid</span></div>
+        <div class="cheat-card">Breakpoint<span>Freezes execution at a chosen line, live variables visible</span></div>
+        <div class="cheat-card">Step Over / Into / Out<span>Control how far execution moves per click</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Panicking at the very first line of a long stack trace instead of reading the actual message underneath it.</li>
+          <li>Assuming "no error was thrown" means "the code is correct" — logic bugs run silently and quietly return the wrong answer.</li>
+          <li>Ignoring yellow <code>console.warn</code> messages because "it's not red" — warnings are often tomorrow's crash.</li>
+          <li>Leaving stray <code>console.log</code> statements scattered in shipped code instead of removing them or replacing them with a deliberate <code>console.warn</code>/<code>console.error</code>.</li>
+          <li>Guessing at a fix and re-running instead of verifying the hypothesis first — you can "fix" the wrong thing and just get a different error.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what error would this code throw?</p>
+        <div class="code-block" style="margin-bottom:14px;">
+          <pre><code><span class="kw">const</span> shipName = <span class="str">"Voyager"</span>;
+console.log(shipNme);</code></pre>
+        </div>
+        <button class="quiz-btn" data-correct="false">SyntaxError</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — shipNme was never declared anywhere (it's a typo of shipName), so the engine throws ReferenceError: shipNme is not defined.">ReferenceError</button>
+        <button class="quiz-btn" data-correct="false">TypeError</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Buggy Code + Console widget ---------------- */
+  const bugs = {
+    typeerror: {
+      label: "MISSION.JS — BUG A",
+      kind: "error",
+      code: [
+        "const cargoManifest = {",
+        '  items: ["oxygen tank", "solar panel", "water filter"]',
+        "};",
+        "",
+        "function reportManifest(manifest) {",
+        '  return manifest.item.join(", "); // typo: should be manifest.items',
+        "}",
+        "",
+        "console.log(reportManifest(cargoManifest));",
+      ].join("\n"),
+    },
+    referenceerror: {
+      label: "MISSION.JS — BUG B",
+      kind: "error",
+      code: [
+        "function calculateFuel(distanceKm) {",
+        "  const fuelNeeded = distanceKm * 2.5;",
+        "  return fuelNeeded + reserveFual; // typo: should be reserveFuel",
+        "}",
+        "",
+        "const reserveFuel = 50;",
+        "console.log(calculateFuel(120));",
+      ].join("\n"),
+    },
+    logic: {
+      label: "MISSION.JS — BUG C",
+      kind: "logic",
+      expected: "16.25 — the true average of 12, 18, 15, and 20",
+      code: [
+        "function averageFuelUsage(readings) {",
+        "  let total = 0;",
+        "  for (let i = 0; i < readings.length - 1; i++) { // bug: should be i < readings.length",
+        "    total += readings[i];",
+        "  }",
+        "  return total / readings.length;",
+        "}",
+        "",
+        "const readings = [12, 18, 15, 20];",
+        'console.log("Average:", averageFuelUsage(readings));',
+      ].join("\n"),
+    },
+  };
+
+  let currentBug = "typeerror";
+
+  const codeLabelEl = document.getElementById("bugCodeLabel");
+  const codeDisplayEl = document.getElementById("bugCodeDisplay");
+  const copyBtn = document.getElementById("bugCopyBtn");
+  const outputEl = document.getElementById("bugConsoleOutput");
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function renderBug(key) {
+    currentBug = key;
+    const bug = bugs[key];
+    codeLabelEl.textContent = bug.label;
+    codeDisplayEl.innerHTML = escapeHtml(bug.code);
+    copyBtn.setAttribute("data-copy", bug.code);
+    outputEl.innerHTML = '<div class="out-line out-status">Click ▶ RUN to execute this snippet for real.</div>';
+
+    document.querySelectorAll(".bug-btn").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-bug") === key);
+    });
+  }
+
+  function printLine(text, cls) {
+    const line = document.createElement("div");
+    line.className = "out-line" + (cls ? " " + cls : "");
+    line.textContent = text;
+    outputEl.appendChild(line);
+  }
+
+  function runBug() {
+    const bug = bugs[currentBug];
+    outputEl.innerHTML = "";
+
+    const logs = [];
+    const fakeConsole = {
+      log: function () { logs.push(Array.prototype.slice.call(arguments).map(String).join(" ")); },
+      error: function () { logs.push(Array.prototype.slice.call(arguments).map(String).join(" ")); },
+      warn: function () { logs.push(Array.prototype.slice.call(arguments).map(String).join(" ")); },
+      table: function (data) { logs.push(JSON.stringify(data)); },
+    };
+
+    try {
+      const fn = new Function("console", bug.code);
+      fn(fakeConsole);
+
+      logs.forEach(function (l) { printLine(l); });
+
+      if (bug.kind === "logic") {
+        printLine("No error was thrown — the code ran successfully.", "out-status");
+        printLine("But the real average is " + bug.expected + ". Wrong, and silently so.", "out-error");
+      } else {
+        printLine("No error was thrown for this run.", "out-status");
+      }
+    } catch (err) {
+      printLine("Uncaught " + err.name + ": " + err.message, "out-error");
+      printLine('(real error.name = "' + err.name + '" · real error.message = "' + err.message + '" — genuinely thrown by your browser, not scripted)', "out-status");
+    }
+  }
+
+  document.querySelectorAll(".bug-btn").forEach(function (b) {
+    b.addEventListener("click", function () { renderBug(b.getAttribute("data-bug")); });
+  });
+  document.getElementById("bugRunBtn").addEventListener("click", runBug);
+
+  document.addEventListener("DOMContentLoaded", function () {
+    renderBug("typeerror");
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+<style>
+  .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+  .auth-card { width: 100%; max-width: 420px; }
+  .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .auth-tab {
+    flex: 1; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    padding: 10px; border-radius: 8px; cursor: pointer; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em;
+  }
+  .auth-tab.active { color: var(--accent); border-color: var(--accent); background: rgba(78,225,255,0.08); }
+  .auth-field { margin-bottom: 16px; }
+  .auth-field label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-family: var(--font-display); letter-spacing: 0.03em; }
+  .auth-field input {
+    width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px;
+    padding: 11px 14px; color: var(--text-primary); font-family: var(--font-body); font-size: 14px;
+  }
+  .auth-field input:focus { outline: none; border-color: var(--accent); }
+  .auth-submit {
+    width: 100%; background: var(--accent); color: var(--bg-void); border: none; border-radius: 8px;
+    padding: 13px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.05em; cursor: pointer; margin-top: 4px;
+  }
+  .auth-submit:disabled { opacity: 0.5; cursor: default; }
+  .auth-msg { margin-top: 16px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .auth-msg.error { display: block; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); color: var(--danger); }
+  .auth-msg.success { display: block; background: rgba(77,255,180,0.08); border: 1px solid rgba(77,255,180,0.3); color: var(--success); }
+  .auth-note { margin-top: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+  .auth-guest { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-secondary); text-decoration: none; }
+  .auth-guest:hover { color: var(--accent); }
+  .config-warning {
+    max-width: 420px; margin: 0 auto 20px; padding: 14px 18px; border-radius: 10px;
+    background: rgba(255,207,77,0.08); border: 1px solid rgba(255,207,77,0.35); color: var(--warning); font-size: 13px;
+  }
+</style>
+</head>
+<body class="accent-cyan">
+
+<canvas id="starfield"></canvas>
+
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div id="configWarning" class="config-warning" style="display:none;">
+      Supabase isn't configured yet (<code>assets/config.js</code> is blank) — accounts won't work until that's filled in. You can still <a href="index.html" style="color:inherit;text-decoration:underline;">continue as a guest</a>.
+    </div>
+
+    <header style="text-align:center;margin-bottom:28px;">
+      <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+      <h1 style="font-size:26px;margin:14px 0 6px;">PARENT SIGN-IN</h1>
+      <p style="color:var(--text-secondary);font-size:14px;margin:0;">One account for the whole family. Add your cadets after signing in.</p>
+    </header>
+
+    <div class="card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignIn">SIGN IN</button>
+        <button class="auth-tab" id="tabSignUp">CREATE ACCOUNT</button>
+      </div>
+
+      <form id="authForm">
+        <div class="auth-field">
+          <label for="authEmail">EMAIL</label>
+          <input type="email" id="authEmail" required autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">PASSWORD</label>
+          <input type="password" id="authPassword" required autocomplete="current-password" minlength="6">
+        </div>
+        <button type="submit" class="auth-submit" id="authSubmit">SIGN IN</button>
+      </form>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+
+    <a class="auth-guest" href="index.html">Continue without an account ▸</a>
+    <p class="auth-note">Kids don't need their own login — you'll create a profile for each child from the family dashboard after signing in.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/academy.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  if (!window.Academy.auth.isConfigured()) {
+    document.getElementById("configWarning").style.display = "block";
+  }
+
+  let mode = "signin"; // or "signup"
+  const tabSignIn = document.getElementById("tabSignIn");
+  const tabSignUp = document.getElementById("tabSignUp");
+  const submitBtn = document.getElementById("authSubmit");
+  const form = document.getElementById("authForm");
+  const msgEl = document.getElementById("authMsg");
+
+  function setMode(next) {
+    mode = next;
+    tabSignIn.classList.toggle("active", mode === "signin");
+    tabSignUp.classList.toggle("active", mode === "signup");
+    submitBtn.textContent = mode === "signin" ? "SIGN IN" : "CREATE ACCOUNT";
+    msgEl.className = "auth-msg";
+    msgEl.textContent = "";
+  }
+  tabSignIn.addEventListener("click", () => setMode("signin"));
+  tabSignUp.addEventListener("click", () => setMode("signup"));
+
+  function showMsg(text, kind) {
+    msgEl.textContent = text;
+    msgEl.className = "auth-msg " + kind;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!window.Academy.auth.isConfigured()) {
+      showMsg("Supabase isn't configured yet — fill in assets/config.js first.", "error");
+      return;
+    }
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    submitBtn.disabled = true;
+    try {
+      if (mode === "signin") {
+        await window.Academy.auth.signIn(email, password);
+        showMsg("Signed in — redirecting…", "success");
+      } else {
+        await window.Academy.auth.signUp(email, password);
+        showMsg("Account created — redirecting…", "success");
+      }
+      setTimeout(() => { window.location.href = "index.html"; }, 600);
+    } catch (err) {
+      showMsg(err.message || "Something went wrong. Try again.", "error");
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Already signed in? Skip straight to the dashboard.
+  window.Academy.auth.getSession().then((session) => {
+    if (session) window.location.href = "index.html";
+  });
+})();
+</script>
+
+</body>
+</html>

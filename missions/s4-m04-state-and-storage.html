@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 4.4: State & Storage — localStorage — Remembering Between Visits | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s4-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 4</div>
+    <h1>MISSION 4.4: STATE & STORAGE</h1>
+    <div class="subtitle">localStorage — Remembering Between Visits</div>
+    <p class="briefing-line">Every app you've built so far has had amnesia. Refresh the page and every variable, every click count, every typed note is gone — wiped clean, like it never happened. That's because it was all living in RAM, and RAM forgets. This mission gives your code a memory: a small, permanent storage locker built into the browser itself, so the things your app knows about a cadet can actually survive a reload, a tab close, even a full computer restart.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~35 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Back in Mission 0.1, you learned the difference between RAM and storage: RAM is fast, temporary scratch space that empties the instant power is lost, while storage is slower but permanent — it survives a shutdown. Every JavaScript variable you've written since then — <code>let clicks = 0;</code>, <code>const ship = {...}</code> — lives in RAM. The moment you reload the page, the whole script re-runs from scratch, and every one of those variables gets recreated at zero. That's not a bug. That's just what RAM does.</p>
+      <p>The collection of "current values your app is tracking right now" is called <strong>app state</strong> — how many clicks happened, what the cadet typed, which tab is active, whether dark mode is on. Normally, all of that state lives only in RAM and dies on reload. Sometimes that's fine. But sometimes you want state to <strong>persist</strong> — to still be there the next time the cadet opens the page.</p>
+      <p>That's what <code>localStorage</code> is for. It's a small key-value storage locker the browser gives to every website, scoped to that one site's origin (a page on your domain can't see another site's locker, and vice versa). Anything you save there sticks around across reloads, across tab closes, even across full browser and computer restarts — until the cadet clears their browsing data or your code deliberately removes it.</p>
+      <p>You've actually been benefiting from exactly this the entire time you've used this Academy without realizing it. The <code>academy.js</code> file that runs this very page uses <code>localStorage</code> to remember your mission progress, your checklist ticks, your light/dark theme choice, and whether the sidebar was open — which is exactly why none of that resets every time you load a new mission page. It's not magic. It's the same tool this mission is about to teach you.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <marker id="ssarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- Top track: RAM variable -->
+          <text x="20" y="24" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" font-weight="bold">IN RAM (a variable)</text>
+          <rect x="20" y="36" width="160" height="60" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="100" y="60" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">let clicks = 7;</text>
+          <text x="100" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">lives while script runs</text>
+
+          <path d="M180,66 L340,66" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#ssarrow)"/>
+          <text x="260" y="56" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">RELOAD (F5)</text>
+
+          <rect x="340" y="36" width="200" height="60" rx="10" fill="#1b2540" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5,4"/>
+          <text x="440" y="60" fill="#ff6b6b" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">clicks = 0</text>
+          <text x="440" y="80" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">gone — RAM was wiped</text>
+
+          <!-- Bottom track: localStorage -->
+          <text x="20" y="150" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" font-weight="bold">IN localStorage (a key/value pair)</text>
+          <rect x="20" y="162" width="220" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="130" y="188" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">"clicks" → "7"</text>
+          <text x="130" y="206" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">written to the browser's disk</text>
+          <text x="130" y="222" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">not just this script's memory</text>
+
+          <path d="M240,197 L400,197" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#ssarrow)"/>
+          <text x="320" y="187" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">RELOAD (F5)</text>
+
+          <rect x="400" y="162" width="220" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="510" y="190" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">"clicks" → "7"</text>
+          <text x="510" y="210" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">still there — read it back with</text>
+          <text x="510" y="224" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">getItem() on the next load</text>
+
+          <text x="320" y="270" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Same reload. One value vanishes because it never left RAM — the other survives because it was saved to storage.</text>
+        </svg>
+        <div class="diagram-caption">A variable in memory dies on reload. A localStorage entry is written to the browser's actual storage and comes back exactly as you left it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>App State vs. Persistent State</h3>
+        <p>Not everything your app tracks needs to survive a reload. Whether a dropdown menu is currently open, the exact pixel position of a drag-in-progress, the contents of an error message mid-typo — that's <strong>transient state</strong>, and RAM is exactly the right place for it. It's supposed to reset. But a cadet's saved notes, their high score, their theme preference — that's state you generally want to <strong>persist</strong>, because losing it on every reload would be annoying or destructive.</p>
+        <p>The decision isn't automatic. You have to explicitly choose, for each piece of state, whether it belongs only in a variable or also gets written to storage. localStorage never happens by accident — you always call it on purpose.</p>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          Ask yourself: "if the cadet reloads this page right now, should this value still be here?" If yes, it needs to live in localStorage (or somewhere else permanent), not just a variable.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>setItem, getItem, removeItem</h3>
+        <p><code>localStorage</code> is a simple key-value store with three core methods. Keys and values are always strings.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// Save a value&#10;localStorage.setItem(&quot;callsign&quot;, &quot;Nova&quot;);&#10;&#10;// Read it back (returns null if the key was never set)&#10;const savedName = localStorage.getItem(&quot;callsign&quot;);&#10;console.log(savedName); // &quot;Nova&quot;&#10;&#10;// Remove it&#10;localStorage.removeItem(&quot;callsign&quot;);&#10;console.log(localStorage.getItem(&quot;callsign&quot;)); // null">COPY</button></div>
+          <pre><code><span class="comment">// Save a value</span>
+localStorage.<span class="fn">setItem</span>(<span class="str">"callsign"</span>, <span class="str">"Nova"</span>);
+
+<span class="comment">// Read it back (returns null if the key was never set)</span>
+<span class="kw">const</span> savedName = localStorage.<span class="fn">getItem</span>(<span class="str">"callsign"</span>);
+console.<span class="fn">log</span>(savedName); <span class="comment">// "Nova"</span>
+
+<span class="comment">// Remove it</span>
+localStorage.<span class="fn">removeItem</span>(<span class="str">"callsign"</span>);
+console.<span class="fn">log</span>(localStorage.<span class="fn">getItem</span>(<span class="str">"callsign"</span>)); <span class="comment">// null</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>setItem(key, value)</code> writes to the browser's actual storage, not a variable — it's still there after a reload. <code>getItem(key)</code> reads it back, and returns <code>null</code> (not <code>undefined</code>, not an empty string) if that key has never been set — always plan for that case, especially the very first time a cadet visits with nothing saved yet.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Storing Objects: JSON.stringify & JSON.parse</h3>
+        <p>Here's the catch that trips almost everyone up the first time: <code>localStorage</code> can only store <strong>strings</strong>. If you hand it a number, it gets silently converted to text. If you hand it an object or an array, JavaScript converts it too — but not into anything useful.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const crewMember = { name: &quot;Kip&quot;, rank: &quot;Officer&quot; };&#10;&#10;// WRONG — localStorage forces this to a string, and objects&#10;// convert to the useless text &quot;[object Object]&quot;&#10;localStorage.setItem(&quot;crew&quot;, crewMember);&#10;console.log(localStorage.getItem(&quot;crew&quot;)); // &quot;[object Object]&quot;&#10;&#10;// RIGHT — turn it into a JSON string first&#10;localStorage.setItem(&quot;crew&quot;, JSON.stringify(crewMember));&#10;&#10;// ...and turn it back into a real object when reading it&#10;const raw = localStorage.getItem(&quot;crew&quot;);&#10;const restored = JSON.parse(raw);&#10;console.log(restored.name); // &quot;Kip&quot;">COPY</button></div>
+          <pre><code><span class="kw">const</span> crewMember = { name: <span class="str">"Kip"</span>, rank: <span class="str">"Officer"</span> };
+
+<span class="comment">// WRONG — localStorage forces this to a string, and objects</span>
+<span class="comment">// convert to the useless text "[object Object]"</span>
+localStorage.<span class="fn">setItem</span>(<span class="str">"crew"</span>, crewMember);
+console.<span class="fn">log</span>(localStorage.<span class="fn">getItem</span>(<span class="str">"crew"</span>)); <span class="comment">// "[object Object]"</span>
+
+<span class="comment">// RIGHT — turn it into a JSON string first</span>
+localStorage.<span class="fn">setItem</span>(<span class="str">"crew"</span>, JSON.<span class="fn">stringify</span>(crewMember));
+
+<span class="comment">// ...and turn it back into a real object when reading it</span>
+<span class="kw">const</span> raw = localStorage.<span class="fn">getItem</span>(<span class="str">"crew"</span>);
+<span class="kw">const</span> restored = JSON.<span class="fn">parse</span>(raw);
+console.<span class="fn">log</span>(restored.name); <span class="comment">// "Kip"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>JSON.stringify()</code> converts a real object or array into a text representation that captures its full shape — safe to hand to <code>setItem</code>. <code>JSON.parse()</code> does the reverse, turning that text back into a real, usable object. Stringify going in, parse coming out — every single time you round-trip an object or array through localStorage.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: localStorage's size limit</summary>
+          <p>Every origin gets roughly 5–10MB of localStorage, depending on the browser — plenty for settings, small notes, a handful of saved records, but nowhere near enough for large datasets, images, or anything approaching a real database. It's also fully synchronous, meaning large reads/writes can briefly freeze your page. localStorage is meant for small, simple state — a few saved values, not your app's entire dataset. When you actually need a real database, that's what Sector 5 (Supabase/Firebase) is for.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>sessionStorage & When NOT to Persist</h3>
+        <p><code>localStorage</code> has a sibling with the exact same API — <code>setItem</code>, <code>getItem</code>, <code>removeItem</code> — but different lifespan rules: <code>sessionStorage</code>. Anything saved there is cleared automatically the moment the browser tab closes. It's useful for state that should survive a reload of the same tab (so the cadet doesn't lose progress mid-form) but shouldn't outlive the visit — like a multi-step form's in-progress answers.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// Same API as localStorage, but cleared when the tab closes&#10;sessionStorage.setItem(&quot;draftMessage&quot;, &quot;Hey Commander, quick qu&quot;);&#10;console.log(sessionStorage.getItem(&quot;draftMessage&quot;));">COPY</button></div>
+          <pre><code><span class="comment">// Same API as localStorage, but cleared when the tab closes</span>
+sessionStorage.<span class="fn">setItem</span>(<span class="str">"draftMessage"</span>, <span class="str">"Hey Commander, quick qu"</span>);
+console.<span class="fn">log</span>(sessionStorage.<span class="fn">getItem</span>(<span class="str">"draftMessage"</span>));</code></pre>
+        </div>
+        <p>And one rule that matters more than any syntax here: <strong>never store sensitive data in localStorage or sessionStorage.</strong> Both are plain, unencrypted text sitting on the cadet's computer — anyone with access to that browser (or a malicious script that sneaks onto your page) can open DevTools and read every key instantly. No passwords, no API keys, no payment details, no private personal data. Real authentication systems use special server-managed mechanisms for that — you'll meet them properly in Sector 5.</p>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Same methods, different lifetime: <code>localStorage</code> persists indefinitely (until cleared), <code>sessionStorage</code> dies with the tab. Neither one is a vault — treat both as readable by anyone at the keyboard.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This sandbox builds a tiny persistent notes app using <strong>real</strong> browser <code>localStorage</code> — not a simulation. Hit RUN and it will load whatever's currently saved (or show a default if nothing's saved yet), then let you update it.</p>
+      <p><strong>Important:</strong> clicking <strong>RUN</strong> only resets the little "SHIP DISPLAY" panel on the right — it does <em>not</em> touch localStorage itself, because that data lives in the real browser, outside the sandbox. To actually prove persistence works, you need to reload the <strong>whole page</strong> — hit <strong>F5</strong> (or Ctrl+R / Cmd+R) in your real browser tab, or close and reopen this tab, then come back and hit RUN again. If your saved note is still there after a full page reload, you've just seen state survive past the point where a plain variable would have died.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: save an object</button>
+        <button class="console-btn" id="btnExample2">try: clear saved data</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above (or a real HTML file with a <code>&lt;script&gt;</code> tag), build a small persistent log-entry tool.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">On load, read a value from <code>localStorage</code> using <code>getItem()</code> under a key you chose yourself
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Handle the "nothing saved yet" case — if <code>getItem()</code> returns <code>null</code>, fall back to a sensible default instead of crashing
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Save a new value with <code>setItem()</code> so it persists for next time
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Store and retrieve an <strong>object</strong> (not just a plain string or number), using <code>JSON.stringify()</code> going in and <code>JSON.parse()</code> coming back out
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Reload the actual browser page (F5) — not just click RUN — and confirm your saved value is still there
+          <span class="sub">Clicking RUN alone only resets the sandbox's display, not real localStorage — the reload is the real test</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Add a way to call <code>removeItem()</code> and confirm the value is gone after removing it
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your saved object comes back as the text <code>"[object Object]"</code> instead of real data, you skipped <code>JSON.stringify()</code> on the way in. If reading it back throws an error like "Unexpected token", you probably skipped <code>JSON.parse()</code> on the way out — or you're trying to parse a value that was <code>null</code> because nothing was saved yet. Always check for <code>null</code> before parsing.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Extend your tool to store an <em>array</em> of log entries instead of a single value — each time the cadet adds a note, read the existing array back with <code>JSON.parse</code>, push the new entry onto it, then save the whole array again with <code>JSON.stringify</code>. Confirm the full list survives a page reload, not just the most recent entry.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>localStorage.setItem(k, v)</code><span>Save a string value under a key, persists indefinitely</span></div>
+        <div class="cheat-card"><code>localStorage.getItem(k)</code><span>Read a value back — returns <code>null</code> if never set</span></div>
+        <div class="cheat-card"><code>localStorage.removeItem(k)</code><span>Delete one saved key/value pair</span></div>
+        <div class="cheat-card"><code>JSON.stringify(obj)</code><span>Convert an object/array into a saveable string</span></div>
+        <div class="cheat-card"><code>JSON.parse(str)</code><span>Convert a saved string back into a real object/array</span></div>
+        <div class="cheat-card"><code>sessionStorage</code><span>Same API as localStorage, but cleared when the tab closes</span></div>
+        <div class="cheat-card">App state vs. persisted state</div>
+        <div class="cheat-card"><code>~5–10MB</code><span>Typical localStorage size limit per site — small data only</span></div>
+        <div class="cheat-card">Never store secrets</div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Passing an object straight into <code>setItem()</code> without <code>JSON.stringify()</code> and getting the useless string <code>"[object Object]"</code> back.</li>
+          <li>Forgetting <code>JSON.parse()</code> when reading a stored object back out, then being confused why it's "just a string" with no properties.</li>
+          <li>Not handling the case where <code>getItem()</code> returns <code>null</code> — the very first visit, before anything has ever been saved.</li>
+          <li>Storing sensitive data (passwords, tokens, personal info) in localStorage, forgetting it's plain, unencrypted text anyone at that computer can read.</li>
+          <li>Confusing localStorage's indefinite persistence with sessionStorage's tab-lifetime — using the wrong one for data that needed to (or shouldn't) survive a closed tab.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — you save an array with <code>localStorage.setItem("log", myArray)</code>, skipping <code>JSON.stringify()</code>. What happens?</p>
+        <button class="quiz-btn" data-correct="false">It saves correctly — localStorage can store arrays directly</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — localStorage only stores strings, so the array gets force-converted to a useless comma-joined (or worse) text form instead of real, readable data.">It gets silently converted to a string that isn't useful array data</button>
+        <button class="quiz-btn" data-correct="false">JavaScript throws an error and refuses to save anything</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// A tiny persistent notes app — using REAL localStorage.
+// Run it, edit the note below, hit RUN again — then reload
+// the WHOLE PAGE (F5) to see it survive. Clicking RUN alone
+// only resets this sandbox's display, not localStorage itself.
+
+const display = document.querySelector("#shipDisplay");
+const STORAGE_KEY = "mission4_4_notes";
+
+// 1. Read whatever's already saved (null if nothing yet)
+const saved = localStorage.getItem(STORAGE_KEY);
+const note = saved !== null ? saved : "No note saved yet.";
+
+console.log("Loaded from localStorage:", note);
+display.textContent = "NOTE: " + note;
+
+// 2. Save a new note for next time
+const newNote = "Fuel cells nominal, logged at " + new Date().toLocaleTimeString();
+localStorage.setItem(STORAGE_KEY, newNote);
+console.log("Saved new note. Now reload the PAGE (F5), not just RUN.");`;
+
+  const EXAMPLE_OBJECT = `// Storing an OBJECT requires JSON.stringify going in
+// and JSON.parse coming back out.
+
+const display = document.querySelector("#shipDisplay");
+const STORAGE_KEY = "mission4_4_crew";
+
+const raw = localStorage.getItem(STORAGE_KEY);
+const crew = raw !== null ? JSON.parse(raw) : { name: "Unassigned", visits: 0 };
+
+crew.visits = crew.visits + 1;
+crew.name = "Cadet";
+
+console.log("Crew record:", crew.name, "| visits:", crew.visits);
+display.textContent = crew.name + " — visit #" + crew.visits;
+
+localStorage.setItem(STORAGE_KEY, JSON.stringify(crew));
+console.log("Saved as JSON. Reload the PAGE (F5) and run this again — visits should climb.");`;
+
+  const EXAMPLE_CLEAR = `// Cleaning up: removeItem() deletes a saved key entirely.
+
+const display = document.querySelector("#shipDisplay");
+
+localStorage.removeItem("mission4_4_notes");
+localStorage.removeItem("mission4_4_crew");
+
+console.log("Cleared mission4_4_notes and mission4_4_crew.");
+console.log("getItem now returns:", localStorage.getItem("mission4_4_notes"));
+
+display.textContent = "STORAGE CLEARED";`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_OBJECT },
+        { btnId: "btnExample2", code: EXAMPLE_CLEAR },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

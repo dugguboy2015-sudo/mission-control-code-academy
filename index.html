@@ -5,12 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mission Control Code Academy</title>
 <link rel="stylesheet" href="assets/academy.css">
+<style>
+  .account-bar {
+    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 20px; margin: 0 auto 0; max-width: 980px; font-size: 13px; color: var(--text-secondary);
+  }
+  .account-bar a, .account-bar button {
+    color: var(--text-secondary); text-decoration: none; background: transparent; border: none; cursor: pointer;
+    font-family: var(--font-body); font-size: 13px;
+  }
+  .account-bar a:hover, .account-bar button:hover { color: var(--accent); }
+  .account-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12px; color: var(--accent); }
+  .signin-banner {
+    max-width: 640px; margin: 0 auto 8px; text-align: center; font-size: 13px; color: var(--text-muted);
+    padding: 10px 16px;
+  }
+  .signin-banner a { color: var(--accent); }
+
+  .picker-overlay { position: fixed; inset: 0; background: var(--bg-void); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .picker-overlay.open { display: flex; }
+  .picker-box { text-align: center; max-width: 640px; }
+  .picker-box h1 { font-size: 28px; margin-bottom: 8px; }
+  .picker-box p { color: var(--text-secondary); margin-bottom: 32px; }
+  .picker-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .picker-child {
+    width: 130px; background: var(--bg-panel); border: 2px solid var(--border-glow); border-radius: 14px;
+    padding: 20px 12px; cursor: pointer; color: var(--text-primary);
+  }
+  .picker-child:hover { border-color: var(--accent); }
+  .picker-child .av { font-size: 40px; margin-bottom: 10px; }
+  .picker-child .nm { font-family: var(--font-display); font-size: 14px; }
+  .picker-add { width: 130px; border: 2px dashed var(--border-glow); border-radius: 14px; padding: 20px 12px; color: var(--text-muted); text-decoration: none; }
+  .picker-add:hover { border-color: var(--accent); color: var(--accent); }
+  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 210; display: none; align-items: center; justify-content: center; }
+  .pin-overlay.open { display: flex; }
+  .pin-box { text-align: center; }
+  .pin-box input { width: 160px; text-align: center; font-size: 24px; letter-spacing: 10px; padding: 12px; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; color: var(--text-primary); margin: 16px 0; }
+  .pin-msg { color: var(--danger); font-size: 13px; min-height: 18px; }
+</style>
 </head>
 <body class="accent-cyan">
 
 <canvas id="starfield"></canvas>
 
+<!-- "Who's learning?" profile picker (shown when a parent is signed in with no active child) -->
+<div class="picker-overlay" id="pickerOverlay">
+  <div class="picker-box">
+    <h1>WHO'S LEARNING TODAY?</h1>
+    <p>Pick a cadet profile to continue their training record.</p>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<!-- PIN entry -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="card pin-box">
+    <div id="pinChildName" style="font-family:var(--font-display);margin-bottom:6px;"></div>
+    <div style="color:var(--text-muted);font-size:12px;">Enter 4-digit PIN</div>
+    <div><input type="password" id="pinInput" maxlength="4" inputmode="numeric" autofocus></div>
+    <div class="pin-msg" id="pinMsg"></div>
+    <button class="fam-btn, tag-pill" id="pinCancel" style="background:transparent;border:1px solid var(--border-glow);color:var(--text-secondary);padding:8px 16px;border-radius:8px;cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
 <div class="content-wrap">
+
+  <div class="account-bar" id="accountBar"></div>
 
   <header class="dashboard-hero">
     <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
@@ -37,6 +97,9 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
 <script src="assets/missions-data.js"></script>
 <script src="assets/academy.js"></script>
 <script>
@@ -44,6 +107,106 @@
   "use strict";
 
   const DIFF_ICON = { cadet: "🟢", officer: "🟡", commander: "🔴" };
+
+  /* ---------------- Account bar / profile picker (Phase 2) ---------------- */
+  async function renderAccountArea() {
+    const bar = document.getElementById("accountBar");
+    if (!window.Academy || !window.Academy.auth.isConfigured()) {
+      bar.innerHTML = "";
+      return null; // not configured — behave exactly like the guest-only Phase 1 site
+    }
+
+    const session = await window.Academy.auth.getSession();
+    if (!session) {
+      bar.innerHTML = `<span class="signin-banner" style="margin:0;padding:0;">Progress in this browser only. <a href="login.html">Sign in</a> to save it to a cadet profile.</span>`;
+      return null;
+    }
+
+    const activeChildId = window.Academy.session.getActiveChild();
+    const children = await window.Academy.family.listChildren();
+    const activeChild = activeChildId ? children.find((c) => c.id === activeChildId) : null;
+
+    if (!activeChild) {
+      showPicker(children);
+      bar.innerHTML = "";
+      return null;
+    }
+
+    bar.innerHTML = `
+      <span class="account-chip">${activeChild.avatar} ${activeChild.name}</span>
+      <button id="switchProfileBtn">Switch Profile</button>
+      <a href="family.html">Family Settings</a>
+      <button id="signOutBtn2">Sign Out</button>
+    `;
+    document.getElementById("switchProfileBtn").addEventListener("click", () => {
+      window.Academy.session.clearActiveChild();
+      window.location.reload();
+    });
+    document.getElementById("signOutBtn2").addEventListener("click", async () => {
+      await window.Academy.auth.signOut();
+      window.location.href = "login.html";
+    });
+    return activeChild;
+  }
+
+  function showPicker(children) {
+    const overlay = document.getElementById("pickerOverlay");
+    const grid = document.getElementById("pickerGrid");
+    grid.innerHTML = "";
+    children.forEach((c) => {
+      const btn = document.createElement("div");
+      btn.className = "picker-child";
+      btn.innerHTML = `<div class="av">${c.avatar}</div><div class="nm">${c.name}</div>`;
+      btn.addEventListener("click", () => selectChild(c));
+      grid.appendChild(btn);
+    });
+    const addLink = document.createElement("a");
+    addLink.className = "picker-add";
+    addLink.href = "family.html";
+    addLink.innerHTML = `<div class="av">+</div><div class="nm">Add Cadet</div>`;
+    grid.appendChild(addLink);
+    overlay.classList.add("open");
+  }
+
+  async function selectChild(child) {
+    // A reload (rather than re-rendering in place) lets academy.js's own boot
+    // sequence do the remote progress/theme sync it already does on every page
+    // load — one source of truth for that logic instead of two.
+    if (!child.hasPin) {
+      window.Academy.session.setActiveChild(child.id);
+      window.location.reload();
+      return;
+    }
+    const pinOverlay = document.getElementById("pinOverlay");
+    const pinInput = document.getElementById("pinInput");
+    const pinMsg = document.getElementById("pinMsg");
+    document.getElementById("pinChildName").textContent = `${child.avatar} ${child.name}`;
+    pinInput.value = "";
+    pinMsg.textContent = "";
+    pinOverlay.classList.add("open");
+    pinInput.focus();
+
+    function cleanup() {
+      pinOverlay.classList.remove("open");
+      pinInput.removeEventListener("keydown", onKey);
+      document.getElementById("pinCancel").removeEventListener("click", onCancel);
+    }
+    function onCancel() { cleanup(); }
+    async function onKey(e) {
+      if (e.key !== "Enter") return;
+      const ok = await window.Academy.family.verifyPin(child.id, pinInput.value.trim());
+      if (ok) {
+        cleanup();
+        window.Academy.session.setActiveChild(child.id);
+        window.location.reload();
+      } else {
+        pinMsg.textContent = "Incorrect PIN.";
+        pinInput.value = "";
+      }
+    }
+    pinInput.addEventListener("keydown", onKey);
+    document.getElementById("pinCancel").addEventListener("click", onCancel);
+  }
 
   function render() {
     const manifest = window.MISSION_MANIFEST;
@@ -111,7 +274,12 @@
     document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await renderAccountArea();
+    // Explicitly await the same remote sync academy.js's own boot handler runs —
+    // two independent async DOMContentLoaded listeners give no ordering guarantee,
+    // so this is called here too (idempotent) to be certain it's done before render().
+    if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
     render();
     // First sector open by default
     const first = document.querySelector(".sector-card");

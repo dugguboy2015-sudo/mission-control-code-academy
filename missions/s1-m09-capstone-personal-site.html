@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.9: Capstone — Your Personal Site — Design & Build a Multi-Section Site | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Capstone dependency-chips strip (bespoke — not in academy.css) ---------- */
+  .capstone-strip {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .capstone-chip {
+    font-family: var(--font-code);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+  }
+  .capstone-chip.c-html   { border-color: rgba(78,225,255,0.4);  color: var(--accent-cyan); }
+  .capstone-chip.c-css    { border-color: rgba(255,157,77,0.4);  color: var(--accent-orange); }
+  .capstone-chip.c-motion { border-color: rgba(255,110,199,0.4); color: var(--accent-pink); }
+  .capstone-chip.c-design { border-color: rgba(176,131,255,0.4); color: var(--accent-purple); }
+
+  /* ---------- Field Manual: plain reference lists (not the checklist widget) ---------- */
+  .plan-list, .recap-list { margin: 10px 0 0; padding-left: 20px; color: var(--text-secondary); font-size: 14.5px; }
+  .plan-list li, .recap-list li { margin-bottom: 8px; }
+  .recap-list strong { color: var(--text-primary); }
+  .launch-steps-list { margin: 10px 0 0; padding-left: 22px; color: var(--text-secondary); font-size: 14.5px; }
+  .launch-steps-list li { margin-bottom: 10px; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m09">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1 CAPSTONE</div>
+    <h1>MISSION 1.9: CAPSTONE — YOUR PERSONAL SITE</h1>
+    <div class="subtitle">Design & Build a Multi-Section Site</div>
+    <p class="briefing-line">Every mission in Sector 1 handed you one tool in isolation: structure, forms, the box model, flexbox, grid, responsive layout, motion, design judgment. A capstone doesn't teach a new tool — it's the moment you point every one of them at a single real target and ship it. By the end of this mission you won't have a page that only works on your own laptop. You'll have a personal site, built by you, living at a public URL any device on the planet can load.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~90 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c-html">Mission 1.1 · HTML</span>
+      <span class="capstone-chip c-html">Mission 1.2 · Forms</span>
+      <span class="capstone-chip c-css">Mission 1.3–1.4 · CSS & Flexbox</span>
+      <span class="capstone-chip c-css">Mission 1.5 · Grid</span>
+      <span class="capstone-chip c-css">Mission 1.6 · Responsive</span>
+      <span class="capstone-chip c-motion">Mission 1.7 · Animation</span>
+      <span class="capstone-chip c-design">Mission 1.8 · Design & A11y</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Nothing in this mission is new. That's the point. You already know how to structure a page with semantic HTML, take input through a real form, control spacing with the box model, lay things out with flexbox and grid, make a layout reflow across screen sizes, add a transition that feels intentional rather than gimmicky, and choose type and color that a human being can actually read. A capstone is where those separate skills stop being separate — they become one project, built by one engineer, making dozens of small decisions that all have to agree with each other.</p>
+      <p>Your target for this mission is a <strong>personal site</strong>: a small, real home on the internet that says who you are, what you're learning, and how to reach you. It doesn't need to be fancy. It needs to be <em>yours</em> — genuinely written and styled by you, not copied — and it needs to actually work, on a phone screen as well as a laptop.</p>
+      <p>And then it needs to <strong>ship</strong>. A project sitting in a folder on your computer, that only you have ever seen render, isn't finished — it's a draft. This is <strong>Thread 2</strong> of the Architect's Layer, and it starts right here at Ladder Level <strong>L1</strong>: "done" means <em>deployed to a public URL, and it works on mobile.</em> Every capstone from here forward raises that bar further — secrets kept out of code, real data, evals, monitoring — but the habit begins now, with the smallest possible version: press a few buttons on GitHub, and your project becomes something you can text a link to.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;height:auto;">
+          <defs>
+            <marker id="sitemaparrow" markerWidth="9" markerHeight="9" refX="4.5" refY="7" orient="auto">
+              <path d="M0,0 L9,0 L4.5,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <rect x="160" y="15" width="380" height="55" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="350" y="37" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">&lt;header&gt; — Hero</text>
+          <text x="350" y="55" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">your name + a one-line tagline</text>
+          <path d="M350,70 L350,90" stroke="#4ee1ff" stroke-width="2" marker-end="url(#sitemaparrow)"/>
+
+          <rect x="160" y="90" width="380" height="55" rx="8" fill="#1b2540" stroke="#ff9d4d" stroke-width="2"/>
+          <text x="350" y="112" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">&lt;section id="about"&gt;</text>
+          <text x="350" y="130" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">who you are, skills you've got</text>
+          <path d="M350,145 L350,165" stroke="#ff9d4d" stroke-width="2" marker-end="url(#sitemaparrow)"/>
+
+          <rect x="160" y="165" width="380" height="55" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="350" y="187" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">&lt;section id="projects"&gt;</text>
+          <text x="350" y="205" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">flexbox or grid — projects / interests</text>
+          <path d="M350,220 L350,240" stroke="#4dffb4" stroke-width="2" marker-end="url(#sitemaparrow)"/>
+
+          <rect x="160" y="240" width="380" height="55" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="350" y="262" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">&lt;section id="contact"&gt;</text>
+          <text x="350" y="280" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">a real, working &lt;form&gt;</text>
+          <path d="M350,295 L350,315" stroke="#ff6ec7" stroke-width="2" marker-end="url(#sitemaparrow)"/>
+
+          <rect x="160" y="315" width="380" height="55" rx="8" fill="#1b2540" stroke="#a8b3d1" stroke-width="1.5"/>
+          <text x="350" y="337" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">&lt;footer&gt;</text>
+          <text x="350" y="355" fill="#6b7699" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">copyright line, maybe a link or two</text>
+        </svg>
+        <div class="diagram-caption">One flow, top to bottom: Hero → About → Projects → Contact → Footer. Every box on this map is one semantic section in your finished page.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">Four short stops before you touch the Command Console: plan what goes where, know which earlier mission covers which piece, ship it with a real walkthrough, and give it one honest design pass before calling it finished.</p>
+
+      <div class="subsection">
+        <h3>Planning Your Sections</h3>
+        <p>Do not open the Command Console yet. A real build starts with five minutes of planning — on paper, in a notes app, wherever — because every hour you spend deciding what goes where saves you three hours of rearranging HTML later. Answer these before writing a single tag:</p>
+        <ul class="plan-list">
+          <li><strong>Hero:</strong> what's the one sentence that tells a stranger who you are and what this site is? (Not a paragraph. One sentence.)</li>
+          <li><strong>About / Skills:</strong> which 3–5 things about you actually matter here — languages you're learning, things you've built, things you're into?</li>
+          <li><strong>Projects / Interests:</strong> pick 2–4 items you can each describe in one line. This is the section flexbox or grid will lay out as a row or a card grid.</li>
+          <li><strong>Contact:</strong> what do you actually want a visitor to do — send a message? See a real email address? Keep it to one clear action.</li>
+        </ul>
+        <p>Sketch the sections in order on paper if it helps — it's the same shape as the diagram above. This is the real planning habit every larger project in this academy will keep asking for.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Bringing It Together</h3>
+        <p>Here's exactly which earlier mission is responsible for which piece of your finished site. If a task in the Mission Challenge below feels unfamiliar, this is the mission to revisit.</p>
+        <ul class="recap-list">
+          <li><strong>Structure (1.1):</strong> semantic <code>&lt;header&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, and <code>&lt;footer&gt;</code> — not a page built entirely out of <code>&lt;div&gt;</code>.</li>
+          <li><strong>Forms (1.2):</strong> a contact section built from a real <code>&lt;form&gt;</code>, with every input properly <code>&lt;label&gt;</code>-ed and given a <code>name</code>.</li>
+          <li><strong>Box model (1.3):</strong> consistent padding and margin, and <code>box-sizing: border-box</code> set globally so widths behave the way you expect.</li>
+          <li><strong>Flexbox (1.4) or Grid (1.5):</strong> whichever fits your Projects/Interests section — a single row of cards is flexbox's job, a gallery-style grid is Grid's.</li>
+          <li><strong>Responsive design (1.6):</strong> at least one <code>@media</code> query that changes the layout at a narrower width, not just text that shrinks.</li>
+          <li><strong>Animation (1.7):</strong> one transition or <code>@keyframes</code> animation, used with restraint — motion that supports the page, not motion for its own sake.</li>
+          <li><strong>Design & accessibility (1.8):</strong> a real type scale (headings and body text at deliberately different sizes), a small controlled color palette, and text that passes AA contrast against its background.</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>Quick Launch: Going Live with GitHub Pages</h3>
+        <p>This is a preview of <strong>Mission 4.5</strong>, which goes much deeper on deployment — pipelines, environment variables, custom domains, the works. You haven't been taught any of that yet, and you don't need it. What follows gets you a real public URL in about five minutes, using nothing but a free GitHub account and a web browser.</p>
+        <ol class="launch-steps-list">
+          <li><strong>Create a free GitHub account.</strong> If you don't already have one, go to <code>github.com/join</code> and sign up — it's free for personal use.</li>
+          <li><strong>Create a new repository.</strong> Click the <strong>+</strong> in the top corner → <strong>New repository</strong>. Give it any name (like <code>my-personal-site</code>), leave it <strong>Public</strong>, and click <strong>Create repository</strong>.</li>
+          <li><strong>Upload your files.</strong> On the new repository's page, click <strong>uploading an existing file</strong> and drag in your HTML file — make sure it's named exactly <code>index.html</code>, since that's the filename GitHub Pages looks for by default. If you split your CSS into a separate file, upload that too. Commit the upload.
+            <div class="code-block" style="margin-top:10px;">
+              <div class="code-tab"><span>BASH — ALTERNATIVE IF YOU'VE FINISHED SECTOR 3'S GIT MISSION</span><button class="copy-btn" data-copy="git init&#10;git remote add origin https://github.com/your-username/your-repo.git&#10;git add .&#10;git commit -m &quot;My personal site&quot;&#10;git branch -M main&#10;git push -u origin main">COPY</button></div>
+              <pre><code><span class="kw">git</span> init
+<span class="kw">git</span> remote add origin https://github.com/your-username/your-repo.git
+<span class="kw">git</span> add .
+<span class="kw">git</span> commit -m <span class="str">"My personal site"</span>
+<span class="kw">git</span> branch -M main
+<span class="kw">git</span> push -u origin main</code></pre>
+            </div>
+          </li>
+          <li><strong>Turn on GitHub Pages.</strong> In your repository, click the <strong>Settings</strong> tab, then <strong>Pages</strong> in the left sidebar. Under "Build and deployment," set <strong>Source</strong> to <em>Deploy from a branch</em>, set <strong>Branch</strong> to <code>main</code> and the folder to <code>/ (root)</code>, then click <strong>Save</strong>.</li>
+          <li><strong>Your site is now live.</strong> Give it a minute, then refresh that same Pages settings screen — GitHub will show your public URL near the top, usually shaped like <code>https://your-username.github.io/your-repo/</code>. Open it. Send it to someone. Open it on your phone.</li>
+        </ol>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Enabling Pages didn't compile, bundle, or transform anything — there's no build step here. GitHub is simply taking the exact files sitting in your chosen branch and folder and serving them, byte for byte, at a public address. That's why the filename matters so much: without an <code>index.html</code> at the root of that folder, there's nothing for GitHub to serve, and the URL 404s.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why does the URL look different for different people?</summary>
+          <p>GitHub Pages has a special case worth knowing about. Name your repository anything ordinary, like <code>my-personal-site</code>, and your live URL lands under a subfolder: <code>https://your-username.github.io/my-personal-site/</code>. But name the repository <em>exactly</em> <code>your-username.github.io</code> (matching your own account name), and GitHub treats it as your one personal "user site," serving it straight from the root: <code>https://your-username.github.io/</code>, no subfolder at all. Both are genuinely live, genuinely public URLs — the second is just reserved for one special repo per account.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Design Review Pass</h3>
+        <p>Before you call it done, give the page one last pass with 1.8's eyes instead of your builder eyes. This takes five minutes and catches almost everything a visitor would actually notice:</p>
+        <ul class="plan-list">
+          <li>Shrink your browser to about 375px wide (or open DevTools' device toolbar) — does anything overlap, overflow, or force horizontal scrolling?</li>
+          <li>Run your text/background color pairs through a contrast checker — everything meant to be read should clear 4.5:1.</li>
+          <li>Look at your headings next to your body text — is the size difference obvious at a glance, or does everything look the same weight?</li>
+          <li>Check your spacing rhythm — is it consistent section to section, or did one area get more breathing room than the rest by accident rather than by choice?</li>
+          <li>Click or tap every link and form field once, for real — a broken <code>href</code> or an unlabeled input hides in plain sight until you actually try it.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This is a deliberately unfinished scaffold — a semantic skeleton with empty sections and nothing styled yet. Build your real personal site directly inside it: write your own CSS inside the <code>&lt;style&gt;</code> block at the top, fill in each section, and watch the preview update live as you go. When you're happy with it, this is also exactly the file (or files) you'll upload to GitHub in the Quick Launch steps above.</p>
+
+      <div class="editor-grid">
+        <div class="editor-pane">
+          <div class="pane-header"><span>EDIT.HTML</span><span id="charCount">0 chars</span></div>
+          <textarea id="htmlEditor" class="sandbox-editor" spellcheck="false" style="min-height:420px;"></textarea>
+        </div>
+        <div class="preview-pane">
+          <div class="pane-header"><span>LIVE PREVIEW</span><span>●</span></div>
+          <iframe id="previewFrame" title="live preview" sandbox="allow-same-origin"></iframe>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter scaffold</button>
+        <button class="console-btn" id="btnFlexRow">insert a flexbox project-card row</button>
+        <button class="console-btn" id="btnTransition">insert a hover transition example</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build your real personal site in the Command Console (or a real code editor, if you have one), then ship it. Every task below must be true of your finished, <em>deployed</em> site.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">A hero/intro section with your name and a one-line tagline
+          <span class="sub">This is the first thing a visitor sees — make it count</span></label>
+        </li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">An about/skills section listing at least 3 real things about you</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">A projects/interests section with at least 2 items, laid out with <strong>flexbox or CSS Grid</strong> — not stacked divs</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">A working contact section built from a real <code>&lt;form&gt;</code>, with every input labeled, named, and at least one field marked <code>required</code></label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">At least one <code>@media</code> query that visibly changes your layout at a narrower width
+          <span class="sub">Not just smaller text — an actual layout change, like stacking columns</span></label>
+        </li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">A deliberate type scale and a color palette that passes AA contrast (check it with 1.8's contrast checker)</label></li>
+        <li><input type="checkbox" id="ch7"><label for="ch7">At least one purposeful CSS transition or <code>@keyframes</code> animation</label></li>
+        <li><input type="checkbox" id="ch8"><label for="ch8">Semantic HTML throughout — <code>header</code>, <code>main</code>, <code>section</code>, <code>footer</code> — with meaningful <code>alt</code> text on any images</label></li>
+        <li><input type="checkbox" id="ch9"><label for="ch9">Deployed live via GitHub Pages, with the public URL confirmed working on your phone
+          <span class="sub">Ladder Level L1: deployed to a public URL, works on mobile</span></label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your layout looks perfect on your laptop and breaks on your phone, that's exactly what the "test at a narrow width" step in the Design Review Pass is for — do it <em>before</em> you deploy, not after someone else finds it for you. If your live GitHub Pages URL 404s after you enable it, double-check that your file is named exactly <code>index.html</code>, sitting at the root of the branch/folder you selected in Settings → Pages, not buried in a subfolder.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add your own dark/light toggle — a button that switches a CSS class on your page and swaps a set of colors — built entirely by you, separate from the academy's own theme toggle. For an extra stretch, make your header stick to the top of the viewport while scrolling using <code>position: sticky</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>header / main / section / footer</code><span>Semantic structure (1.1)</span></div>
+        <div class="cheat-card"><code>&lt;form&gt; + label + name + required</code><span>A real, working contact form (1.2)</span></div>
+        <div class="cheat-card"><code>box-sizing: border-box</code><span>Predictable widths under padding/border (1.3)</span></div>
+        <div class="cheat-card"><code>display: flex; gap;</code><span>One-dimensional layout — rows of cards (1.4)</span></div>
+        <div class="cheat-card"><code>display: grid; grid-template-columns;</code><span>Two-dimensional layout — galleries, dashboards (1.5)</span></div>
+        <div class="cheat-card"><code>@media (max-width: ...)</code><span>Reflow the layout at a breakpoint (1.6)</span></div>
+        <div class="cheat-card"><code>transition / @keyframes</code><span>Motion used on purpose, not for show (1.7)</span></div>
+        <div class="cheat-card">4.5:1 contrast, a real type scale<span>Design & accessibility basics (1.8)</span></div>
+        <div class="cheat-card">Settings → Pages → Branch → Save<span>Where GitHub Pages actually gets enabled</span></div>
+        <div class="cheat-card"><code>index.html</code> at the root<span>The one file GitHub Pages looks for by default</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Shipping without ever narrowing the browser window — a layout that only exists at desktop width isn't a finished layout.</li>
+          <li>Dropping <code>alt</code> text on images now that "it's just a personal site" — that rule from Mission 1.1 didn't expire.</li>
+          <li>Building a contact form with no <code>name</code> attributes on its inputs — it looks finished, but there's nothing there yet to actually receive the message (that piece comes much later, in the backend sectors).</li>
+          <li>Enabling Pages against the wrong branch or the wrong folder, so the live URL 404s even though the code is sitting right there in the repo.</li>
+          <li>Uploading everything except <code>index.html</code> itself, or naming it something else — GitHub Pages won't guess.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does turning on GitHub Pages actually do?</p>
+        <button class="quiz-btn" data-correct="false">It compiles and optimizes your code into a faster format</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — no build step, no magic. Whatever's in your branch and folder is exactly what gets served, byte for byte.">It takes the files already in your chosen branch/folder and serves them as-is at a public URL</button>
+        <button class="quiz-btn" data-correct="false">It automatically builds a backend server to receive your contact form's messages</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `<style>
+  /* Write your real CSS here — colors, type scale, layout, one transition. */
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, sans-serif; color: #1a1a2e; }
+
+  /* TODO: style your header/hero */
+
+  /* TODO: lay out #projects with flexbox or grid */
+
+  /* TODO: add one @media query for narrow screens */
+
+  /* TODO: add one transition or @keyframes animation */
+</style>
+
+<header>
+  <h1>Your Name</h1>
+  <p>One line: who you are and what this site is</p>
+</header>
+
+<main>
+  <section id="about">
+    <!-- TODO: about / skills — at least 3 real things about you -->
+  </section>
+
+  <section id="projects">
+    <!-- TODO: projects / interests — lay this out with flexbox or grid -->
+  </section>
+
+  <section id="contact">
+    <!-- TODO: a real, labeled, working <form> -->
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2026 Your Name</p>
+</footer>`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const preview = initHtmlCssPreview({
+      editorId: "htmlEditor",
+      frameId: "previewFrame",
+      charCountId: "charCount",
+      starter: STARTER,
+      previewCss: "* { box-sizing: border-box; } body { margin:0; font-family: -apple-system, sans-serif; color:#1a1a2e; background:#fff; } img{max-width:100%;}",
+    });
+
+    const editor = document.getElementById("htmlEditor");
+
+    document.getElementById("btnReset").addEventListener("click", () => {
+      editor.value = STARTER;
+      preview.render();
+    });
+
+    document.getElementById("btnFlexRow").addEventListener("click", () => {
+      editor.value += `
+
+<!-- Example: a flexbox row of project cards — adapt this into your #projects section -->
+<style>
+  .example-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .example-card { flex: 1 1 160px; background: #f0f2fa; border-radius: 10px; padding: 16px; }
+</style>
+<div class="example-row">
+  <div class="example-card"><h3>Project One</h3><p>One line about it.</p></div>
+  <div class="example-card"><h3>Project Two</h3><p>One line about it.</p></div>
+</div>`;
+      preview.render();
+    });
+
+    document.getElementById("btnTransition").addEventListener("click", () => {
+      editor.value += `
+
+<!-- Example: a purposeful hover transition -->
+<style>
+  .example-btn {
+    background: #2563eb; color: #fff; border: none; padding: 10px 18px;
+    border-radius: 8px; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .example-btn:hover { transform: translateY(-2px); background: #1d4ed8; }
+</style>
+<button class="example-btn">Say Hello</button>`;
+      preview.render();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

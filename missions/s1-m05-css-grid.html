@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.5: CSS Grid Layout — Two-Dimensional Layout | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Grid Playground ---------- */
+  .playground-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 760px) {
+    .playground-grid { grid-template-columns: 1fr; }
+  }
+  .control-panel {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .control-group { margin-bottom: 18px; }
+  .control-group:last-child { margin-bottom: 0; }
+  .control-group label.group-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 11.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pill-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+
+  .control-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+  .preview-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  #gridStage {
+    display: grid;
+    min-height: 260px;
+    padding: 16px;
+    transition: all 0.2s ease;
+  }
+  .grid-box {
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(78,225,255,0.15);
+    min-height: 54px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .grid-box.spanned {
+    border-color: var(--accent-pink, #ff6ec7);
+    box-shadow: 0 0 12px rgba(255,110,199,0.3);
+    background: linear-gradient(160deg, #2a1b38, #1e1330);
+  }
+  .grid-box .span-note {
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    color: var(--accent-pink, #ff6ec7);
+    font-family: var(--font-display);
+  }
+  .grid-box .span-hint {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+  }
+  #cssOutput {
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--bg-panel-alt);
+    border-top: 1px solid var(--border-glow);
+    font-family: var(--font-code);
+    font-size: 13px;
+    color: var(--accent-cyan);
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.5: CSS GRID LAYOUT</h1>
+    <div class="subtitle">Two-Dimensional Layout</div>
+    <p class="briefing-line">Flexbox taught you to line elements up along a single direction — a row, or a column. But a real deck plan isn't a single corridor. It's rows AND columns at once, with rooms that span multiple cells. That's CSS Grid: the layout system built for arranging a page in two dimensions simultaneously. Same CSS language, new superpower.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think about the difference between arranging crew along a single corridor and laying out an entire deck plan. Flexbox is the corridor: you pick one direction — a row or a column — and items line up along it, one after another. It's <strong>one-dimensional</strong>. Excellent for a navbar, a button group, a sidebar-plus-content split.</p>
+      <p>CSS Grid is the deck plan. You define columns <em>and</em> rows at the same time, and every element gets placed into a specific cell — or made to span several cells — in that two-dimensional structure. It's built for laying out a whole page section, a photo gallery, a dashboard of cards, or anything where you're thinking in both directions at once rather than just "next in line."</p>
+      <p>Here's the rule of thumb Commander Byte drills into every cadet: <strong>if you're arranging things in one direction, reach for Flexbox. If you're arranging things in a grid — rows and columns together — reach for Grid.</strong> They aren't rivals; they're different tools for different shaped problems, and real pages usually use both — Grid for the big page structure, Flexbox for the smaller pieces inside each grid cell.</p>
+      <p>Like Flexbox, Grid is turned on with one declaration on a parent container. The difference is what happens next: instead of one axis to control, you get two axes, an explicit set of named tracks, and the ability to have an item deliberately overlap or span across several of them.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <!-- title labels -->
+          <text x="320" y="20" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">grid-template-columns: 1fr 1fr 1fr;  grid-template-rows: 1fr 1fr;</text>
+
+          <!-- grid container outline -->
+          <rect x="70" y="36" width="500" height="196" rx="6" fill="#0c1120" stroke="#2e3d63" stroke-width="1.5"/>
+
+          <!-- column track lines (vertical, cyan) -->
+          <line x1="236.7" y1="36" x2="236.7" y2="232" stroke="#4ee1ff" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line x1="403.3" y1="36" x2="403.3" y2="232" stroke="#4ee1ff" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+          <!-- row track line (horizontal, pink) -->
+          <line x1="70" y1="134" x2="570" y2="134" stroke="#ff6ec7" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+          <!-- column axis arrow + label -->
+          <line x1="90" y1="16" x2="550" y2="16" stroke="#4ee1ff" stroke-width="2" marker-end="url(#gcol)"/>
+          <text x="90" y="30" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10">columns</text>
+
+          <!-- row axis arrow + label -->
+          <line x1="600" y1="46" x2="600" y2="222" stroke="#ff6ec7" stroke-width="2" marker-end="url(#grow)"/>
+          <text x="606" y="140" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10">rows</text>
+
+          <defs>
+            <marker id="gcol" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#4ee1ff"/>
+            </marker>
+            <marker id="grow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#ff6ec7"/>
+            </marker>
+          </defs>
+
+          <!-- cell 1 -->
+          <rect x="80" y="46" width="146.7" height="78" rx="4" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.2"/>
+          <text x="153" y="90" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">1</text>
+          <!-- cell 2 spans 2 columns -->
+          <rect x="246.7" y="46" width="313.3" height="78" rx="4" fill="#1e1330" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="403" y="85" fill="#ff9dd6" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">2</text>
+          <text x="403" y="100" fill="#ff9dd6" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">grid-column: span 2</text>
+          <!-- cell 4 -->
+          <rect x="80" y="144" width="146.7" height="78" rx="4" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.2"/>
+          <text x="153" y="188" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">4</text>
+          <!-- cell 5 -->
+          <rect x="246.7" y="144" width="146.7" height="78" rx="4" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.2"/>
+          <text x="320" y="188" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">5</text>
+          <!-- cell 6 -->
+          <rect x="413.3" y="144" width="146.7" height="78" rx="4" fill="#131a2e" stroke="#4ee1ff" stroke-width="1.2"/>
+          <text x="487" y="188" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">6</text>
+        </svg>
+        <div class="diagram-caption">A 3-column, 2-row grid. Cyan dashed lines are column tracks, the pink dashed line is a row track. Cell 2 is told to <code>span 2</code> columns, so it eats the space cell 3 would've occupied — that's Grid's two-dimensional placement in action.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Turning It On: display: grid</h3>
+        <p>Exactly like Flexbox, Grid is switched on with one line on the <strong>parent</strong> element. The moment you do, that element's direct children become <strong>grid items</strong>, and the parent starts obeying Grid's placement rules instead of normal block-stacking.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".dashboard {&#10;  display: grid;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.dashboard</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          On its own, <code>display: grid</code> doesn't look like much — by default you get a single column, and children just stack in one row per item. The real power shows up once you define <code>grid-template-columns</code> and <code>grid-template-rows</code>, which is next.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Defining Columns & Rows</h3>
+        <p><code>grid-template-columns</code> and <code>grid-template-rows</code> describe the tracks of your grid — how many columns/rows exist and how wide/tall each one is. The <code>fr</code> unit means "one fraction of the remaining space," which makes flexible, responsive tracks trivial to write. <code>repeat()</code> saves you from typing the same track size over and over.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".dashboard {&#10;  display: grid;&#10;  grid-template-columns: 1fr 1fr 1fr;&#10;  grid-template-rows: 200px 200px;&#10;}&#10;&#10;/* same columns, shorter to write */&#10;.dashboard {&#10;  grid-template-columns: repeat(3, 1fr);&#10;}&#10;&#10;/* mixed: a fixed sidebar + a flexible main area */&#10;.layout {&#10;  grid-template-columns: 220px 1fr;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.dashboard</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">1fr 1fr 1fr</span>;
+  <span class="prop">grid-template-rows</span>: <span class="val">200px 200px</span>;
+}
+
+<span class="comment">/* same columns, shorter to write */</span>
+<span class="sel">.dashboard</span> {
+  <span class="prop">grid-template-columns</span>: <span class="val">repeat(3, 1fr)</span>;
+}
+
+<span class="comment">/* mixed: a fixed sidebar + a flexible main area */</span>
+<span class="sel">.layout</span> {
+  <span class="prop">grid-template-columns</span>: <span class="val">220px 1fr</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>1fr 1fr 1fr</code> creates three equal-width columns that share the container's space evenly, and they reflow automatically if the container resizes — no percentages or math required. <code>repeat(3, 1fr)</code> is identical to typing <code>1fr</code> three times. Mixing units — like <code>220px 1fr</code> — pins one track to a fixed size and lets the other absorb whatever space is left, a very common sidebar pattern.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: minmax() and auto-fit — grids that wrap themselves</summary>
+          <p><code>repeat(auto-fit, minmax(150px, 1fr))</code> is one of the most useful one-liners in CSS. It tells the browser "fit as many columns as you can, each at least 150px wide, but let them stretch to fill leftover space" — and when the container gets too narrow to fit another column, it automatically wraps to a new row. No media query needed. This is the trick professional photo galleries and card grids use to be responsive without writing a single breakpoint.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Gap</h3>
+        <p><code>gap</code> works in Grid exactly like it does in Flexbox: consistent spacing between cells, in both directions, without margin hacks. You can also use <code>row-gap</code> and <code>column-gap</code> separately if you want different spacing on each axis.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".dashboard {&#10;  display: grid;&#10;  grid-template-columns: repeat(3, 1fr);&#10;  gap: 16px;&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.dashboard</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">repeat(3, 1fr)</span>;
+  <span class="prop">gap</span>: <span class="val">16px</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>gap: 16px</code> adds 16px of space between every column and every row of cells — but never on the outer edge of the grid. That distinction matters: gap is spacing <em>between</em> siblings, not padding around the container.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Spanning Items</h3>
+        <p>Individual grid items can be told to occupy more than one track using <code>grid-column</code> or <code>grid-row</code>. The shorthand <code>span N</code> means "stretch across N tracks starting from wherever this item would normally land."</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".featured-card {&#10;  grid-column: span 2; /* eats the width of 2 columns */&#10;}&#10;&#10;.tall-card {&#10;  grid-row: span 2; /* eats the height of 2 rows */&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.featured-card</span> {
+  <span class="prop">grid-column</span>: <span class="val">span 2</span>; <span class="comment">/* eats the width of 2 columns */</span>
+}
+
+<span class="sel">.tall-card</span> {
+  <span class="prop">grid-row</span>: <span class="val">span 2</span>; <span class="comment">/* eats the height of 2 rows */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This is the move that makes Grid feel different from Flexbox: one item can deliberately take up more room than its neighbors while everything else automatically reflows around it — a hero image spanning 2 columns in a gallery, a highlighted stat card spanning 2 rows in a dashboard. A very common bug: writing <code>grid-row: span 2</code> when you meant <code>grid-column: span 2</code> — one stretches sideways, the other stretches down, and it's an easy pair to mix up.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Named Areas</h3>
+        <p>For whole-page layouts, <code>grid-template-areas</code> lets you literally draw the layout as ASCII art in your CSS, naming each region, then assign each child to a named region with <code>grid-area</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".page {&#10;  display: grid;&#10;  grid-template-columns: 220px 1fr;&#10;  grid-template-areas:&#10;    &quot;sidebar header&quot;&#10;    &quot;sidebar main&quot;;&#10;}&#10;&#10;.sidebar { grid-area: sidebar; }&#10;.header  { grid-area: header; }&#10;.main    { grid-area: main; }">COPY</button></div>
+          <pre><code><span class="sel">.page</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">220px 1fr</span>;
+  <span class="prop">grid-template-areas</span>:
+    <span class="val">"sidebar header"</span>
+    <span class="val">"sidebar main"</span>;
+}
+
+<span class="sel">.sidebar</span> { <span class="prop">grid-area</span>: <span class="val">sidebar</span>; }
+<span class="sel">.header</span>  { <span class="prop">grid-area</span>: <span class="val">header</span>; }
+<span class="sel">.main</span>    { <span class="prop">grid-area</span>: <span class="val">main</span>; }</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each quoted string in <code>grid-template-areas</code> is one row; each word inside it is one column's area name. Repeating <code>sidebar</code> across both rows tells the browser "this area spans both rows here" — that's how the sidebar becomes tall without touching <code>grid-row</code> at all. It reads almost like a diagram of the page, which is exactly the point.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The Grid Playground. Click any control to change the container's grid CSS live — watch the boxes rearrange in two dimensions and the generated code update below. Click box <strong>2</strong> on the stage to toggle it spanning 2 columns.</p>
+
+      <div class="playground-grid">
+        <div class="control-panel">
+          <div class="control-group">
+            <label class="group-label">GRID-TEMPLATE-COLUMNS</label>
+            <div class="pill-row" data-prop="columns">
+              <button class="pill-btn" data-value="1fr 1fr">1fr 1fr</button>
+              <button class="pill-btn active" data-value="1fr 1fr 1fr">1fr 1fr 1fr</button>
+              <button class="pill-btn" data-value="repeat(4, 1fr)">repeat(4, 1fr)</button>
+              <button class="pill-btn" data-value="100px 1fr">100px 1fr</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">GRID-TEMPLATE-ROWS</label>
+            <div class="pill-row" data-prop="rows">
+              <button class="pill-btn active" data-value="auto">auto</button>
+              <button class="pill-btn" data-value="80px 80px">80px 80px</button>
+              <button class="pill-btn" data-value="repeat(2, 100px)">repeat(2, 100px)</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">GAP</label>
+            <div class="pill-row" data-prop="gap">
+              <button class="pill-btn" data-value="0px">0px</button>
+              <button class="pill-btn active" data-value="10px">10px</button>
+              <button class="pill-btn" data-value="24px">24px</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">BOX COUNT</label>
+            <div class="pill-row" data-prop="boxcount">
+              <button class="pill-btn" data-value="4">4</button>
+              <button class="pill-btn active" data-value="6">6</button>
+              <button class="pill-btn" data-value="9">9</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">ITEM SPAN</label>
+            <p class="control-hint">Click box <strong>2</strong> on the stage to toggle <code>grid-column: span 2</code> on it.</p>
+          </div>
+        </div>
+
+        <div class="preview-stage">
+          <div class="stage-header"><span>LIVE STAGE</span><span>●</span></div>
+          <div id="gridStage"></div>
+          <pre id="cssOutput"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a responsive photo gallery (or a small dashboard of cards, your choice) using CSS Grid, in a real HTML + CSS file.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a container with at least 6 child elements (photos or cards)
+          <span class="sub">Plain <code>&lt;div&gt;</code>s with background colors or placeholder images are fine</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Set the container to <code>display: grid</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Define <code>grid-template-columns</code> using <code>repeat()</code> and the <code>fr</code> unit so columns share space evenly
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Add a <code>gap</code> so items aren't jammed edge-to-edge
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Make exactly one item span 2 columns using <code>grid-column: span 2</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Shrink your browser window and confirm the grid still looks reasonable (even if it's not yet fully responsive)
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If <code>grid-column: span 2</code> doesn't seem to do anything, double-check that <code>display: grid</code> and <code>grid-template-columns</code> are set on the <strong>parent</strong> container, not on the item itself. Spanning only makes sense inside a grid that already has columns to span across.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Replace your fixed <code>repeat(3, 1fr)</code> with <code>repeat(auto-fit, minmax(150px, 1fr))</code> and resize the window. Your gallery should now add or remove columns on its own — a fully self-wrapping grid with zero media queries.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>display: grid</code><span>Turns a container into a grid parent</span></div>
+        <div class="cheat-card"><code>grid-template-columns</code><span>Defines column tracks — try <code>fr</code> units</span></div>
+        <div class="cheat-card"><code>grid-template-rows</code><span>Defines row tracks</span></div>
+        <div class="cheat-card"><code>repeat(3, 1fr)</code><span>Shorthand for repeating the same track size</span></div>
+        <div class="cheat-card"><code>gap</code><span>Space between cells, both directions</span></div>
+        <div class="cheat-card"><code>grid-column: span 2</code><span>Stretch an item across 2 columns</span></div>
+        <div class="cheat-card"><code>grid-row: span 2</code><span>Stretch an item across 2 rows</span></div>
+        <div class="cheat-card"><code>grid-template-areas</code><span>Name regions, draw the layout as ASCII art</span></div>
+        <div class="cheat-card"><code>minmax(150px, 1fr)</code><span>A track with a floor and a flexible ceiling</span></div>
+        <div class="cheat-card"><code>auto-fit</code><span>Fit as many tracks as will comfortably wrap</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting <code>display: grid</code> on the parent — without it, <code>grid-template-columns</code> and friends do absolutely nothing.</li>
+          <li>Confusing <code>grid-column</code> with <code>grid-row</code> — one spans sideways, one spans downward, easy to swap by accident.</li>
+          <li>Reaching for Grid when the layout is really one-dimensional — a simple row of buttons is usually simpler as Flexbox.</li>
+          <li>Writing a fixed <code>repeat(3, 1fr)</code> and wondering why the gallery breaks on mobile — that's what <code>auto-fit</code> + <code>minmax()</code> is for.</li>
+          <li>Forgetting that <code>gap</code> only adds space <em>between</em> items, not around the outer edge of the grid — you still need padding for that.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — you need a layout with a header, a sidebar, and a main content area, all visible at once in two dimensions. Which tool fits best?</p>
+        <button class="quiz-btn" data-correct="false">Flexbox, with flex-direction: column</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — a header, sidebar, and main area laid out together is a two-dimensional problem, which is exactly what Grid is built for.">CSS Grid</button>
+        <button class="quiz-btn" data-correct="false">Neither — you'd need JavaScript to position them</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Grid Playground ---------------- */
+  const gridStage = document.getElementById('gridStage');
+  const cssOutput = document.getElementById('cssOutput');
+
+  const state = {
+    columns: '1fr 1fr 1fr',
+    rows: 'auto',
+    gap: '10px',
+    boxcount: '6',
+    spanBox2: false
+  };
+
+  const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+  function renderStage() {
+    gridStage.style.gridTemplateColumns = state.columns;
+    gridStage.style.gridTemplateRows = state.rows;
+    gridStage.style.gap = state.gap;
+
+    const count = parseInt(state.boxcount, 10);
+    gridStage.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const box = document.createElement('div');
+      box.className = 'grid-box';
+      const isBox2 = (i === 1); // "box 2" is index 1
+      if (isBox2 && state.spanBox2) {
+        box.classList.add('spanned');
+        box.style.gridColumn = 'span 2';
+      }
+      const label = document.createElement('span');
+      label.textContent = labels[i];
+      box.appendChild(label);
+      if (isBox2) {
+        const note = document.createElement('span');
+        note.className = state.spanBox2 ? 'span-note' : 'span-hint';
+        note.textContent = state.spanBox2 ? 'span 2 ✓' : 'click to span';
+        box.appendChild(note);
+        box.addEventListener('click', () => {
+          state.spanBox2 = !state.spanBox2;
+          renderStage();
+        });
+      }
+      gridStage.appendChild(box);
+    }
+
+    const spanLine = state.spanBox2 ? '\n\n.item-2 {\n  grid-column: span 2;\n}' : '';
+
+    cssOutput.textContent =
+`.grid-container {
+  display: grid;
+  grid-template-columns: ${state.columns};
+  grid-template-rows: ${state.rows};
+  gap: ${state.gap};
+}${spanLine}`;
+  }
+
+  document.querySelectorAll('.pill-row').forEach(row => {
+    const prop = row.getAttribute('data-prop');
+    row.querySelectorAll('.pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        row.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state[prop] = btn.getAttribute('data-value');
+        renderStage();
+      });
+    });
+  });
+
+  renderStage();
+
+})();
+</script>
+
+</body>
+</html>

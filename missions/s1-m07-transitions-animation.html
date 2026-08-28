@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.7: Transitions, Animation & Polish — Making It Feel Alive | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Motion Lab ---------- */
+  .motionlab-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 760px) {
+    .motionlab-grid { grid-template-columns: 1fr; }
+  }
+  .control-panel {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .control-group { margin-bottom: 18px; }
+  .control-group:last-child { margin-bottom: 0; }
+  .control-group label.group-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 11.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pill-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+
+  .replay-btn {
+    width: 100%;
+    margin-top: 4px;
+    background: var(--accent);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 14px rgba(78,225,255,0.25);
+    transition: transform 0.12s ease;
+  }
+  .replay-btn:hover { transform: translateY(-1px); }
+  .replay-btn:active { transform: translateY(0) scale(0.97); }
+
+  .motion-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .motion-track {
+    position: relative;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+  }
+  .motion-track::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    right: 30px;
+    bottom: 44px;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--border-glow) 0 8px, transparent 8px 16px);
+  }
+  .motion-target {
+    --dur: 500ms;
+    --tx: 0px;
+    --scale: 1;
+    --rot: 0deg;
+    --op: 1;
+    position: relative;
+    z-index: 1;
+    width: 62px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    border-radius: 14px;
+    box-shadow: 0 0 14px rgba(78,225,255,0.2);
+    transform: translateX(var(--tx)) scale(var(--scale)) rotate(var(--rot));
+    opacity: var(--op);
+    transition-property: transform, opacity;
+    transition-duration: var(--dur);
+    transition-timing-function: ease;
+  }
+  .motion-target .thruster { display: inline-block; animation: thrusterFlicker 1.6s ease-in-out infinite; }
+  @keyframes thrusterFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  #motionCssOutput {
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--bg-panel-alt);
+    border-top: 1px solid var(--border-glow);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--accent-cyan);
+    white-space: pre-wrap;
+  }
+
+  .ref-loader-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border-glow);
+    background: rgba(255,255,255,0.02);
+  }
+  .ref-loader {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 3px solid var(--border-glow);
+    border-top-color: var(--accent-cyan);
+    animation: labSpin 900ms linear infinite;
+  }
+  @keyframes labSpin { to { transform: rotate(360deg); } }
+  .ref-loader-row span { font-size: 12.5px; color: var(--text-muted); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.7: TRANSITIONS, ANIMATION & POLISH</h1>
+    <div class="subtitle">Making It Feel Alive</div>
+    <p class="briefing-line">Everything you've built so far has been static — it appears, and then it just sits there. Real interfaces respond. A button reacts when you hover over it. A panel slides open instead of snapping into existence. A loading spinner tells you the system is still working instead of leaving you guessing. This mission is about closing that gap: <code>transition</code>, <code>transform</code>, and <code>@keyframes</code> — and, just as important, knowing when to leave something alone.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think about the status lights on a ship's console. A blinking amber light means "working on it." A steady green light means "all clear." A fast red pulse means "deal with this now." Every one of those lights is motion doing a job — it's compressing information into something you can read out of the corner of your eye, without reading a word of text. That's what good motion on a web page does too: it tells you a button was pressed, a panel is loading, an item was deleted, a form failed validation. It communicates <strong>state</strong>.</p>
+      <p>Bad motion is a disco floor. Every card wobbles on load, every icon spins for no reason, every hover triggers three different effects at once. None of it means anything, so your eye stops trusting any of it — and the one animation that actually mattered (the "your payment failed" shake) gets lost in the noise. The skill in this mission isn't just "how do I make things move." It's "how do I make the right thing move, by the right amount, for the right reason" — and leave everything else still.</p>
+      <p>Two CSS tools do almost all of this work. <strong><code>transition</code></strong> smoothly animates a property from one value to another whenever that value changes — hover states, toggled classes, anything with a clear "before" and "after." <strong><code>@keyframes</code></strong> paired with <strong><code>animation</code></strong> handles anything more complex than a straight line between two states — multi-step sequences, or motion that loops forever, like a loading spinner. Both are driven by an <strong>easing function</strong>, which decides the pacing of the change over time — and that pacing is most of what separates motion that feels "expensive" from motion that feels cheap.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <rect x="20" y="20" width="600" height="200" rx="8" fill="#0f1526" stroke="#2e3d63" stroke-width="1.5"/>
+          <!-- grid lines -->
+          <line x1="80" y1="40" x2="80" y2="200" stroke="#2e3d63" stroke-width="1"/>
+          <line x1="80" y1="200" x2="560" y2="200" stroke="#2e3d63" stroke-width="1"/>
+          <line x1="320" y1="40" x2="320" y2="200" stroke="#1b2540" stroke-width="1" stroke-dasharray="2 4"/>
+          <line x1="80" y1="120" x2="560" y2="120" stroke="#1b2540" stroke-width="1" stroke-dasharray="2 4"/>
+
+          <!-- linear -->
+          <path d="M80,200 L560,40" fill="none" stroke="#ff9d4d" stroke-width="2.5"/>
+          <!-- ease -->
+          <path d="M80,200 C200,184 200,40 560,40" fill="none" stroke="#4dffb4" stroke-width="2.5"/>
+          <!-- ease-in-out -->
+          <path d="M80,200 C282,200 358,40 560,40" fill="none" stroke="#4ee1ff" stroke-width="2.5"/>
+
+          <circle cx="80" cy="200" r="4" fill="#a8b3d1"/>
+          <circle cx="560" cy="40" r="4" fill="#a8b3d1"/>
+
+          <text x="320" y="222" fill="#6b7699" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">TIME →</text>
+          <text x="40" y="120" fill="#6b7699" font-family="Fira Code, monospace" font-size="12" text-anchor="middle" transform="rotate(-90 40 120)">PROGRESS →</text>
+
+          <rect x="440" y="52" width="12" height="3" fill="#ff9d4d"/>
+          <text x="458" y="58" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="11">linear</text>
+          <rect x="440" y="70" width="12" height="3" fill="#4dffb4"/>
+          <text x="458" y="76" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11">ease</text>
+          <rect x="440" y="88" width="12" height="3" fill="#4ee1ff"/>
+          <text x="458" y="94" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11">ease-in-out</text>
+        </svg>
+        <div class="diagram-caption">Same duration, three different feelings. <code>linear</code> moves at a constant speed (mechanical). <code>ease</code> starts fast then eases into the landing. <code>ease-in-out</code> eases gently at both ends — the most "natural" feeling of the three.</div>
+      </div>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <line x1="60" y1="70" x2="460" y2="70" stroke="#2e3d63" stroke-width="1.5"/>
+          <!-- delay segment -->
+          <rect x="60" y="58" width="100" height="24" rx="4" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <!-- duration segment -->
+          <rect x="160" y="58" width="300" height="24" rx="4" fill="#4ee1ff" fill-opacity="0.18" stroke="#4ee1ff" stroke-width="1.5"/>
+
+          <circle cx="60" cy="70" r="5" fill="#ffe66d"/>
+          <circle cx="460" cy="70" r="5" fill="#4dffb4"/>
+
+          <text x="60" y="45" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">property changes</text>
+          <text x="110" y="115" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">transition-delay: 150ms</text>
+          <text x="310" y="115" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">transition-duration: 500ms</text>
+          <text x="460" y="45" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">end value reached</text>
+        </svg>
+        <div class="diagram-caption">The clock doesn't start at zero — <code>delay</code> is dead time before the transition begins, then <code>duration</code> is how long the actual change takes.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The <code>transition</code> Property</h3>
+        <p><code>transition</code> tells the browser: "when this property's value changes, don't just snap to the new value — animate between the old one and the new one." It takes up to four pieces of information: which <strong>property</strong> to watch, how long the change takes (<strong>duration</strong>), the pacing curve (<strong>timing-function</strong>), and how long to wait before starting (<strong>delay</strong>, optional).</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="/* property | duration | timing-function | delay */&#10;.launch-btn {&#10;  transition: transform 200ms ease-in-out 0ms;&#10;}&#10;&#10;.launch-btn:hover {&#10;  transform: scale(1.05);&#10;}">COPY</button></div>
+          <pre><code><span class="comment">/* property | duration | timing-function | delay */</span>
+<span class="sel">.launch-btn</span> {
+  <span class="prop">transition</span>: <span class="val">transform 200ms ease-in-out 0ms</span>;
+}
+
+<span class="sel">.launch-btn:hover</span> {
+  <span class="prop">transform</span>: <span class="val">scale(1.05)</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The <code>transition</code> line sits on the <em>base</em> rule, not the <code>:hover</code> rule — it's a standing instruction that says "whenever transform changes on this element, take 200ms to get there." The <code>:hover</code> rule just supplies the new value. This is the pattern for nearly every transition you'll write: declare the transition once, then change the target value from somewhere else (a pseudo-class, or a class toggled by JavaScript).
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3><code>transform</code>: The Properties Worth Animating</h3>
+        <p><code>transform</code> bundles several operations that move an element without touching the page's layout: <code>translate()</code> shifts it, <code>scale()</code> resizes it, and <code>rotate()</code> spins it. You can combine them in one declaration, and they stack in the order you write them.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".card {&#10;  transform: translateX(0) scale(1) rotate(0deg);&#10;  transition: transform 300ms ease;&#10;}&#10;&#10;.card.dismissed {&#10;  transform: translateX(-40px) scale(0.9) rotate(-2deg);&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.card</span> {
+  <span class="prop">transform</span>: <span class="val">translateX(0) scale(1) rotate(0deg)</span>;
+  <span class="prop">transition</span>: <span class="val">transform 300ms ease</span>;
+}
+
+<span class="sel">.card.dismissed</span> {
+  <span class="prop">transform</span>: <span class="val">translateX(-40px) scale(0.9) rotate(-2deg)</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Adding the <code>.dismissed</code> class changes all three transform functions at once, and because they're all packed into a single <code>transform</code> value, one <code>transition</code> line animates the whole combination together. This is deliberate: <code>transform</code> and <code>opacity</code> are the properties you should reach for first when animating anything, for a reason the deep dive below explains.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why <code>transform</code>/<code>opacity</code> and not <code>width</code>/<code>top</code>/<code>left</code>?</summary>
+          <p>Every frame, the browser runs a pipeline: <strong>layout</strong> (figure out where every box goes and how big it is), <strong>paint</strong> (draw the pixels), then <strong>composite</strong> (assemble the painted layers on screen, often on the GPU). Animating <code>width</code>, <code>height</code>, <code>top</code>, or <code>left</code> changes a box's geometry, so the browser has to re-run <em>layout</em> for that element and everything affected by it, every single frame — 60 times a second if you want it smooth. That's expensive, and on a slow device or a busy page it shows up as visible stutter, or "jank."</p>
+          <p><code>transform</code> and <code>opacity</code> skip layout and paint entirely. The browser can hand the element to the compositor as its own layer and just slide, scale, rotate, or fade that layer on the GPU — no re-measuring the page required. Same visual result in many cases (moving something 40px to the left with <code>left: 40px</code> vs. <code>transform: translateX(40px)</code>), radically cheaper to compute. Default to <code>transform</code> and <code>opacity</code> for anything animated; reach for other properties only when there's no transform-based way to express the effect.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3><code>@keyframes</code> &amp; <code>animation</code></h3>
+        <p><code>transition</code> only knows two points: before and after. For anything with multiple steps, or anything that should loop forever — a pulsing status light, a spinning loader — you need <code>@keyframes</code>. You define named waypoints as percentages of the animation's total duration, then attach them to an element with the <code>animation</code> shorthand.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="@keyframes spin {&#10;  from { transform: rotate(0deg); }&#10;  to   { transform: rotate(360deg); }&#10;}&#10;&#10;.loader {&#10;  width: 24px;&#10;  height: 24px;&#10;  border: 3px solid #2e3d63;&#10;  border-top-color: #4ee1ff;&#10;  border-radius: 50%;&#10;  animation: spin 900ms linear infinite;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">@keyframes</span> <span class="fn">spin</span> {
+  <span class="sel">from</span> { <span class="prop">transform</span>: <span class="val">rotate(0deg)</span>; }
+  <span class="sel">to</span>   { <span class="prop">transform</span>: <span class="val">rotate(360deg)</span>; }
+}
+
+<span class="sel">.loader</span> {
+  <span class="prop">width</span>: <span class="val">24px</span>;
+  <span class="prop">height</span>: <span class="val">24px</span>;
+  <span class="prop">border</span>: <span class="val">3px solid #2e3d63</span>;
+  <span class="prop">border-top-color</span>: <span class="val">#4ee1ff</span>;
+  <span class="prop">border-radius</span>: <span class="val">50%</span>;
+  <span class="prop">animation</span>: <span class="val">spin 900ms linear infinite</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>@keyframes spin</code> defines two waypoints, <code>from</code> (0%) and <code>to</code> (100%) — you can also use explicit percentages like <code>0%</code>, <code>50%</code>, <code>100%</code> for more steps in between. The <code>animation</code> shorthand on <code>.loader</code> reads as: use the <code>spin</code> keyframes, take 900ms per lap, pace it <code>linear</code> (constant speed — correct for a loader, since nothing about "still loading" should ease up), and repeat <code>infinite</code>ly. Unlike <code>transition</code>, this animation starts running the instant the element exists — no hover or class change required.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Delay &amp; Sequencing</h3>
+        <p>Both tools support a delay: <code>transition-delay</code> and <code>animation-delay</code>. On their own they just postpone the start — but stack several elements with slightly increasing delays and you get a <strong>stagger</strong>, where items appear to reveal themselves one after another instead of all at once.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".mission-row:nth-child(1) { transition-delay: 0ms; }&#10;.mission-row:nth-child(2) { transition-delay: 80ms; }&#10;.mission-row:nth-child(3) { transition-delay: 160ms; }">COPY</button></div>
+          <pre><code><span class="sel">.mission-row:nth-child(1)</span> { <span class="prop">transition-delay</span>: <span class="val">0ms</span>; }
+<span class="sel">.mission-row:nth-child(2)</span> { <span class="prop">transition-delay</span>: <span class="val">80ms</span>; }
+<span class="sel">.mission-row:nth-child(3)</span> { <span class="prop">transition-delay</span>: <span class="val">160ms</span>; }</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each row gets the same transition, just starting a little later than the one before it. Staggers are a taste tool as much as a technical one — a small stagger (60–120ms per item) reads as a deliberate cascade; anything longer starts to feel like the page is loading in slow motion.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Easing &amp; Taste</h3>
+        <p>The timing-function is where "technically animated" becomes "feels right." <code>linear</code> is constant speed — correct for continuous loops (spinners, marquees), but robotic for anything with a clear start and stop. <code>ease</code> and <code>ease-in-out</code> are smoother defaults for UI motion. When those built-in curves aren't quite right, <code>cubic-bezier(x1, y1, x2, y2)</code> lets you hand-draw a custom curve — for example a slight overshoot for something that should feel bouncy or playful.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".badge-pop {&#10;  transition: transform 350ms cubic-bezier(0.68, -0.55, 0.27, 1.55);&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.badge-pop</span> {
+  <span class="prop">transition</span>: <span class="val">transform 350ms cubic-bezier(0.68, -0.55, 0.27, 1.55)</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Those <code>cubic-bezier</code> numbers describe two control points on a curve from (0,0) to (1,1); negative or &gt;1 values let the curve overshoot before settling, which reads as a little "bounce." You don't need to memorize the math — most editors and browser DevTools have a visual curve picker — but you do need to make the choice on purpose. The taste rule for this whole mission: every animation should answer "why does this move, and why does it move <em>this</em> way?" If you can't answer that in one sentence, it's decoration, not communication — cut it.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The Motion Lab. Pick which property animates, how long it takes, and its easing curve — then hit <strong>REPLAY</strong> as many times as you like. Watch the generated CSS at the bottom update to match.</p>
+
+      <div class="motionlab-grid">
+        <div class="control-panel">
+          <div class="control-group">
+            <label class="group-label">PROPERTY</label>
+            <div class="pill-row" data-prop="property">
+              <button class="pill-btn active" data-value="scale">scale</button>
+              <button class="pill-btn" data-value="translateX">translateX</button>
+              <button class="pill-btn" data-value="rotate">rotate</button>
+              <button class="pill-btn" data-value="opacity">opacity</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">DURATION</label>
+            <div class="pill-row" data-prop="duration">
+              <button class="pill-btn" data-value="200ms">200ms</button>
+              <button class="pill-btn active" data-value="500ms">500ms</button>
+              <button class="pill-btn" data-value="1000ms">1000ms</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="group-label">EASING</label>
+            <div class="pill-row" data-prop="easing">
+              <button class="pill-btn active" data-value="ease">ease</button>
+              <button class="pill-btn" data-value="linear">linear</button>
+              <button class="pill-btn" data-value="ease-in-out">ease-in-out</button>
+              <button class="pill-btn" data-value="cubic-bezier(0.68,-0.55,0.27,1.55)">bounce (cubic-bezier)</button>
+            </div>
+          </div>
+          <button class="replay-btn" id="motionReplay">▶ REPLAY</button>
+        </div>
+
+        <div class="motion-stage">
+          <div class="stage-header"><span>LIVE STAGE</span><span>●</span></div>
+          <div class="motion-track">
+            <div class="motion-target" id="motionTarget"><span class="thruster">🚀</span></div>
+          </div>
+          <pre id="motionCssOutput"></pre>
+          <div class="ref-loader-row">
+            <div class="ref-loader"></div>
+            <span>Reference only — a looping <code>@keyframes</code> + <code>animation: … infinite;</code>, not controlled by the panel above.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>In a real HTML + CSS file (reuse an earlier mission's file or start fresh), build the following.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Build a "LAUNCH" button and give it a <code>transition</code> on <code>transform</code> for its <code>:hover</code> state (a small scale-up is enough)
+          <span class="sub">The transition line belongs on the base rule, not on <code>:hover</code></span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Add a separate <code>:active</code> state that scales the button slightly <em>down</em> for the moment it's pressed
+          <span class="sub">This is the tactile "yes, I registered your click" feedback</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Build a looping loading indicator using <code>@keyframes</code> and <code>animation: … infinite;</code>
+          <span class="sub">A spinning ring or a pulsing dot both work</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Give every transition and animation you wrote an explicit duration and timing-function — don't leave either to chance
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Pick one animation and write a one-line CSS comment explaining <em>why</em> you chose that specific easing for it
+          <span class="sub">"Because it looked cool" doesn't count — tie it to what the motion communicates</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Trigger each animation at least three times in a row and confirm it replays correctly, not just the first time
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your hover transition works but nothing happens when you re-hover after moving your mouse away and back — check that you didn't accidentally apply the transition only inside the <code>:hover</code> rule. It has to live on the element's normal state so the browser knows to animate the <em>return</em> trip too. And remember: <code>transition</code> only fires when a property's value actually changes — toggling a class that sets the exact same value twice in a row produces no visible animation at all.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Take three elements (three mission cards, three checklist items — anything repeated) and stagger their entrance using increasing <code>transition-delay</code> or <code>animation-delay</code> values, so they appear to arrive one after another instead of all at once.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>transition: prop dur ease delay;</code><span>Animate a property between two known values</span></div>
+        <div class="cheat-card"><code>transform: translateX()</code><span>Shift an element — cheap, GPU-friendly</span></div>
+        <div class="cheat-card"><code>transform: scale()</code><span>Resize an element without touching layout</span></div>
+        <div class="cheat-card"><code>transform: rotate()</code><span>Spin an element around its center</span></div>
+        <div class="cheat-card"><code>@keyframes name { }</code><span>Define named waypoints for multi-step motion</span></div>
+        <div class="cheat-card"><code>animation: name dur ease iter;</code><span>Attach keyframes; use <code>infinite</code> to loop</span></div>
+        <div class="cheat-card"><code>ease-in-out</code><span>Smooth at both ends — the safe default for UI</span></div>
+        <div class="cheat-card"><code>linear</code><span>Constant speed — correct for continuous loops</span></div>
+        <div class="cheat-card"><code>cubic-bezier(x1,y1,x2,y2)</code><span>A hand-drawn custom easing curve</span></div>
+        <div class="cheat-card"><code>opacity</code><span>Fades cheaply — pairs well with transform</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Animating <code>width</code>, <code>height</code>, <code>top</code>, or <code>left</code> instead of <code>transform</code>/<code>opacity</code> — it forces the browser to re-run layout every frame and shows up as stutter.</li>
+          <li>Writing <code>transition: all 0.3s</code> out of laziness — it silently animates <em>every</em> property that changes, including ones you never meant to, and costs more to compute.</li>
+          <li>Never picking an easing on purpose, so everything defaults to plain <code>ease</code> whether or not that's actually the right feel for that motion.</li>
+          <li>Forgetting that <code>transition</code> only fires on an actual value <em>change</em> — re-applying the same value twice produces nothing, which looks like a bug but isn't.</li>
+          <li>Animating everything on the page "because it's cool" — a page where every element moves is a page where the one animation that mattered gets ignored.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which of these is cheapest for the browser to animate on every frame?</p>
+        <button class="quiz-btn" data-correct="false">width</button>
+        <button class="quiz-btn" data-correct="false">top</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — transform skips layout and paint entirely; the compositor just moves the existing layer.">transform</button>
+        <button class="quiz-btn" data-correct="false">margin</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Motion Lab ---------------- */
+  const target = document.getElementById('motionTarget');
+  const codeOut = document.getElementById('motionCssOutput');
+  const replayBtn = document.getElementById('motionReplay');
+
+  const state = {
+    property: 'scale',
+    duration: '500ms',
+    easing: 'ease'
+  };
+
+  // Each property config supplies the CSS-custom-property values for the
+  // "resting" state and the "animated" state, plus what to show in the
+  // generated-code panel (which mirrors how you'd actually write this —
+  // a transition on the base rule, and a class that changes one value).
+  const CONFIG = {
+    scale: {
+      cssProp: 'transform',
+      base: { tx: '0px', scale: '1', rot: '0deg', op: '1' },
+      end:  { tx: '0px', scale: '1.5', rot: '0deg', op: '1' },
+      declaredValue: 'scale(1.5)'
+    },
+    translateX: {
+      cssProp: 'transform',
+      base: { tx: '0px', scale: '1', rot: '0deg', op: '1' },
+      end:  { tx: '150px', scale: '1', rot: '0deg', op: '1' },
+      declaredValue: 'translateX(150px)'
+    },
+    rotate: {
+      cssProp: 'transform',
+      base: { tx: '0px', scale: '1', rot: '0deg', op: '1' },
+      end:  { tx: '0px', scale: '1', rot: '360deg', op: '1' },
+      declaredValue: 'rotate(360deg)'
+    },
+    opacity: {
+      cssProp: 'opacity',
+      base: { tx: '0px', scale: '1', rot: '0deg', op: '1' },
+      end:  { tx: '0px', scale: '1', rot: '0deg', op: '0.15' },
+      declaredValue: '0.15'
+    }
+  };
+
+  function applyVars(vars) {
+    target.style.setProperty('--tx', vars.tx);
+    target.style.setProperty('--scale', vars.scale);
+    target.style.setProperty('--rot', vars.rot);
+    target.style.setProperty('--op', vars.op);
+  }
+
+  function updateCode() {
+    const cfg = CONFIG[state.property];
+    codeOut.textContent =
+`.ship {
+  transition: ${cfg.cssProp} ${state.duration} ${state.easing};
+}
+
+.ship.is-active {
+  ${cfg.cssProp}: ${cfg.declaredValue};
+}`;
+  }
+
+  // Replay technique: force the element back to its resting values with
+  // the transition duration set to 0 (an instant, invisible snap), flush
+  // that style change to the DOM, then — on the next animation frame —
+  // restore the real duration/easing and apply the "active" values. That
+  // guarantees a fresh transition every time, even if the previous run
+  // never finished, which is why clicking REPLAY repeatedly always works
+  // instead of only firing once.
+  function playAnimation() {
+    const cfg = CONFIG[state.property];
+
+    target.style.transitionDuration = '0s';
+    applyVars(cfg.base);
+    void target.offsetWidth; // force a style/layout flush
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        target.style.transitionDuration = state.duration;
+        target.style.transitionTimingFunction = state.easing;
+        applyVars(cfg.end);
+      });
+    });
+  }
+
+  document.querySelectorAll('.motionlab-grid .pill-row').forEach(row => {
+    const prop = row.getAttribute('data-prop');
+    row.querySelectorAll('.pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        row.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state[prop] = btn.getAttribute('data-value');
+        updateCode();
+        playAnimation();
+      });
+    });
+  });
+
+  replayBtn.addEventListener('click', playAnimation);
+
+  updateCode();
+  applyVars(CONFIG[state.property].base);
+
+})();
+</script>
+
+</body>
+</html>

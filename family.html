@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Dashboard — Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+<style>
+  .fam-wrap { max-width: 720px; margin: 0 auto; padding: 60px 24px 80px; position: relative; z-index: 1; }
+  .fam-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
+  .fam-head h1 { font-size: 24px; margin: 0; }
+  .fam-actions { display: flex; gap: 10px; }
+  .fam-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    padding: 9px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.04em;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .fam-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .fam-btn.primary { background: var(--accent); color: var(--bg-void); border-color: var(--accent); }
+
+  .child-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+  .child-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; }
+  .child-avatar { font-size: 32px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--bg-panel-alt); border-radius: 12px; flex-shrink: 0; }
+  .child-info { flex: 1; min-width: 0; }
+  .child-info .name { font-family: var(--font-display); font-size: 16px; }
+  .child-info .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .child-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .icon-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { width: 100%; max-width: 400px; }
+  .modal h2 { font-size: 18px; margin: 0 0 18px; }
+  .avatar-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .avatar-opt { font-size: 22px; width: 44px; height: 44px; border-radius: 10px; background: var(--bg-panel-alt); border: 2px solid var(--border-glow); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .avatar-opt.selected { border-color: var(--accent); }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-family: var(--font-display); }
+  .modal-field input { width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions button { flex: 1; }
+  .modal-msg { margin-top: 12px; font-size: 13px; color: var(--danger); min-height: 18px; }
+</style>
+</head>
+<body class="accent-cyan">
+
+<canvas id="starfield"></canvas>
+
+<div class="fam-wrap">
+  <div class="fam-head">
+    <h1>👨‍👩‍👧 FAMILY DASHBOARD</h1>
+    <div class="fam-actions">
+      <a class="fam-btn" href="index.html">◈ Mission Control</a>
+      <button class="fam-btn" id="signOutBtn">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <p style="margin:0;color:var(--text-secondary);font-size:14px;">Cadet profiles for your family. Each one keeps its own progress and theme — no email or password needed for kids.</p>
+  </div>
+
+  <div class="child-list" id="childList"></div>
+
+  <button class="fam-btn primary" id="addChildBtn" style="width:100%;padding:14px;">+ ADD A CADET PROFILE</button>
+</div>
+
+<!-- Add/Edit child modal -->
+<div class="modal-overlay" id="childModal">
+  <div class="card modal">
+    <h2 id="modalTitle">Add a Cadet</h2>
+    <div class="avatar-picker" id="avatarPicker"></div>
+    <div class="modal-field">
+      <label for="childName">NAME</label>
+      <input type="text" id="childName" placeholder="Cadet call sign" maxlength="30">
+    </div>
+    <div class="modal-field">
+      <label for="childPin">PIN (optional, 4 digits — a soft lock, not real security)</label>
+      <input type="text" id="childPin" placeholder="Leave blank for none" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="modal-actions">
+      <button class="fam-btn" id="modalCancel" style="justify-content:center;">Cancel</button>
+      <button class="fam-btn primary" id="modalSave" style="justify-content:center;">Save</button>
+    </div>
+    <div class="modal-msg" id="modalMsg"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/academy.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const AVATARS = ["🚀", "👾", "🛰️", "🪐", "👨‍🚀", "👩‍🚀", "🤖", "⭐", "🌌", "🔭"];
+  let editingChildId = null;
+
+  async function requireAuth() {
+    const session = await window.Academy.auth.getSession();
+    if (!session) {
+      window.location.href = "login.html";
+      // location.href doesn't halt execution — throw to stop the caller's
+      // async chain (renderChildren, etc.) from running against no session
+      // during the brief window before the browser actually navigates away.
+      throw new Error("not signed in — redirecting");
+    }
+    return session;
+  }
+
+  async function renderChildren() {
+    const list = document.getElementById("childList");
+    list.innerHTML = "";
+    const children = await window.Academy.family.listChildren();
+    if (!children.length) {
+      list.innerHTML = `<div class="card empty-state">No cadet profiles yet. Add one to get started.</div>`;
+      return;
+    }
+    children.forEach((c) => {
+      const card = document.createElement("div");
+      card.className = "card child-card";
+      card.innerHTML = `
+        <div class="child-avatar">${c.avatar}</div>
+        <div class="child-info">
+          <div class="name">${c.name}</div>
+          <div class="meta">${c.theme === "light" ? "☀ Light theme" : "☾ Dark theme"} ${c.hasPin ? "· 🔒 PIN set" : ""}</div>
+        </div>
+        <div class="child-row-actions">
+          <button class="icon-btn" data-edit="${c.id}" title="Edit">✎</button>
+          <button class="icon-btn danger" data-delete="${c.id}" title="Remove">🗑</button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    list.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => openModal(children.find((c) => c.id === btn.getAttribute("data-edit"))));
+    });
+    list.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const child = children.find((c) => c.id === btn.getAttribute("data-delete"));
+        if (confirm(`Remove ${child.name}'s profile? This deletes their progress too.`)) {
+          await window.Academy.family.deleteChild(child.id);
+          renderChildren();
+        }
+      });
+    });
+  }
+
+  function openModal(child) {
+    editingChildId = child ? child.id : null;
+    document.getElementById("modalTitle").textContent = child ? "Edit Cadet" : "Add a Cadet";
+    document.getElementById("childName").value = child ? child.name : "";
+    document.getElementById("childPin").value = "";
+    document.getElementById("modalMsg").textContent = "";
+    renderAvatarPicker(child ? child.avatar : AVATARS[0]);
+    document.getElementById("childModal").classList.add("open");
+  }
+  function closeModal() {
+    document.getElementById("childModal").classList.remove("open");
+  }
+
+  let selectedAvatar = AVATARS[0];
+  function renderAvatarPicker(selected) {
+    selectedAvatar = selected;
+    const picker = document.getElementById("avatarPicker");
+    picker.innerHTML = "";
+    AVATARS.forEach((a) => {
+      const btn = document.createElement("button");
+      btn.className = "avatar-opt" + (a === selected ? " selected" : "");
+      btn.type = "button";
+      btn.textContent = a;
+      btn.addEventListener("click", () => {
+        selectedAvatar = a;
+        picker.querySelectorAll(".avatar-opt").forEach((el) => el.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+      picker.appendChild(btn);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await requireAuth();
+    } catch (e) {
+      return; // not signed in — requireAuth() already redirected to login.html
+    }
+    await renderChildren();
+
+    document.getElementById("addChildBtn").addEventListener("click", () => openModal(null));
+    document.getElementById("modalCancel").addEventListener("click", closeModal);
+    document.getElementById("childModal").addEventListener("click", (e) => { if (e.target.id === "childModal") closeModal(); });
+
+    document.getElementById("modalSave").addEventListener("click", async () => {
+      const name = document.getElementById("childName").value.trim();
+      const pin = document.getElementById("childPin").value.trim();
+      const msgEl = document.getElementById("modalMsg");
+      if (!name) { msgEl.textContent = "Give your cadet a name."; return; }
+      if (pin && !/^\d{4}$/.test(pin)) { msgEl.textContent = "PIN must be exactly 4 digits, or left blank."; return; }
+      try {
+        if (editingChildId) {
+          await window.Academy.family.updateChild(editingChildId, { name, avatar: selectedAvatar });
+          if (pin) await window.Academy.family.setPin(editingChildId, pin);
+        } else {
+          await window.Academy.family.createChild({ name, avatar: selectedAvatar, pin: pin || null });
+        }
+        closeModal();
+        renderChildren();
+      } catch (err) {
+        msgEl.textContent = err.message || "Something went wrong.";
+      }
+    });
+
+    document.getElementById("signOutBtn").addEventListener("click", async () => {
+      await window.Academy.auth.signOut();
+      window.location.href = "login.html";
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.2: Conditionals & Control Flow — Teaching the Ship to Decide | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s2-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.2: CONDITIONALS & CONTROL FLOW</h1>
+    <div class="subtitle">Teaching the Ship to Decide</div>
+    <p class="briefing-line">Mission 2.1 gave your code a pulse — variables, functions, a way to react to a click. But a real system doesn't run the same steps every time. It checks things first. Is the fuel low? Are the shields up? Did the cadet type the right password? Every one of those questions needs an answer that changes what happens next. That's what this mission is about: giving your code the ability to look at the world and branch.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~35 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A ship's autopilot never runs a single fixed script from launch to landing. It's constantly evaluating conditions — fuel level, hull integrity, distance to the nearest object, whether a hatch is sealed — and every one of those checks can send the ship down a completely different path. Low fuel means <em>divert to the nearest station</em>. A hull breach means <em>seal the compartment and alert the crew</em>. Nothing wrong at all means <em>keep cruising</em>. The autopilot isn't smart because it has more code — it's smart because it has more <strong>branches</strong>.</p>
+      <p>In JavaScript, a <strong>conditional</strong> is a statement that runs one block of code or another based on whether something is true or false. You already saw a taste of this in Mission 2.1's <code>checkFuelStatus</code> function. This mission goes much deeper: how JavaScript actually decides what counts as "true," the full comparison and logic toolkit, and two more tools — the ternary operator and <code>switch</code> — for when <code>if</code>/<code>else</code> starts feeling clunky.</p>
+      <p>Get comfortable with this. Every program you'll ever write — a game, a form, an AI agent's decision loop — is fundamentally a pile of conditionals wearing a trench coat. Master branching and you've mastered the skeleton of all programming logic.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <defs>
+            <marker id="condarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- Entry -->
+          <rect x="255" y="10" width="130" height="46" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="320" y="38" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">checkStatus(fuel)</text>
+
+          <!-- Diamond 1: fuel < 10 -->
+          <polygon points="320,76 400,116 320,156 240,116" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="320" y="112" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">fuel &lt; 10?</text>
+          <text x="320" y="128" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">(if)</text>
+
+          <!-- YES branch -> CRITICAL -->
+          <path d="M400,116 L500,116" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#condarrow)"/>
+          <text x="450" y="107" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">yes</text>
+          <rect x="500" y="91" width="120" height="50" rx="8" fill="#1b2540" stroke="#ff9d4d" stroke-width="2"/>
+          <text x="560" y="112" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">"CRITICAL"</text>
+          <text x="560" y="128" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">refuel now</text>
+
+          <!-- NO branch down to diamond 2 -->
+          <path d="M320,156 L320,196" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#condarrow)"/>
+          <text x="336" y="182" fill="#ff6b6b" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">no</text>
+
+          <!-- Diamond 2: fuel < 40 -->
+          <polygon points="320,196 400,236 320,276 240,236" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="320" y="232" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">fuel &lt; 40?</text>
+          <text x="320" y="248" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">(else if)</text>
+
+          <!-- YES branch -> LOW -->
+          <path d="M400,236 L500,236" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#condarrow)"/>
+          <text x="450" y="227" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">yes</text>
+          <rect x="500" y="211" width="120" height="50" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="560" y="232" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">"LOW"</text>
+          <text x="560" y="248" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">plan a stop</text>
+
+          <!-- NO branch down to final -->
+          <path d="M320,276 L320,316" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#condarrow)"/>
+          <text x="336" y="302" fill="#ff6b6b" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">no</text>
+
+          <!-- Final: NOMINAL (else) -->
+          <rect x="255" y="316" width="130" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="320" y="337" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">"NOMINAL"</text>
+          <text x="320" y="353" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">(else — catches the rest)</text>
+        </svg>
+        <div class="diagram-caption">An <code>if</code> / <code>else if</code> / <code>else</code> chain as a decision tree. Each diamond is one question; JavaScript checks them top to bottom and stops at the first "yes." The final <code>else</code> has no question of its own — it catches everything that didn't match above it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>if / else if / else In Depth</h3>
+        <p>An <code>if</code> statement runs its block only when the condition in parentheses evaluates to <code>true</code>. Chain as many <code>else if</code> blocks as you need for additional questions, and end with one plain <code>else</code> to catch whatever's left over. JavaScript checks each condition <strong>top to bottom</strong> and stops at the first one that matches — it never checks the rest, even if a later condition would also be true.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function checkShields(shieldPercent) {&#10;  if (shieldPercent &lt;= 0) {&#10;    return &quot;SHIELDS DOWN&quot;;&#10;  } else if (shieldPercent &lt; 25) {&#10;    return &quot;SHIELDS CRITICAL&quot;;&#10;  } else if (shieldPercent &lt; 70) {&#10;    return &quot;SHIELDS HOLDING&quot;;&#10;  } else {&#10;    return &quot;SHIELDS AT FULL&quot;;&#10;  }&#10;}&#10;&#10;console.log(checkShields(15)); // &quot;SHIELDS CRITICAL&quot;">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">checkShields</span>(shieldPercent) {
+  <span class="kw">if</span> (shieldPercent &lt;= <span class="num">0</span>) {
+    <span class="kw">return</span> <span class="str">"SHIELDS DOWN"</span>;
+  } <span class="kw">else if</span> (shieldPercent &lt; <span class="num">25</span>) {
+    <span class="kw">return</span> <span class="str">"SHIELDS CRITICAL"</span>;
+  } <span class="kw">else if</span> (shieldPercent &lt; <span class="num">70</span>) {
+    <span class="kw">return</span> <span class="str">"SHIELDS HOLDING"</span>;
+  } <span class="kw">else</span> {
+    <span class="kw">return</span> <span class="str">"SHIELDS AT FULL"</span>;
+  }
+}
+
+console.<span class="fn">log</span>(<span class="fn">checkShields</span>(<span class="num">15</span>)); <span class="comment">// "SHIELDS CRITICAL"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          With <code>shieldPercent = 15</code>, the first check (<code>&lt;= 0</code>) fails, the second (<code>&lt; 25</code>) succeeds, and JavaScript returns immediately — it never even looks at the <code>&lt; 70</code> check or the final <code>else</code>. Order matters: if you'd written the <code>&lt; 70</code> check first, a value of <code>15</code> would incorrectly match it too, since 15 is also less than 70. Always order your conditions from most specific/extreme to least.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Comparison & Logical Operators</h3>
+        <p>Comparisons produce a boolean (<code>true</code> or <code>false</code>): <code>===</code> and <code>!==</code> check equality/inequality, while <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, and <code>&gt;=</code> compare order. Logical operators combine or invert booleans: <code>&amp;&amp;</code> (AND) requires both sides true, <code>||</code> (OR) requires at least one side true, and <code>!</code> (NOT) flips a boolean.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const fuel = 62;&#10;const shieldsUp = true;&#10;const hostileNearby = false;&#10;&#10;// AND — both must be true&#10;const readyToJump = fuel &gt; 50 &amp;&amp; shieldsUp;&#10;console.log(readyToJump); // true&#10;&#10;// OR — at least one must be true&#10;const shouldRetreat = hostileNearby || fuel &lt; 20;&#10;console.log(shouldRetreat); // false&#10;&#10;// NOT — flips a boolean&#10;console.log(!shieldsUp); // false">COPY</button></div>
+          <pre><code><span class="kw">const</span> fuel = <span class="num">62</span>;
+<span class="kw">const</span> shieldsUp = <span class="kw">true</span>;
+<span class="kw">const</span> hostileNearby = <span class="kw">false</span>;
+
+<span class="comment">// AND — both must be true</span>
+<span class="kw">const</span> readyToJump = fuel &gt; <span class="num">50</span> &amp;&amp; shieldsUp;
+console.<span class="fn">log</span>(readyToJump); <span class="comment">// true</span>
+
+<span class="comment">// OR — at least one must be true</span>
+<span class="kw">const</span> shouldRetreat = hostileNearby || fuel &lt; <span class="num">20</span>;
+console.<span class="fn">log</span>(shouldRetreat); <span class="comment">// false</span>
+
+<span class="comment">// NOT — flips a boolean</span>
+console.<span class="fn">log</span>(!shieldsUp); <span class="comment">// false</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>&amp;&amp;</code> and <code>||</code> also <strong>short-circuit</strong>: in <code>a &amp;&amp; b</code>, if <code>a</code> is false, JavaScript never even evaluates <code>b</code> — the whole expression is already false. In <code>a || b</code>, if <code>a</code> is true, <code>b</code> is skipped. This isn't just an efficiency trick; it's a tool you'll use constantly (see the deep dive below). And always reach for <code>===</code>, never <code>==</code> — <code>==</code> tries to convert mismatched types before comparing, so <code>"5" == 5</code> is confusingly <code>true</code>, while <code>"5" === 5</code> is correctly <code>false</code> because a string is never the same type as a number.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Truthiness & Falsiness</h3>
+        <p>Any value, not just <code>true</code>/<code>false</code>, can be used where JavaScript expects a boolean — like inside an <code>if</code> condition. It gets converted to one automatically. Exactly six values convert to <code>false</code> ("falsy"); <strong>everything else</strong> converts to <code>true</code> ("truthy") — including things that feel like they should be false, like an object with no properties or the string <code>"0"</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// The complete list of falsy values in JavaScript:&#10;if (false) {}      // falsy&#10;if (0) {}          // falsy&#10;if (&quot;&quot;) {}         // falsy (empty string)&#10;if (null) {}       // falsy&#10;if (undefined) {}  // falsy&#10;if (NaN) {}        // falsy (Not a Number)&#10;&#10;// Everything else is truthy — even these:&#10;if (&quot;0&quot;) {}        // truthy! (non-empty string)&#10;if (&quot;false&quot;) {}    // truthy! (non-empty string)&#10;if ([]) {}         // truthy! (an array, even an empty one)&#10;if ({}) {}         // truthy! (an object, even an empty one)&#10;if (-1) {}         // truthy! (any nonzero number)">COPY</button></div>
+          <pre><code><span class="comment">// The complete list of falsy values in JavaScript:</span>
+<span class="kw">if</span> (<span class="kw">false</span>) {}      <span class="comment">// falsy</span>
+<span class="kw">if</span> (<span class="num">0</span>) {}          <span class="comment">// falsy</span>
+<span class="kw">if</span> (<span class="str">""</span>) {}         <span class="comment">// falsy (empty string)</span>
+<span class="kw">if</span> (<span class="kw">null</span>) {}       <span class="comment">// falsy</span>
+<span class="kw">if</span> (undefined) {}  <span class="comment">// falsy</span>
+<span class="kw">if</span> (NaN) {}        <span class="comment">// falsy (Not a Number)</span>
+
+<span class="comment">// Everything else is truthy — even these:</span>
+<span class="kw">if</span> (<span class="str">"0"</span>) {}        <span class="comment">// truthy! (non-empty string)</span>
+<span class="kw">if</span> (<span class="str">"false"</span>) {}    <span class="comment">// truthy! (non-empty string)</span>
+<span class="kw">if</span> ([]) {}         <span class="comment">// truthy! (an array, even an empty one)</span>
+<span class="kw">if</span> ({}) {}         <span class="comment">// truthy! (an object, even an empty one)</span>
+<span class="kw">if</span> (-<span class="num">1</span>) {}         <span class="comment">// truthy! (any nonzero number)</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Memorize the six falsy values — <code>false</code>, <code>0</code>, <code>""</code>, <code>null</code>, <code>undefined</code>, <code>NaN</code> — and treat literally everything else as truthy. This matters most when you write a shortcut like <code>if (fuel)</code> instead of <code>if (fuel &gt; 0)</code>: it looks like it means "if there's fuel," but it actually means "if fuel is anything except exactly <code>0</code>, <code>NaN</code>, or a falsy value" — which is usually fine for a number, but becomes a real bug the moment a legitimately meaningful value like <code>0</code> needs to be treated as valid, not "missing."
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Short-circuiting for default values</summary>
+          <p>Because <code>||</code> stops at the first truthy value, it's a common shorthand for "use this value, unless it's missing, in which case fall back to a default":</p>
+          <div class="code-block">
+            <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function greetCadet(input) {&#10;  const name = input || &quot;Cadet&quot;;&#10;  return &quot;Welcome aboard, &quot; + name;&#10;}&#10;&#10;console.log(greetCadet(&quot;Nova&quot;)); // &quot;Welcome aboard, Nova&quot;&#10;console.log(greetCadet(&quot;&quot;));     // &quot;Welcome aboard, Cadet&quot; (empty string is falsy)">COPY</button></div>
+            <pre><code><span class="kw">function</span> <span class="fn">greetCadet</span>(input) {
+  <span class="kw">const</span> name = input || <span class="str">"Cadet"</span>;
+  <span class="kw">return</span> <span class="str">"Welcome aboard, "</span> + name;
+}
+
+console.<span class="fn">log</span>(<span class="fn">greetCadet</span>(<span class="str">"Nova"</span>)); <span class="comment">// "Welcome aboard, Nova"</span>
+console.<span class="fn">log</span>(<span class="fn">greetCadet</span>(<span class="str">""</span>));     <span class="comment">// "Welcome aboard, Cadet" (empty string is falsy)</span></code></pre>
+          </div>
+          <p style="margin-bottom:0;">Watch the trap, though: if a valid input could legitimately be <code>0</code> or <code>""</code>, this pattern wrongly replaces it with the default. Modern JavaScript has a safer cousin for exactly this case, <code>??</code> (nullish coalescing), which only falls back on <code>null</code> or <code>undefined</code> — worth knowing exists, even if <code>||</code> remains the more common shorthand you'll see in the wild.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>The Ternary Operator</h3>
+        <p>When an <code>if</code>/<code>else</code> only exists to pick between two values, the <strong>ternary operator</strong> — <code>condition ? valueIfTrue : valueIfFalse</code> — says the same thing in one line. It's an expression, meaning it produces a value directly, so it slots neatly into a variable assignment or a template string.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const fuel = 8;&#10;&#10;// The long way:&#10;let status;&#10;if (fuel &lt; 10) {&#10;  status = &quot;LOW&quot;;&#10;} else {&#10;  status = &quot;OK&quot;;&#10;}&#10;&#10;// The ternary way — same result, one line:&#10;const statusShort = fuel &lt; 10 ? &quot;LOW&quot; : &quot;OK&quot;;&#10;console.log(statusShort); // &quot;LOW&quot;">COPY</button></div>
+          <pre><code><span class="kw">const</span> fuel = <span class="num">8</span>;
+
+<span class="comment">// The long way:</span>
+<span class="kw">let</span> status;
+<span class="kw">if</span> (fuel &lt; <span class="num">10</span>) {
+  status = <span class="str">"LOW"</span>;
+} <span class="kw">else</span> {
+  status = <span class="str">"OK"</span>;
+}
+
+<span class="comment">// The ternary way — same result, one line:</span>
+<span class="kw">const</span> statusShort = fuel &lt; <span class="num">10</span> ? <span class="str">"LOW"</span> : <span class="str">"OK"</span>;
+console.<span class="fn">log</span>(statusShort); <span class="comment">// "LOW"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A ternary is a great fit for exactly-two-outcomes decisions — especially inline, like <code>display.style.color = fuel &lt; 10 ? "red" : "green";</code>. It's a bad fit the moment you need more than two branches or your branches need multiple statements each; forcing a three-way decision into nested ternaries reads like a riddle. When in doubt, reach for <code>if</code>/<code>else</code> — clarity beats cleverness.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>switch — Many Branches, One Value</h3>
+        <p>A long <code>if</code>/<code>else if</code> chain that keeps testing the <em>same</em> variable against different exact values gets repetitive fast. A <code>switch</code> statement handles that pattern directly: it compares one value against a series of <code>case</code> labels using strict equality (<code>===</code>), and runs the matching block. <code>break</code> stops it from "falling through" into the next case, and <code>default</code> is the equivalent of a final <code>else</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function describeSector(sectorId) {&#10;  switch (sectorId) {&#10;    case 1:&#10;      return &quot;Sector 1 — Home Systems&quot;;&#10;    case 2:&#10;      return &quot;Sector 2 — Deep Code&quot;;&#10;    case 3:&#10;      return &quot;Sector 3 — Version Drift&quot;;&#10;    default:&#10;      return &quot;Uncharted sector&quot;;&#10;  }&#10;}&#10;&#10;console.log(describeSector(2)); // &quot;Sector 2 — Deep Code&quot;&#10;console.log(describeSector(9)); // &quot;Uncharted sector&quot;">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">describeSector</span>(sectorId) {
+  <span class="kw">switch</span> (sectorId) {
+    <span class="kw">case</span> <span class="num">1</span>:
+      <span class="kw">return</span> <span class="str">"Sector 1 — Home Systems"</span>;
+    <span class="kw">case</span> <span class="num">2</span>:
+      <span class="kw">return</span> <span class="str">"Sector 2 — Deep Code"</span>;
+    <span class="kw">case</span> <span class="num">3</span>:
+      <span class="kw">return</span> <span class="str">"Sector 3 — Version Drift"</span>;
+    <span class="kw">default</span>:
+      <span class="kw">return</span> <span class="str">"Uncharted sector"</span>;
+  }
+}
+
+console.<span class="fn">log</span>(<span class="fn">describeSector</span>(<span class="num">2</span>)); <span class="comment">// "Sector 2 — Deep Code"</span>
+console.<span class="fn">log</span>(<span class="fn">describeSector</span>(<span class="num">9</span>)); <span class="comment">// "Uncharted sector"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Because each case here <code>return</code>s immediately, we didn't strictly need <code>break</code> — returning already exits the function. But if a case just runs a statement (like a <code>console.log</code>) instead of returning, forgetting <code>break</code> means execution "falls through" and keeps running the <em>next</em> case's code too, whether you meant it to or not. That's the single most common <code>switch</code> bug — when in doubt, add the <code>break</code>.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Time to make some branches of your own. Below is a <code>missionStatus</code> function that reads a fuel level and a shield level and decides what the ship's computer should report. Edit the logic, hit RUN, and watch both the console output and the ship display react.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: ternary shortcut</button>
+        <button class="console-btn" id="btnExample2">try: switch version</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above, build a multi-branch <strong>docking clearance</strong> checker that decides whether a ship is cleared to dock.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Write a function <code>checkDockingClearance(fuel, shieldsUp, hostileNearby)</code> that takes all three values as parameters
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Use <code>&amp;&amp;</code> to combine at least two conditions meaningfully — for example, clearance requires <em>both</em> enough fuel <em>and</em> shields up
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>||</code> somewhere it makes sense — for example, deny clearance if fuel is too low <em>or</em> a hostile ship is nearby
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Include at least three distinct outcomes (an <code>if</code>/<code>else if</code>/<code>else</code> chain, not just true/false)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Somewhere in your code, use a ternary to set a short display value (like a color or a one-word label) instead of a full <code>if</code>/<code>else</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Update <code>#shipDisplay</code>'s <code>textContent</code> with the final clearance decision and call <code>console.log</code> with the reasoning
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your function always returns the same result no matter what you change, double check you're using <code>&amp;&amp;</code>/<code>||</code> correctly — a common slip is writing <code>fuel &gt; 20 &amp;&amp; &lt; 80</code>, which isn't valid JavaScript. Each side of <code>&amp;&amp;</code> and <code>||</code> needs to be a complete comparison on its own, like <code>fuel &gt; 20 &amp;&amp; fuel &lt; 80</code>.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Take a long <code>if</code>/<code>else if</code> chain that checks one variable against several exact string values (like a docking bay name — <code>"Alpha"</code>, <code>"Beta"</code>, <code>"Gamma"</code>) and rewrite it as a <code>switch</code> statement instead. Confirm it still produces the same output for every case.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>if / else if / else</code><span>Branch on one or more conditions, top to bottom</span></div>
+        <div class="cheat-card"><code>=== / !==</code><span>Strict equals / not equals — always prefer over == / !=</span></div>
+        <div class="cheat-card"><code>&gt; &lt; &gt;= &lt;=</code><span>Order comparisons, produce a boolean</span></div>
+        <div class="cheat-card"><code>&amp;&amp;</code><span>AND — true only if both sides are true; short-circuits</span></div>
+        <div class="cheat-card"><code>||</code><span>OR — true if at least one side is true; short-circuits</span></div>
+        <div class="cheat-card"><code>!</code><span>NOT — flips true to false and vice versa</span></div>
+        <div class="cheat-card"><code>falsy values</code><span><code>false, 0, "", null, undefined, NaN</code> — everything else is truthy</span></div>
+        <div class="cheat-card"><code>cond ? a : b</code><span>Ternary — a compact if/else that produces a value</span></div>
+        <div class="cheat-card"><code>switch / case / break</code><span>Compare one value against many exact options</span></div>
+        <div class="cheat-card"><code>default</code><span>The switch statement's equivalent of a final else</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing a single <code>=</code> (assignment) inside a condition instead of <code>===</code> (comparison) — <code>if (fuel = 0)</code> silently sets <code>fuel</code> to <code>0</code> and then evaluates as falsy, instead of checking it.</li>
+          <li>Using <code>==</code> instead of <code>===</code> and getting surprising type-coercion results, like <code>"0" == false</code> being <code>true</code>.</li>
+          <li>Forgetting that the final <code>else</code> catches <em>everything</em> not already matched above it — a badly ordered chain can route unexpected values into the wrong branch.</li>
+          <li>Relying on plain truthiness (<code>if (fuel)</code>) for a number where <code>0</code> is a real, meaningful value rather than "missing" — it gets treated as false when it shouldn't be.</li>
+          <li>Forgetting <code>break</code> inside a <code>switch</code> case, causing execution to "fall through" into the next case unintentionally.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does <code>"5" === 5</code> evaluate to, and why?</p>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — === checks type as well as value, and a string is never the same type as a number, no matter what it looks like.">false, because the types don't match</button>
+        <button class="quiz-btn" data-correct="false">true, because the values look the same</button>
+        <button class="quiz-btn" data-correct="false">it throws an error</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// Edit the values, then hit RUN
+function missionStatus(fuel, shieldsUp) {
+  if (fuel < 10) {
+    return "ABORT: fuel critical";
+  } else if (fuel < 40 && !shieldsUp) {
+    return "CAUTION: low fuel, shields down";
+  } else if (!shieldsUp) {
+    return "CAUTION: shields down";
+  } else {
+    return "ALL SYSTEMS NOMINAL";
+  }
+}
+
+const fuel = 25;
+const shieldsUp = false;
+const result = missionStatus(fuel, shieldsUp);
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = result;
+
+console.log("fuel:", fuel, "shields:", shieldsUp);
+console.log("STATUS ->", result);`;
+
+  const EXAMPLE_TERNARY = `function missionStatus(fuel, shieldsUp) {
+  if (fuel < 10) {
+    return "ABORT: fuel critical";
+  } else if (fuel < 40 && !shieldsUp) {
+    return "CAUTION: low fuel, shields down";
+  } else if (!shieldsUp) {
+    return "CAUTION: shields down";
+  } else {
+    return "ALL SYSTEMS NOMINAL";
+  }
+}
+
+const fuel = 60;
+const shieldsUp = true;
+const result = missionStatus(fuel, shieldsUp);
+
+// Ternary: pick a color in one line instead of an if/else
+const color = fuel < 40 ? "#ff9d4d" : "#4dffb4";
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = result;
+display.style.color = color;
+
+console.log("STATUS ->", result, "| color:", color);`;
+
+  const EXAMPLE_SWITCH = `function describeBay(bayName) {
+  switch (bayName) {
+    case "Alpha":
+      return "Bay Alpha — primary docking ring";
+    case "Beta":
+      return "Bay Beta — cargo transfer";
+    case "Gamma":
+      return "Bay Gamma — emergency only";
+    default:
+      return "Unknown bay — clearance denied";
+  }
+}
+
+const bay = "Beta";
+const result = describeBay(bay);
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = result;
+
+console.log("Requested bay:", bay);
+console.log(result);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_TERNARY },
+        { btnId: "btnExample2", code: EXAMPLE_SWITCH },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

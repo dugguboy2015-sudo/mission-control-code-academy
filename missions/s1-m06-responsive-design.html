@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 1.6: Positioning & Responsive Design — Mobile-First, Media Queries | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Responsive Preview widget ---------- */
+  .rp-shell {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+  }
+  .rp-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+  }
+  .rp-width-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rp-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .rp-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .rp-btn.active { background: var(--accent); color: var(--bg-void); border-color: var(--accent); font-weight: 600; }
+  .rp-breakpoint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .rp-bp-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
+  .rp-bp-pill.lit {
+    color: var(--bg-void);
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(78,225,255,0.4);
+  }
+  .rp-viewport-wrap {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: repeating-linear-gradient(45deg, #0a0e1a, #0a0e1a 10px, #0d1224 10px, #0d1224 20px);
+    overflow-x: auto;
+  }
+  .rp-viewport {
+    width: 375px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 0 0 3px var(--border-glow), 0 8px 30px rgba(0,0,0,0.5);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .rp-current-width {
+    text-align: center;
+    font-family: var(--font-code);
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 8px 0 0;
+  }
+  /* --- sample page rendered inside the viewport --- */
+  .rp-page { font-family: 'Rubik', sans-serif; color: #1a1a2e; }
+  .rp-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #1b2540;
+    color: #fff;
+  }
+  .rp-nav .rp-logo { font-family: 'Orbitron', sans-serif; font-size: 13px; color: #4ee1ff; }
+  .rp-nav .rp-links { display: none; gap: 12px; font-size: 12px; }
+  .rp-hero { padding: 18px 14px; background: #eef2fa; }
+  .rp-hero h4 { margin: 0 0 6px; font-size: 15px; }
+  .rp-hero p { margin: 0; font-size: 11.5px; color: #454f6b; }
+  .rp-cards { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+  .rp-card { background: #f7f9fd; border: 1px solid #ccd5ea; border-radius: 6px; padding: 10px; font-size: 11px; }
+  .rp-card b { display: block; font-size: 12px; margin-bottom: 3px; }
+  /* mobile-first base above; media queries widen the layout as the viewport grows */
+  @media (min-width: 600px) {
+    .rp-nav .rp-links { display: flex; }
+    .rp-hero h4 { font-size: 18px; }
+  }
+  @media (min-width: 900px) {
+    .rp-cards { flex-direction: row; }
+    .rp-card { flex: 1; }
+  }
+
+  /* ---------- Bespoke: Position demo ---------- */
+  .pos-demo-box {
+    position: relative;
+    height: 220px;
+    overflow-y: scroll;
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .pos-demo-inner { position: relative; height: 500px; }
+  .pos-anchor {
+    position: relative;
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed var(--border-glow);
+    border-radius: 8px;
+    height: 90px;
+    margin: 10px 0 380px;
+    padding: 8px;
+    font-family: var(--font-code);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .pos-anchor::before { content: 'relative ancestor (the containing block for "absolute")'; }
+  .pos-floater {
+    width: 150px;
+    padding: 10px 12px;
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 12px;
+    box-shadow: 0 0 12px rgba(78,225,255,0.25);
+    top: 10px;
+    left: 10px;
+  }
+  .pos-controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pos-note { margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s1-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 1</div>
+    <h1>MISSION 1.6: POSITIONING & RESPONSIVE DESIGN</h1>
+    <div class="subtitle">Mobile-First, Media Queries</div>
+    <p class="briefing-line">Your interfaces so far have assumed one screen. But the console you're building will get viewed on a cadet's phone in a docking bay, a tablet in a briefing room, and a full bridge display in the control center — and you don't get to pick which. This mission covers two tools that solve that problem together: the <code>position</code> property, for pulling an element out of normal flow on purpose, and <strong>responsive design</strong>, the discipline of writing layouts that reflow correctly no matter what size screen they land on.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every layout you've built so far lives in <strong>normal flow</strong> — block elements stack top to bottom, inline elements sit left to right, and Flexbox/Grid arrange children within that system. Normal flow is predictable, but sometimes you need to break it deliberately: pin a status bar to the top of the screen no matter how far the cadet scrolls, float a tooltip next to a button, or dock a "return to bridge" button in the corner. That's what the <code>position</code> property is for — it's not a layout system like Flexbox, it's an escape hatch from one.</p>
+      <p>The second problem is older and bigger: your CSS doesn't know how wide the screen will be. A layout hardcoded to look perfect at exactly 1200 pixels wide looks broken at 375. For most of the web's history, this meant designing for a desktop monitor and then patching things up for smaller screens as an afterthought — usually badly. The modern approach flips that order entirely: <strong>mobile-first design</strong> means you write your base styles for the smallest, most constrained screen first, then use <strong>media queries</strong> to add complexity — extra columns, wider spacing, side-by-side layouts — only once there's room for it.</p>
+      <p>Think of it like designing your ship's console to work as a wrist display first. Once you've proven the core controls work in that cramped space, you scale up: add more readouts on a tablet, add a full sensor sweep on the bridge's main screen. You never design "big first, then cram it small" — that's backwards, and it's why so many old sites feel broken on phones.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <!-- phone -->
+          <rect x="30" y="70" width="90" height="160" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <rect x="40" y="84" width="70" height="120" rx="3" fill="#0c1120" stroke="#2e3d63" stroke-width="1"/>
+          <text x="75" y="248" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">375px</text>
+          <text x="75" y="262" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">base styles</text>
+
+          <!-- tablet -->
+          <rect x="230" y="45" width="160" height="200" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <rect x="244" y="60" width="132" height="170" rx="3" fill="#0c1120" stroke="#2e3d63" stroke-width="1"/>
+          <text x="310" y="262" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">min-width: 600px</text>
+
+          <!-- desktop -->
+          <rect x="470" y="20" width="200" height="130" rx="6" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <rect x="482" y="32" width="176" height="100" rx="3" fill="#0c1120" stroke="#2e3d63" stroke-width="1"/>
+          <rect x="555" y="150" width="30" height="10" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <rect x="530" y="160" width="80" height="8" rx="3" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="570" y="262" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">min-width: 900px</text>
+
+          <!-- arrow -->
+          <path d="M125,150 L225,150" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#growarrow)"/>
+          <path d="M395,150 L465,150" fill="none" stroke="#6b7699" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#growarrow)"/>
+          <defs>
+            <marker id="growarrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="diagram-caption">Mobile-first: write the base layout for the phone, then use <code>min-width</code> media queries to progressively add complexity as more space becomes available.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The <code>position</code> Property</h3>
+        <p>Every element has a <code>position</code> value, and it defaults to <code>static</code> — normal flow, no special behavior. Four other values pull an element out of that flow in different ways.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="static    /* default — normal flow, top/left/right/bottom do nothing */&#10;relative  /* stays in flow, but top/left/etc. nudge it FROM where it would be */&#10;absolute  /* removed from flow, positioned against its nearest positioned ancestor */&#10;fixed     /* removed from flow, positioned against the browser viewport */&#10;sticky    /* relative until a scroll threshold, then behaves like fixed */">COPY</button></div>
+          <pre><code><span class="val">static</span>    <span class="comment">/* default — normal flow, top/left/right/bottom do nothing */</span>
+<span class="val">relative</span>  <span class="comment">/* stays in flow, but top/left/etc. nudge it FROM where it would be */</span>
+<span class="val">absolute</span>  <span class="comment">/* removed from flow, positioned against its nearest positioned ancestor */</span>
+<span class="val">fixed</span>     <span class="comment">/* removed from flow, positioned against the browser viewport */</span>
+<span class="val">sticky</span>    <span class="comment">/* relative until a scroll threshold, then behaves like fixed */</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The most important idea here is the <strong>containing block</strong>. An <code>absolute</code> element positions itself relative to the nearest ancestor that is <em>not</em> <code>static</code> — usually one you deliberately set to <code>position: relative</code> for exactly this reason. If no ancestor qualifies, it falls all the way back to the whole page, which is almost never what you wanted — that's the classic "why did my box jump to the top-left corner of the entire site" bug.
+        </div>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".card {&#10;  position: relative; /* establishes the containing block */&#10;}&#10;&#10;.badge {&#10;  position: absolute;&#10;  top: 8px;&#10;  right: 8px; /* positioned relative to .card, not the page */&#10;}">COPY</button></div>
+          <pre><code><span class="sel">.card</span> {
+  <span class="prop">position</span>: <span class="val">relative</span>; <span class="comment">/* establishes the containing block */</span>
+}
+
+<span class="sel">.badge</span> {
+  <span class="prop">position</span>: <span class="val">absolute</span>;
+  <span class="prop">top</span>: <span class="val">8px</span>;
+  <span class="prop">right</span>: <span class="val">8px</span>; <span class="comment">/* positioned relative to .card, not the page */</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This is the single most common real use of positioning: a "NEW" ribbon on a card, a close button in a modal's corner, a notification dot on an icon. The parent opts in with <code>relative</code> (it doesn't even need to move — <code>top</code>/<code>left</code> are optional on it), and the child is pinned inside it with <code>absolute</code>.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Why Fixed Pixels Break</h3>
+        <p>Screens vary enormously: a phone might be 375px wide, a laptop 1440px, an ultrawide monitor over 3000px. If you write <code>width: 1000px</code> on a container, that container is 1000px wide on <em>every</em> device — including phones, where it forces a horizontal scrollbar and cuts off content. Fixed pixel widths assume a screen size that doesn't exist for every visitor.</p>
+        <div class="whatjusthappened">
+          <strong>THE KEY IDEA</strong>
+          It's not that <code>px</code> is bad — it's fine for things that should genuinely stay a fixed size (a 1px border, a 24px icon). The mistake is using it for anything that should <em>adapt</em> — overall widths, section padding, font sizes on a headline. Those need units that scale with the environment, not the ruler.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Mobile-First & Media Queries</h3>
+        <p>A media query is a conditional block of CSS that only applies when the browser window matches a condition — most commonly a minimum or maximum width. Mobile-first design uses <code>min-width</code> queries exclusively: write the plain, unwrapped CSS for the smallest screen, then layer on rules that only activate once the screen is <em>at least</em> that wide.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy="/* base styles = mobile, no media query needed */&#10;.nav-links { display: none; }&#10;.cards { flex-direction: column; }&#10;&#10;/* tablet and up */&#10;@media (min-width: 600px) {&#10;  .nav-links { display: flex; }&#10;}&#10;&#10;/* desktop and up */&#10;@media (min-width: 900px) {&#10;  .cards { flex-direction: row; }&#10;}">COPY</button></div>
+          <pre><code><span class="comment">/* base styles = mobile, no media query needed */</span>
+<span class="sel">.nav-links</span> { <span class="prop">display</span>: <span class="val">none</span>; }
+<span class="sel">.cards</span> { <span class="prop">flex-direction</span>: <span class="val">column</span>; }
+
+<span class="comment">/* tablet and up */</span>
+<span class="kw">@media</span> (min-width: <span class="num">600px</span>) {
+  <span class="sel">.nav-links</span> { <span class="prop">display</span>: <span class="val">flex</span>; }
+}
+
+<span class="comment">/* desktop and up */</span>
+<span class="kw">@media</span> (min-width: <span class="num">900px</span>) {
+  <span class="sel">.cards</span> { <span class="prop">flex-direction</span>: <span class="val">row</span>; }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Every browser, even on a huge monitor, still loads and applies the base mobile styles first — the media queries only add or override on top. This is why mobile-first CSS tends to be shorter and less contradictory than desktop-first CSS, which usually needs <code>max-width</code> queries fighting to <em>undo</em> desktop styles on the way down. The exact pixel value where a layout changes (600px, 900px, whatever) is called a <strong>breakpoint</strong> — pick them based on where your own content starts to look cramped, not a "standard" list.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Relative Units</h3>
+        <p>Alongside media queries, the units you size things in matter just as much. <code>%</code> sizes an element relative to its parent's size. <code>rem</code> sizes relative to the root (<code>&lt;html&gt;</code>) font size — so if a cadet bumps their browser's default text size up for readability, everything sized in <code>rem</code> scales with them. <code>vw</code> and <code>vh</code> size relative to the viewport itself — <code>1vw</code> is always exactly 1% of the current window width, <code>1vh</code> is 1% of its height.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>CSS</span><button class="copy-btn" data-copy=".sidebar { width: 30%; }         /* 30% of its parent's width */&#10;body { font-size: 1rem; }         /* the root size — 16px by default */&#10;h1 { font-size: 2.5rem; }         /* scales with the root, not fixed at 40px */&#10;.hero { min-height: 60vh; }       /* 60% of the visible viewport height */">COPY</button></div>
+          <pre><code><span class="sel">.sidebar</span> { <span class="prop">width</span>: <span class="val">30%</span>; }         <span class="comment">/* 30% of its parent's width */</span>
+<span class="sel">body</span> { <span class="prop">font-size</span>: <span class="val">1rem</span>; }         <span class="comment">/* the root size — 16px by default */</span>
+<span class="sel">h1</span> { <span class="prop">font-size</span>: <span class="val">2.5rem</span>; }         <span class="comment">/* scales with the root, not fixed at 40px */</span>
+<span class="sel">.hero</span> { <span class="prop">min-height</span>: <span class="val">60vh</span>; }       <span class="comment">/* 60% of the visible viewport height */</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A good default rule of thumb: use <code>rem</code> for font sizes and spacing, <code>%</code> for widths inside a layout, <code>vh</code>/<code>vw</code> sparingly for "take up the whole screen" effects (like a full-height hero section), and reserve <code>px</code> for things that genuinely shouldn't scale — borders, small fixed icons, shadow offsets.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: <code>sticky</code>'s quirks, and the <code>vh</code> scrollbar gotcha</summary>
+          <p><code>position: sticky</code> looks like magic but has real rules: it only works within its immediate parent's box, and it needs a threshold to stick to — <code>top: 0</code> means "stick when this element's top edge reaches the top of the viewport (or scrolling ancestor)." If the parent's height is exactly the same as the sticky child, there's no room to "scroll past" it, so it never appears to stick at all. It also silently stops working if any ancestor has <code>overflow: hidden</code> or <code>overflow: auto</code> — sticky is relative to the nearest scrolling container, and clipped overflow breaks that chain.</p>
+          <p>Separately: <code>100vh</code> is defined as 100% of the viewport, but on many mobile browsers the viewport height changes as the address bar shows and hides while scrolling — so a <code>100vh</code> element can be taller than what's visible, causing an awkward jump. On desktop, a vertical scrollbar can also eat into the width <code>100vw</code> reports, causing a razor-thin horizontal scrollbar to appear. Neither is a bug in your CSS — they're both viewport-unit quirks worth knowing about before you're debugging them at 11pm.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Two live instruments. The first resizes a real sample page and shows you exactly which breakpoint is active at each width. The second lets you swap a floating element between all five <code>position</code> values inside a scrollable box, so you can watch the behavior differences instead of just reading about them.</p>
+
+      <div class="subsection" style="border-bottom:none;padding-bottom:0;">
+        <h3>Responsive Preview</h3>
+        <p>Click a width preset to resize the viewport below. Watch the sample page's nav links and card layout reflow, and watch the breakpoint pill light up to show which <code>@media</code> rule is currently active.</p>
+        <div class="rp-shell">
+          <div class="rp-toolbar">
+            <div class="rp-width-buttons">
+              <button class="rp-btn active" data-width="375">📱 375px</button>
+              <button class="rp-btn" data-width="600">📱 600px</button>
+              <button class="rp-btn" data-width="900">💻 900px</button>
+              <button class="rp-btn" data-width="1200">🖥 1200px</button>
+            </div>
+            <div class="rp-breakpoint">
+              <span class="rp-bp-pill" data-bp="mobile">MOBILE<br><span style="font-size:9px;opacity:0.7;">&lt; 600px</span></span>
+              <span class="rp-bp-pill" data-bp="tablet">TABLET<br><span style="font-size:9px;opacity:0.7;">600–900px</span></span>
+              <span class="rp-bp-pill" data-bp="desktop">DESKTOP<br><span style="font-size:9px;opacity:0.7;">&gt; 900px</span></span>
+            </div>
+          </div>
+          <div class="rp-viewport-wrap">
+            <div class="rp-viewport" id="rpViewport">
+              <div class="rp-page">
+                <div class="rp-nav">
+                  <span class="rp-logo">MCCA</span>
+                  <div class="rp-links"><span>HOME</span><span>MISSIONS</span><span>LOGOUT</span></div>
+                </div>
+                <div class="rp-hero">
+                  <h4>Bridge Status: Nominal</h4>
+                  <p>Resize this preview and watch the layout adapt.</p>
+                </div>
+                <div class="rp-cards">
+                  <div class="rp-card"><b>Sector 1</b>Building the Web</div>
+                  <div class="rp-card"><b>Sector 2</b>JavaScript</div>
+                  <div class="rp-card"><b>Sector 3</b>Version Control</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rp-current-width" id="rpCurrentWidth">375px viewport</div>
+        </div>
+      </div>
+
+      <div class="subsection" style="margin-top:30px;border-bottom:none;padding-bottom:0;">
+        <h3>Position Demo</h3>
+        <p>Choose a <code>position</code> value, then scroll the box. <code>static</code> and <code>relative</code> scroll away normally. <code>sticky</code> holds at the top of the box while it can. <code>fixed</code> pins to the whole browser viewport, ignoring this box's scroll entirely. <code>absolute</code> jumps to sit against the dashed "relative ancestor" panel.</p>
+        <div class="pos-controls">
+          <button class="pos-btn pill-btn active" data-pos="static">static</button>
+          <button class="pos-btn pill-btn" data-pos="relative">relative</button>
+          <button class="pos-btn pill-btn" data-pos="absolute">absolute</button>
+          <button class="pos-btn pill-btn" data-pos="fixed">fixed</button>
+          <button class="pos-btn pill-btn" data-pos="sticky">sticky</button>
+        </div>
+        <div class="pos-demo-box" id="posDemoBox">
+          <div class="pos-demo-inner">
+            <div class="pos-anchor" id="posAnchor"></div>
+            <div class="pos-floater" id="posFloater">position: static</div>
+          </div>
+        </div>
+        <p class="pos-note" id="posNote">Scroll the box above — right now the floater is <code>static</code>, so it just sits in normal flow like any other element.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a small page (reuse the live editor from an earlier mission, or a real HTML+CSS file) that proves you can write mobile-first, responsive layout — and use positioning on purpose, not by accident.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Write your base CSS for a narrow screen first — no media query needed for it
+          <span class="sub">Single column, stacked nav, readable without zooming or scrolling sideways</span></label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Add at least one <code>@media (min-width: ...)</code> query that visibly changes the layout at a breakpoint
+          <span class="sub">e.g. a nav that goes from stacked to a row, or cards that go from column to row</span></label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Use at least one relative unit (<code>%</code>, <code>rem</code>, or <code>vw</code>/<code>vh</code>) instead of a fixed <code>px</code> for something that should scale</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Use one non-<code>static</code> <code>position</code> value on purpose, for a real reason
+          <span class="sub">e.g. a badge pinned to a card's corner with <code>relative</code> + <code>absolute</code>, or a header that stays visible with <code>sticky</code></span></label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Shrink your actual browser window down to phone width and confirm nothing overflows or gets cut off</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">If you used <code>absolute</code>, confirm its parent has <code>position: relative</code> — check that it's positioned against the box you intended, not the whole page</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your <code>absolute</code>-positioned element is landing somewhere unexpected, it's almost always the containing-block rule: it's looking for the nearest ancestor that is <code>relative</code>, <code>absolute</code>, <code>fixed</code>, or <code>sticky</code>, and if it doesn't find one, it keeps climbing all the way up to the page. Add <code>position: relative;</code> to the direct parent you actually want it pinned inside.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a second breakpoint so your layout has three distinct states (mobile / tablet / desktop), and make the header <code>sticky</code> so it stays visible while the rest of the page scrolls beneath it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>position: static</code><span>Default — normal flow, offsets do nothing</span></div>
+        <div class="cheat-card"><code>position: relative</code><span>Stays in flow, offsets nudge from its normal spot; creates a containing block</span></div>
+        <div class="cheat-card"><code>position: absolute</code><span>Leaves flow, pins to nearest positioned ancestor</span></div>
+        <div class="cheat-card"><code>position: fixed</code><span>Leaves flow, pins to the browser viewport itself</span></div>
+        <div class="cheat-card"><code>position: sticky</code><span>Relative until a scroll threshold, then behaves like fixed</span></div>
+        <div class="cheat-card"><code>@media (min-width: Npx)</code><span>Applies rules once the screen is at least N px wide</span></div>
+        <div class="cheat-card"><code>Mobile-first</code><span>Base styles = smallest screen; media queries add complexity upward</span></div>
+        <div class="cheat-card"><code>%</code><span>Relative to the parent element's size</span></div>
+        <div class="cheat-card"><code>rem</code><span>Relative to the root font size — scales with user preferences</span></div>
+        <div class="cheat-card"><code>vw / vh</code><span>1% of the viewport's width / height</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Designing desktop-first, then fighting a wall of <code>max-width</code> media queries trying to undo styles for small screens instead of building up from them.</li>
+          <li>Using <code>position: absolute</code> without a <code>relative</code> ancestor, then being surprised the element lands in the corner of the entire page.</li>
+          <li>Hardcoding widths in <code>px</code> for containers that should flex with the screen, forcing a horizontal scrollbar on phones.</li>
+          <li>Expecting <code>sticky</code> to work while an ancestor has <code>overflow: hidden</code> or <code>overflow: auto</code> — it silently stops sticking.</li>
+          <li>Picking breakpoints from a "standard list" instead of the point where your own content actually starts looking cramped.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — you set <code>position: absolute</code> on an element, and its parent has no <code>position</code> value set at all (so it's <code>static</code>). Where does the element position itself against?</p>
+        <button class="quiz-btn" data-correct="false">Its static parent — position always follows the direct parent</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — a static parent doesn't count as a containing block, so the search keeps climbing until it finds one, usually landing on the whole page.">It keeps climbing up the ancestor tree until it finds a non-static ancestor — or the page itself</button>
+        <button class="quiz-btn" data-correct="false">Nowhere — the browser ignores the rule and treats it as static</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------------- Responsive Preview widget ---------------- */
+    const rpViewport = document.getElementById("rpViewport");
+    const rpCurrentWidth = document.getElementById("rpCurrentWidth");
+    const rpButtons = document.querySelectorAll(".rp-btn");
+    const rpPills = document.querySelectorAll(".rp-bp-pill");
+
+    function bpForWidth(w) {
+      if (w < 600) return "mobile";
+      if (w <= 900) return "tablet";
+      return "desktop";
+    }
+
+    function setViewportWidth(w) {
+      rpViewport.style.width = w + "px";
+      rpCurrentWidth.textContent = w + "px viewport";
+      const active = bpForWidth(w);
+      rpPills.forEach(function (pill) {
+        pill.classList.toggle("lit", pill.getAttribute("data-bp") === active);
+      });
+    }
+
+    rpButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        rpButtons.forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        setViewportWidth(parseInt(btn.getAttribute("data-width"), 10));
+      });
+    });
+
+    setViewportWidth(375);
+
+    /* ---------------- Position demo ---------------- */
+    const posFloater = document.getElementById("posFloater");
+    const posBtns = document.querySelectorAll(".pos-btn");
+    const posNote = document.getElementById("posNote");
+    const posDemoBox = document.getElementById("posDemoBox");
+
+    const notes = {
+      static: "Right now the floater is <code>static</code> — it just sits in normal document flow like any other block, taking up its own space in the stack.",
+      relative: "Now it's <code>relative</code> — still in normal flow (it still takes up its original space), but nudged 20px down and right from where it would otherwise sit via <code>top</code>/<code>left</code>.",
+      absolute: "Now it's <code>absolute</code> — pulled completely out of flow and pinned to the top-right corner of the dashed box above, which is its nearest <code>position: relative</code> ancestor (its containing block).",
+      fixed: "Now it's <code>fixed</code> — pinned to the browser viewport itself. Scroll the box and it won't move at all, because it no longer cares about this box's scroll — only the window's.",
+      sticky: "Now it's <code>sticky</code> — it scrolls normally until it reaches the top of this box, then holds there as long as its parent still has room left to scroll past."
+    };
+
+    function applyPosition(pos) {
+      posFloater.style.position = "";
+      posFloater.style.top = "";
+      posFloater.style.left = "";
+      posFloater.style.right = "";
+
+      posFloater.style.position = pos;
+      if (pos === "relative") {
+        posFloater.style.top = "20px";
+        posFloater.style.left = "20px";
+      } else if (pos === "absolute") {
+        posFloater.style.top = "10px";
+        posFloater.style.right = "10px";
+        posFloater.style.left = "auto";
+      } else if (pos === "fixed") {
+        posFloater.style.top = "80px";
+        posFloater.style.right = "40px";
+        posFloater.style.left = "auto";
+      } else if (pos === "sticky") {
+        posFloater.style.top = "0px";
+        posFloater.style.left = "0px";
+      }
+
+      posFloater.textContent = "position: " + pos;
+      posNote.innerHTML = notes[pos];
+      posDemoBox.scrollTop = 0;
+    }
+
+    posBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        posBtns.forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        applyPosition(btn.getAttribute("data-pos"));
+      });
+    });
+
+    applyPosition("static");
+  });
+})();
+</script>
+
+</body>
+</html>

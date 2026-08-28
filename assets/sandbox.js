@@ -11,7 +11,7 @@
 /* ---------------- JS Sandbox ---------------- */
 function initJsSandbox(cfg) {
   const editor = document.getElementById(cfg.editorId);
-  const display = document.getElementById(cfg.displayId);
+  let display = document.getElementById(cfg.displayId);
   const output = document.getElementById(cfg.outputId);
   const runBtn = document.getElementById(cfg.runBtnId);
   if (!editor || !runBtn) return;
@@ -32,14 +32,22 @@ function initJsSandbox(cfg) {
 
   function run() {
     output.innerHTML = "";
-    let freshDisplay = display;
     if (display) {
       const fresh = document.createElement("div");
       fresh.id = cfg.displayId;
       fresh.className = display.className;
-      fresh.textContent = cfg.displayResetText || "STATUS: STANDBY";
+      // Use ?? not || — an intentionally empty string ("start with a blank
+      // container") is falsy and would otherwise be silently overridden by
+      // the default text.
+      fresh.textContent = cfg.displayResetText ?? "STATUS: STANDBY";
       display.replaceWith(fresh);
-      freshDisplay = fresh;
+      // Track the live element so the NEXT run() resets the node actually in
+      // the DOM, not the detached one this call just replaced — without this,
+      // only the first run ever clears the display; every run after it calls
+      // replaceWith() on a disconnected node, which is a silent no-op, so
+      // content built up by appendChild (e.g. a growing list) keeps
+      // accumulating across repeated clicks instead of resetting each time.
+      display = fresh;
     }
     const fakeConsole = {
       log: (...args) => log(args.map(formatArg).join(" "), false),

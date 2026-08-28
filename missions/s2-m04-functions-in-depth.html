@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.4: Functions in Depth — Parameters, Return Values, Scope | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s2-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.4: FUNCTIONS IN DEPTH</h1>
+    <div class="subtitle">Parameters, Return Values, Scope</div>
+    <p class="briefing-line">You've written functions already — <code>calculateFuelNeeded</code>, <code>checkFuelStatus</code>. This mission is about writing them <em>well</em>: choosing the right syntax for the job, giving parameters sensible defaults, exiting early instead of nesting five levels deep, and understanding exactly which variables a piece of code can see. Along the way you'll meet closures — a function's odd, useful habit of remembering where it came from.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think of a function as a <strong>standing order</strong> given to a specific crew station. You don't re-explain docking procedure to the pilot every single time a ship approaches the bay — you wrote the procedure once, gave it a name, and now you just say "run docking procedure" with the current ship's details. The station already knows what to do with whatever it's handed.</p>
+      <p>That's exactly what a function is: a block of logic you define once, then <strong>call</strong> as many times as you need, each time with different <strong>arguments</strong> filling in its <strong>parameters</strong>. The function runs its body using those values and, when it's done, can hand a result back with <code>return</code> — the equivalent of the station reporting "docking complete, bay 4" back to the bridge.</p>
+      <p>Where this gets interesting is everything <em>around</em> the call: what happens if a parameter is left out? What if the logic needs to bail out early instead of nesting deeper and deeper? And which variables can a function actually see — just its own, or everything on the ship? Get comfortable with the answers here, because every function you write from now on leans on them.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <defs>
+            <marker id="fnarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <text x="105" y="35" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">CALL: calculateFuelNeeded(6)</text>
+
+          <rect x="20" y="95" width="170" height="90" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="105" y="130" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">PARAMETERS IN</text>
+          <text x="105" y="150" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">distance = 6</text>
+          <text x="105" y="166" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">efficiency = 12 (default)</text>
+
+          <rect x="265" y="55" width="200" height="170" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="365" y="82" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">FUNCTION BODY</text>
+          <text x="365" y="104" fill="#e8ecf7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">calculateFuelNeeded</text>
+          <line x1="285" y1="114" x2="445" y2="114" stroke="#3a4770" stroke-width="1"/>
+          <text x="365" y="140" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">runs the logic</text>
+          <text x="365" y="158" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">distance * efficiency</text>
+          <text x="365" y="200" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">return ⟶</text>
+
+          <rect x="530" y="95" width="150" height="90" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="605" y="130" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">RETURN VALUE</text>
+          <text x="605" y="150" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">72</text>
+          <text x="605" y="166" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">(sent back to caller)</text>
+
+          <path d="M190,140 L265,140" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#fnarrow)"/>
+          <path d="M465,140 L530,140" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#fnarrow)"/>
+        </svg>
+        <div class="diagram-caption">Anatomy of a call: parameters go in, the body runs exactly once, and <code>return</code> sends exactly one value back out. The function itself never prints or displays anything — it's the caller's job to decide what to do with the result.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Declarations vs. Arrow Functions</h3>
+        <p>There are two common ways to write a function, and picking between them is a matter of idiom, not correctness. A <strong>function declaration</strong> is the classic form — named up front, and hoisted (usable even before its line in the file). An <strong>arrow function</strong> is a shorter syntax, usually stored in a <code>const</code>, and it's what you'll reach for most for short, inline logic.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function calculateFuelNeeded(distance, efficiency) {&#10;  return distance * efficiency;&#10;}&#10;&#10;const calculateFuelNeeded2 = (distance, efficiency) =&gt; distance * efficiency;">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">calculateFuelNeeded</span>(distance, efficiency) {
+  <span class="kw">return</span> distance * efficiency;
+}
+
+<span class="comment">// same logic, arrow syntax — implicit return, no braces needed</span>
+<span class="kw">const</span> calculateFuelNeeded2 = (distance, efficiency) =&gt; distance * efficiency;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Both versions behave identically when called. The arrow version skips <code>{ }</code> and <code>return</code> entirely because a one-expression arrow function automatically returns whatever that expression evaluates to. Reach for a <strong>declaration</strong> for named, top-level utility functions you'll call by name throughout a file. Reach for an <strong>arrow function</strong> for short logic passed directly into something else — a callback for <code>addEventListener</code> or an array method — where naming it separately would just add noise.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Default Parameters & Early Returns</h3>
+        <p>A parameter can have a <strong>default value</strong>, used automatically whenever the caller leaves that argument out (or passes <code>undefined</code>). Write it right in the parameter list: <code>efficiency = 12</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function calculateFuelNeeded(distance, efficiency = 12) {&#10;  return distance * efficiency;&#10;}&#10;&#10;console.log(calculateFuelNeeded(5));      // 60 — efficiency defaults to 12&#10;console.log(calculateFuelNeeded(5, 20));  // 100 — override supplied">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">calculateFuelNeeded</span>(distance, efficiency = <span class="num">12</span>) {
+  <span class="kw">return</span> distance * efficiency;
+}
+
+console.<span class="fn">log</span>(<span class="fn">calculateFuelNeeded</span>(<span class="num">5</span>));      <span class="comment">// 60 — efficiency defaults to 12</span>
+console.<span class="fn">log</span>(<span class="fn">calculateFuelNeeded</span>(<span class="num">5</span>, <span class="num">20</span>));  <span class="comment">// 100 — override supplied</span></code></pre>
+        </div>
+        <p>Now consider a function that needs to check several conditions before deciding what to do. Nesting <code>if</code>/<code>else</code> blocks inside each other gets hard to read fast. An <strong>early return</strong> — a guard clause that exits the function the moment it knows the answer — keeps the logic flat.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function fuelStatusReport(fuel) {&#10;  if (fuel &lt; 0) return &quot;ERROR: negative fuel reading&quot;;&#10;  if (fuel &lt; 10) return &quot;CRITICAL: refuel immediately&quot;;&#10;  if (fuel &lt; 40) return &quot;LOW: plan a refuel stop&quot;;&#10;  return &quot;NOMINAL&quot;;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">fuelStatusReport</span>(fuel) {
+  <span class="kw">if</span> (fuel &lt; <span class="num">0</span>) <span class="kw">return</span> <span class="str">"ERROR: negative fuel reading"</span>;
+  <span class="kw">if</span> (fuel &lt; <span class="num">10</span>) <span class="kw">return</span> <span class="str">"CRITICAL: refuel immediately"</span>;
+  <span class="kw">if</span> (fuel &lt; <span class="num">40</span>) <span class="kw">return</span> <span class="str">"LOW: plan a refuel stop"</span>;
+  <span class="kw">return</span> <span class="str">"NOMINAL"</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each guard clause handles exactly one case and immediately hands control back to the caller — there's no <code>else</code> anywhere, and no risk of accidentally falling through to a case that shouldn't apply. Compare this to writing the same logic as nested <code>if</code>/<code>else if</code>/<code>else</code>: it works, but adding a fifth or sixth condition turns it into a staircase. Guard clauses stay flat no matter how many cases you add.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Scope: Block vs. Function</h3>
+        <p><strong>Scope</strong> is the answer to "which variables can this line of code see?" Variables declared with <code>let</code> or <code>const</code> are <strong>block-scoped</strong> — they only exist inside the nearest <code>{ }</code> that contains them, including the braces of an <code>if</code>, a <code>for</code> loop, or a function body.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function checkFuel(fuel) {&#10;  if (fuel &lt; 10) {&#10;    let status = &quot;CRITICAL&quot;;&#10;    console.log(status); // fine — inside the same block&#10;  }&#10;  console.log(status); // ReferenceError — status doesn&#39;t exist out here&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">checkFuel</span>(fuel) {
+  <span class="kw">if</span> (fuel &lt; <span class="num">10</span>) {
+    <span class="kw">let</span> status = <span class="str">"CRITICAL"</span>;
+    console.<span class="fn">log</span>(status); <span class="comment">// fine — inside the same block</span>
+  }
+  console.<span class="fn">log</span>(status); <span class="comment">// ReferenceError — status doesn't exist out here</span>
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>status</code> was declared inside the <code>if</code> block, so it only lives there — once execution leaves the closing <code>}</code>, it's gone. This is <strong>function scope</strong>'s counterpart: a variable declared anywhere directly inside a function (not nested in a further block) is visible throughout that <em>entire</em> function, but never outside it. Nesting only ever narrows visibility going in — inner code can always see outer variables, never the reverse.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why global variables cause bugs that are hard to trace</summary>
+          <p>A <strong>global variable</strong> — one declared outside every function — is visible to <em>everything</em> on the page. That sounds convenient until two functions both need to touch it:</p>
+          <p><strong>Before</strong> (fragile): <code>let fuel = 100;</code> declared globally. <code>burnFuel(20)</code> subtracts from it, <code>refuel(30)</code> adds to it, and a third function reads <code>fuel</code> to update the display. Call them in the wrong order, add a fourth function that also touches <code>fuel</code>, or run one twice by accident, and the display shows a number nobody can explain — because the bug isn't in any single function, it's in the shared state <em>between</em> them, and there's no way to tell from reading one function alone what else might have changed <code>fuel</code> first.</p>
+          <p><strong>After</strong> (traceable): each function takes fuel <em>in</em> as a parameter and hands the new value <em>out</em> with <code>return</code> — <code>fuel = burnFuel(fuel, 20);</code>. Now every function's behavior depends only on what you handed it, nothing is hidden, and you can test or reason about each one in complete isolation. This is why "avoid global variables" is one of the oldest rules in programming: it's not that globals are forbidden, it's that every one you add is a variable any function anywhere could be silently depending on.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>A First Look at Closures</h3>
+        <p>Here's something that feels like magic the first time you see it: a function can <strong>return another function</strong> — and that returned function keeps working with the variables from the scope it was originally defined in, even after the outer function has already finished running. That's called a <strong>closure</strong>: the inner function "closes over" its birth environment and remembers it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function makeCounter() {&#10;  let count = 0;&#10;  return function () {&#10;    count = count + 1;&#10;    return count;&#10;  };&#10;}&#10;&#10;const counterA = makeCounter();&#10;console.log(counterA()); // 1&#10;console.log(counterA()); // 2&#10;console.log(counterA()); // 3&#10;&#10;const counterB = makeCounter();&#10;console.log(counterB()); // 1 — a brand-new, independent count">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">makeCounter</span>() {
+  <span class="kw">let</span> count = <span class="num">0</span>;
+  <span class="kw">return</span> <span class="kw">function</span> () {
+    count = count + <span class="num">1</span>;
+    <span class="kw">return</span> count;
+  };
+}
+
+<span class="kw">const</span> counterA = <span class="fn">makeCounter</span>();
+console.<span class="fn">log</span>(<span class="fn">counterA</span>()); <span class="comment">// 1</span>
+console.<span class="fn">log</span>(<span class="fn">counterA</span>()); <span class="comment">// 2</span>
+console.<span class="fn">log</span>(<span class="fn">counterA</span>()); <span class="comment">// 3</span>
+
+<span class="kw">const</span> counterB = <span class="fn">makeCounter</span>();
+console.<span class="fn">log</span>(<span class="fn">counterB</span>()); <span class="comment">// 1 — a brand-new, independent count</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>makeCounter()</code> runs, creates a local variable <code>count</code> set to <code>0</code>, and returns a small function that can read and update it — then <code>makeCounter</code> itself finishes. Normally <code>count</code> would be destroyed right there, since it was function-scoped to <code>makeCounter</code>. But the returned function still references it, so JavaScript keeps it alive. Every call to <code>counterA()</code> increments <em>that specific</em> <code>count</code>, which is why the log reads <code>1, 2, 3</code>. Calling <code>makeCounter()</code> again for <code>counterB</code> runs the whole function fresh, creating a <em>brand-new</em> <code>count</code> starting at <code>0</code> again — <code>counterA</code> and <code>counterB</code> each remember their own private variable, completely unaware of each other. That's the whole idea: a closure gives a function its own private, persistent memory.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A fuel-calculation toolkit is loaded below: a function with a default parameter, one that uses early returns, and one that builds a closure. Run it as-is, then start editing — try new arguments, add a third tank, or break something on purpose and see what the console tells you.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: default parameter overrides</button>
+        <button class="console-btn" id="btnExample2">try: two independent closures</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above (or a real HTML file with a <code>&lt;script&gt;</code> tag), build your own small function toolkit.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Write a function that takes at least two parameters, where the second one has a <strong>default value</strong>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Write a status-report function with at least three <strong>early returns</strong> (guard clauses) instead of nested <code>if</code>/<code>else</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Write a "maker" function (like <code>makeFuelTank</code>) that declares a variable and returns an inner function forming a <strong>closure</strong> over it
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Call the returned closure function at least twice and <code>console.log</code> the results to prove it remembers state between calls
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Create a <em>second</em>, independent instance from your maker function and show its state is separate from the first
+          <span class="sub">Two calls to the same maker function should never affect each other's variables</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Use one of your functions' return values to update the ship display's <code>textContent</code>
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your two "independent" counters seem to be sharing one value, check that you're calling the maker function twice (<code>makeFuelTank()</code> and <code>makeFuelTank()</code> again) rather than calling it once and reusing the same returned function for both. Each call to the maker creates a fresh variable — reusing the same returned function is exactly like clicking the same counter twice.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Give your maker function <em>two</em> returned abilities instead of one — for example, have <code>makeFuelTank(startingFuel)</code> return an object like <code>{ burn: function(amount) {...}, refuel: function(amount) {...} }</code>, where both inner functions share and update the same private <code>fuel</code> variable through the same closure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>function name() {}</code><span>Function declaration — named, usable anywhere in its scope</span></div>
+        <div class="cheat-card"><code>const name = () =&gt; {}</code><span>Arrow function — short, idiomatic for callbacks</span></div>
+        <div class="cheat-card"><code>param = value</code><span>Default parameter, used when the argument is omitted</span></div>
+        <div class="cheat-card"><code>return</code><span>Sends a value back and exits the function immediately</span></div>
+        <div class="cheat-card"><code>if (x) return;</code><span>Early return — a guard clause that exits before nested logic builds up</span></div>
+        <div class="cheat-card"><code>let / const</code><span>Block-scoped — exist only inside their nearest <code>{ }</code></span></div>
+        <div class="cheat-card"><code>function scope</code><span>A variable is visible everywhere inside the function it's declared in</span></div>
+        <div class="cheat-card"><code>closure</code><span>An inner function remembers variables from where it was defined</span></div>
+        <div class="cheat-card"><code>avoid globals</code><span>Pass data in as parameters instead of sharing variables everywhere</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting <code>return</code> entirely and being confused when the function's result is <code>undefined</code>.</li>
+          <li><strong>Shadowing:</strong> declaring a variable inside a block with the same name as one outside it — the inner one silently wins inside that block, and edits to it never touch the outer variable.</li>
+          <li>Relying on a global variable instead of passing values as parameters — it works until a second function touches the same variable and the bugs become nearly impossible to trace.</li>
+          <li>Assuming a default parameter only skips truly "empty" arguments — it actually only triggers when the argument is <code>undefined</code>, not for other falsy values like <code>0</code> or <code>""</code>.</li>
+          <li>Arrow functions handle <code>this</code> differently from regular functions (they don't have their own) — it won't bite you yet, but keep the name in mind for when objects and event handlers make it matter.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — you call <code>makeCounter()</code> twice, storing the results as <code>counterA</code> and <code>counterB</code>. After calling <code>counterA()</code> three times, what does <code>counterB()</code> return on its <em>first</em> call?</p>
+        <button class="quiz-btn" data-correct="false">4</button>
+        <button class="quiz-btn" data-correct="false">3</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — each call to makeCounter() builds a brand-new closure with its own count variable, so counterB starts fresh at 0 and returns 1.">1</button>
+        <button class="quiz-btn" data-correct="false">undefined</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// FUEL TOOLKIT — default param, early returns, and a closure
+
+function calculateFuelNeeded(distance, efficiency = 12) {
+  return distance * efficiency;
+}
+
+function fuelStatusReport(fuel) {
+  if (fuel < 0) return "ERROR: negative fuel reading";
+  if (fuel < 10) return "CRITICAL: refuel immediately";
+  if (fuel < 40) return "LOW: plan a refuel stop";
+  return "NOMINAL";
+}
+
+function makeFuelTank(startingFuel) {
+  let fuel = startingFuel;
+  return function (amountBurned) {
+    fuel = fuel - amountBurned;
+    return fuel;
+  };
+}
+
+const display = document.querySelector("#shipDisplay");
+
+const needed = calculateFuelNeeded(6);
+console.log("Fuel needed for a 6-light-year hop:", needed);
+
+const tank = makeFuelTank(100);
+console.log("Tank after burning 30:", tank(30));
+console.log("Tank after burning 45 more:", tank(45));
+
+display.textContent = fuelStatusReport(tank(10));`;
+
+  const EXAMPLE_DEFAULTS = `function calculateFuelNeeded(distance, efficiency = 12) {
+  return distance * efficiency;
+}
+
+console.log("Standard engine (default 12):", calculateFuelNeeded(5));
+console.log("Ion engine override (6):", calculateFuelNeeded(5, 6));
+console.log("Overloaded engine override (20):", calculateFuelNeeded(5, 20));`;
+
+  const EXAMPLE_CLOSURES = `function makeCounter() {
+  let count = 0;
+  return function () {
+    count = count + 1;
+    return count;
+  };
+}
+
+const counterA = makeCounter();
+const counterB = makeCounter();
+
+console.log("counterA:", counterA());
+console.log("counterA:", counterA());
+console.log("counterA:", counterA());
+console.log("counterB:", counterB());`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_DEFAULTS },
+        { btnId: "btnExample2", code: EXAMPLE_CLOSURES },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

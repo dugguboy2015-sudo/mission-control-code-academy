@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.11: Capstone — Interactive Game or Quiz App — Everything, Combined | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Capstone dependency-chips strip (bespoke — not in academy.css) ---------- */
+  .capstone-strip {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .capstone-chip {
+    font-family: var(--font-code);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+  }
+  .capstone-chip.c-logic { border-color: rgba(78,225,255,0.4);  color: var(--accent-cyan); }
+  .capstone-chip.c-data  { border-color: rgba(255,110,199,0.4); color: var(--accent-pink); }
+  .capstone-chip.c-dom   { border-color: rgba(255,157,77,0.4);  color: var(--accent-orange); }
+  .capstone-chip.c-debug { border-color: rgba(176,131,255,0.4); color: var(--accent-purple); }
+
+  /* ---------- Field Manual: plain reference lists (not the checklist widget) ---------- */
+  .plan-list, .recap-list { margin: 10px 0 0; padding-left: 20px; color: var(--text-secondary); font-size: 14.5px; }
+  .plan-list li, .recap-list li { margin-bottom: 8px; }
+  .recap-list strong { color: var(--text-primary); }
+  .launch-steps-list { margin: 10px 0 0; padding-left: 22px; color: var(--text-secondary); font-size: 14.5px; }
+  .launch-steps-list li { margin-bottom: 10px; }
+  .starting-points-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 14px; }
+  .starting-point-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 16px 18px; }
+  .starting-point-card h4 { margin: 0 0 8px; color: var(--accent); font-size: 14.5px; }
+  .starting-point-card p { margin: 0 0 10px; color: var(--text-secondary); font-size: 13.5px; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m11">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2 CAPSTONE</div>
+    <h1>MISSION 2.11: CAPSTONE — INTERACTIVE GAME OR QUIZ APP</h1>
+    <div class="subtitle">Everything, Combined</div>
+    <p class="briefing-line">Ten missions taught you ten separate skills: state, decisions, repetition, reusable logic, data structures, structured records, reading the DOM, reacting to events, hunting down bugs, and reasoning about your own code like an engineer. None of that was the goal by itself. The goal was always this moment — building something that a real person can sit down at, interact with, and watch <em>react, decide, and remember</em> entirely on its own. Not a template you filled in. A small program, built by you, that behaves like software because it <em>is</em> software.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~100 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c-logic">Mission 2.1-2.4 · Core Logic</span>
+      <span class="capstone-chip c-data">Mission 2.5-2.6 · Data</span>
+      <span class="capstone-chip c-dom">Mission 2.7-2.8 · DOM & Events</span>
+      <span class="capstone-chip c-debug">Mission 2.9-2.10 · Debugging & Algorithms</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every mission so far handed you one piece in isolation: variables holding a single value, a loop running against a fixed array, a function you called by hand from the console. Real software doesn't work in isolated pieces — it works because all of those pieces are wired together into one continuous loop that keeps running as long as someone is using it. That loop is exactly what turns a page from something a visitor <em>reads</em> into something a visitor <em>plays</em>.</p>
+      <p>A game or a quiz is the cleanest possible proof that this loop actually works, because there's no hiding a broken piece — if your state and your display ever disagree, the player notices immediately. Get a number wrong and the feedback has to say so, correctly, every single time. Win, and the game has to know it won and say so. Click "play again," and it has to forget everything it knew and start clean. None of that happens by accident. It happens because you tracked real state, wrote real conditions, updated the real DOM, and wired real event listeners — the same four ingredients from Sector 2, now working together instead of alone.</p>
+      <p>This capstone is intentionally open-ended: build a <strong>number-guessing game</strong>, a <strong>quiz app</strong>, a <strong>memory/matching game</strong>, or something entirely your own idea — the Command Console below hands you a working number-guessing game as a starting skeleton, but you are not required to keep it. Pick whichever shape excites you more; the underlying skills are identical either way.</p>
+      <p>And as with every capstone in this academy, "done" doesn't mean "runs on my laptop." This is <strong>Ladder Level L1</strong> again, from Mission 1.9: <em>deployed to a public URL, and it works on mobile.</em> A game nobody else can play isn't a finished game — it's a demo only you have ever seen.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <defs>
+            <marker id="gamelooparrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+          <rect x="40" y="30" width="180" height="70" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="130" y="58" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">1. PLAYER INPUT</text>
+          <text x="130" y="78" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">a guess, a click, an answer</text>
+
+          <rect x="420" y="30" width="180" height="70" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="510" y="58" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">2. UPDATE STATE</text>
+          <text x="510" y="78" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">score, attempts, target, index</text>
+
+          <rect x="230" y="170" width="180" height="70" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="320" y="198" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">3. UPDATE DISPLAY</text>
+          <text x="320" y="218" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">DOM reflects the new state</text>
+
+          <path d="M220,65 L420,65" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#gamelooparrow)"/>
+          <path d="M480,100 L360,170" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#gamelooparrow)"/>
+          <path d="M260,170 L150,100" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#gamelooparrow)"/>
+        </svg>
+        <div class="diagram-caption">The same Input → Process → Output loop from Mission 0.1 — except now it closes itself. The player's next move depends on what the display just showed them, which depended on the state your code just changed. That closed loop, running over and over, is what "interactive" actually means.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">Four stops before the Command Console: plan your state honestly, see two ready-made shapes to build from, ship it the same way you did back in Mission 1.9, and consider one real extension once the core works.</p>
+
+      <div class="subsection">
+        <h3>Planning Your Game/Quiz</h3>
+        <p>Do not start typing yet. The single most common reason a game "feels buggy" is that nobody decided up front exactly what the program needs to remember. Answer these on paper first:</p>
+        <ul class="plan-list">
+          <li><strong>What state do you need?</strong> List every value your program has to remember between one player action and the next — a target number, a score, which question you're on, how many guesses are left, whether the game is over. If you can't list it, you can't track it.</li>
+          <li><strong>What's the win/lose or completion condition?</strong> Exactly what has to be true for the game to end — a correct guess, running out of attempts, reaching the last question? Write the condition as a real comparison, like <code>guessesLeft === 0</code>, not a vague feeling.</li>
+          <li><strong>What changes on screen, and when?</strong> For each piece of state, name the DOM element that has to update when it changes. State that nothing on screen ever reflects isn't state a player can see — it's just a variable you're keeping to yourself.</li>
+          <li><strong>What resets on "play again"?</strong> List every value from your first answer again — all of it has to go back to its starting point, not just the parts that are visible.</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>Two Starting Points</h3>
+        <p>Both of these are legitimate capstones. Pick whichever one you'd rather spend the next hour building — or use them as a launchpad for a genuinely different idea (a memory-matching game, a reaction-timer, a hangman). What matters is the state, the logic, the DOM, and the events underneath, not which specific game sits on top.</p>
+        <div class="starting-points-grid">
+          <div class="starting-point-card">
+            <h4>Shape A — Number-Guessing Game</h4>
+            <p>A secret target number, an input, a guess button, an attempt counter, and higher/lower feedback until the player finds it. This is exactly what the Command Console starts you with below.</p>
+            <div class="code-block">
+              <div class="code-tab"><span>JAVASCRIPT — CORE STATE</span><button class="copy-btn" data-copy="let gameState = {&#10;  target: 14,&#10;  attempts: 0,&#10;  isOver: false&#10;};">COPY</button></div>
+              <pre><code><span class="kw">let</span> gameState = {
+  target: <span class="num">14</span>,
+  attempts: <span class="num">0</span>,
+  isOver: <span class="kw">false</span>
+};</code></pre>
+            </div>
+          </div>
+          <div class="starting-point-card">
+            <h4>Shape B — Quiz App</h4>
+            <p>An array of question objects, a running score, a "current question" index, and a results screen once you run out of questions. Great fit for arrays of objects (2.5/2.6) and event delegation (2.8).</p>
+            <div class="code-block">
+              <div class="code-tab"><span>JAVASCRIPT — CORE STATE</span><button class="copy-btn" data-copy="let quizState = {&#10;  questions: [ /* { q, choices, correct } */ ],&#10;  index: 0,&#10;  score: 0&#10;};">COPY</button></div>
+              <pre><code><span class="kw">let</span> quizState = {
+  questions: [ <span class="comment">/* { q, choices, correct } */</span> ],
+  index: <span class="num">0</span>,
+  score: <span class="num">0</span>
+};</code></pre>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:14px;">The Command Console below has example buttons that swap in a runnable sketch of each shape — use them to see the difference in practice before committing to one.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Quick Launch: Going Live with GitHub Pages</h3>
+        <p>You've done this before — this is the identical walkthrough from Mission 1.9. If it stuck, skim it and move on. If you haven't reached that mission yet, here it is again in full: <strong>Mission 4.5</strong> covers deployment properly later, but this gets you a real public URL in about five minutes with nothing but a free GitHub account and a browser.</p>
+        <ol class="launch-steps-list">
+          <li><strong>Create a free GitHub account.</strong> If you don't already have one, go to <code>github.com/join</code> and sign up — it's free for personal use.</li>
+          <li><strong>Create a new repository.</strong> Click the <strong>+</strong> in the top corner → <strong>New repository</strong>. Give it any name (like <code>my-guessing-game</code>), leave it <strong>Public</strong>, and click <strong>Create repository</strong>.</li>
+          <li><strong>Upload your files.</strong> On the new repository's page, click <strong>uploading an existing file</strong> and drag in your HTML file — make sure it's named exactly <code>index.html</code>, since that's the filename GitHub Pages looks for by default. Commit the upload.
+            <div class="code-block" style="margin-top:10px;">
+              <div class="code-tab"><span>BASH — ALTERNATIVE IF YOU'VE FINISHED SECTOR 3'S GIT MISSION</span><button class="copy-btn" data-copy="git init&#10;git remote add origin https://github.com/your-username/your-repo.git&#10;git add .&#10;git commit -m &quot;My game&quot;&#10;git branch -M main&#10;git push -u origin main">COPY</button></div>
+              <pre><code><span class="kw">git</span> init
+<span class="kw">git</span> remote add origin https://github.com/your-username/your-repo.git
+<span class="kw">git</span> add .
+<span class="kw">git</span> commit -m <span class="str">"My game"</span>
+<span class="kw">git</span> branch -M main
+<span class="kw">git</span> push -u origin main</code></pre>
+            </div>
+          </li>
+          <li><strong>Turn on GitHub Pages.</strong> In your repository, click the <strong>Settings</strong> tab, then <strong>Pages</strong> in the left sidebar. Under "Build and deployment," set <strong>Source</strong> to <em>Deploy from a branch</em>, set <strong>Branch</strong> to <code>main</code> and the folder to <code>/ (root)</code>, then click <strong>Save</strong>.</li>
+          <li><strong>Your game is now live.</strong> Give it a minute, then refresh that same Pages settings screen — GitHub will show your public URL near the top, usually shaped like <code>https://your-username.github.io/your-repo/</code>. Open it. Play it. Then open it on your phone and play it there too — that's the actual mobile check the checklist asks for.</li>
+        </ol>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Same as last time: no build step, no compiling, no bundling. GitHub is serving the exact bytes sitting in your chosen branch and folder at a public address. That's why the filename still matters — no <code>index.html</code> at the root means nothing for GitHub to serve, and the URL 404s.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: My game uses two files (HTML + a separate .js file) — does that still work?</summary>
+          <p>Yes. Upload both files into the same repository, and make sure your HTML's <code>&lt;script src="script.js"&gt;&lt;/script&gt;</code> points at whatever you actually named the second file, with matching capitalization — GitHub Pages serves static files exactly as uploaded, and a mismatched filename or case is the single most common reason a deployed game "loads" but does nothing.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Leveling It Up</h3>
+        <p>Once your core loop genuinely works — state changes, display updates, win/lose fires correctly, play-again resets cleanly — here are two real extensions worth the extra time, and both are exactly what the bonus objective below is asking for:</p>
+        <ul class="plan-list">
+          <li><strong>A persistent high score with <code>localStorage</code>.</strong> <code>localStorage.setItem("highScore", attempts)</code> writes a value that survives a page reload; <code>localStorage.getItem("highScore")</code> reads it back. You'll cover this properly in Mission 4.4 — this is a legitimate early preview.</li>
+          <li><strong>A difficulty setting.</strong> A simple dropdown or set of buttons that changes a number in your state — say, the guessing range, or how many questions get asked — before the game starts. It's a small addition that makes the whole thing feel like a real, configurable app rather than a fixed demo.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This starts you off with a genuinely working number-guessing game — hit RUN and play it immediately. Your job is to build it out further (attempts limits, play again, your own theme), swap it for the quiz-app example, or replace it entirely with your own idea. Everything you build here reaches into <code>#shipDisplay</code> on the right exactly like it would reach into a real page.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>GAME DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (number-guess)</button>
+        <button class="console-btn" id="btnExample1">try: play-again with a full reset</button>
+        <button class="console-btn" id="btnExample2">try: quiz-app starting point</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build your real game or quiz in the Command Console above (or a real code editor, if you have one), then ship it. Every task below must be true of your finished, <em>deployed</em> app — not just something that ran once in the sandbox.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Real game/quiz state tracked in variables or a single state object
+          <span class="sub">Not loose values scattered across the file — one clear place your code reads and updates</span></label>
+        </li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">At least one loop or array method (<code>for</code>, <code>forEach</code>, <code>map</code>, <code>filter</code>) used meaningfully — not just present for show</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">DOM elements created and inserted with <code>document.createElement</code> / <code>appendChild</code>
+          <span class="sub">Dynamically building the page, not only swapping the text of elements that already existed</span></label>
+        </li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">At least one delegated event listener, or listeners that are cleanly attached without duplicating on every re-render</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">A real win/lose or completion condition, with clear feedback text a player would actually understand</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">A "play again" / reset that puts <strong>every</strong> piece of state back to its starting value — not just what's visibly on screen</label></li>
+        <li><input type="checkbox" id="ch7"><label for="ch7">At least one handled edge case — an empty input, an invalid guess, or clicking an answer after the quiz already ended</label></li>
+        <li><input type="checkbox" id="ch8"><label for="ch8">Your own stamp on it — different questions, a different theme, a different twist — not the starter code left unchanged</label></li>
+        <li><input type="checkbox" id="ch9"><label for="ch9">Deployed live via GitHub Pages, with the public URL confirmed working on your phone
+          <span class="sub">Ladder Level L1: deployed to a public URL, works on mobile</span></label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your game "mostly" works but occasionally shows a stale score, a leftover message, or a double-counted click, the bug is almost never in your win/lose logic — it's almost always that some piece of state didn't get reset, or some event listener got attached a second time on top of the first. Before chasing the symptom, go back to your Planning list and check, one by one, whether every value on it actually gets reset on "play again."</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add persistent high-score tracking with <code>localStorage</code> (best score, or fewest attempts, survives a page reload), <strong>or</strong> add a difficulty setting the player picks before the game starts. Either one turns this from "a game that works" into "a game that feels finished."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>let state = { ... }</code><span>One place to track everything the app remembers (2.1)</span></div>
+        <div class="cheat-card"><code>if / else / ternary</code><span>Branch on the current state (2.2)</span></div>
+        <div class="cheat-card"><code>for / while / for...of</code><span>Repeat over guesses, questions, or attempts (2.3)</span></div>
+        <div class="cheat-card"><code>function / () =&gt; {}</code><span>Reusable logic like <code>checkGuess()</code> or <code>renderQuestion()</code> (2.4)</span></div>
+        <div class="cheat-card"><code>.map() / .filter() / .forEach()</code><span>Transform or render a list of data (2.5)</span></div>
+        <div class="cheat-card"><code>{ q, choices, correct }</code><span>Structured records — one object per question (2.6)</span></div>
+        <div class="cheat-card"><code>createElement / appendChild</code><span>Build new DOM nodes at runtime (2.7)</span></div>
+        <div class="cheat-card"><code>addEventListener + delegation</code><span>One listener handling many dynamic children (2.8)</span></div>
+        <div class="cheat-card"><code>console.log() + breakpoints</code><span>Find out what your state actually is, not what you assume (2.9)</span></div>
+        <div class="cheat-card"><code>Math.random(), comparisons</code><span>The small building blocks behind real game logic (2.10)</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>State and display quietly falling out of sync — your variable says the score is 3, but the screen still shows 2, because something updated one and forgot the other.</li>
+          <li>A "play again" that clears the screen but forgets to reset a variable buried further up the file — the game looks fresh, but the old target number or old score is still lurking underneath.</li>
+          <li>Re-attaching a fresh <code>addEventListener</code> every time you re-render a list, instead of once — clicks start firing your handler two, three, four times without you touching anything.</li>
+          <li>Never testing an empty or invalid input — the game works perfectly for every "normal" guess and crashes or misbehaves the instant someone submits nothing.</li>
+          <li>Calling it done after one successful play-through instead of trying to break it — win once, lose once, submit garbage once, click fast twice — before trusting it.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — your quiz app's score jumps by 2 instead of 1 on some clicks, and it gets worse the longer you play. What's the most likely cause?</p>
+        <button class="quiz-btn" data-correct="false">JavaScript occasionally counts clicks incorrectly on its own</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — each re-render attached a brand-new listener on top of the old ones instead of replacing them, so one real click fires multiple handlers.">A new click listener is being attached every time the question re-renders, stacking on top of the old ones</button>
+        <button class="quiz-btn" data-correct="false"><code>.forEach()</code> is unreliable and should be avoided</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// NUMBER-GUESSING GAME — a working starter. RUN it, play it, then build it out.
+// Pick your own game or quiz idea, or keep building this one — it's yours now.
+
+const target = 14;   // TODO: swap this for Math.floor(Math.random() * 20) + 1
+let attempts = 0;
+
+const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const prompt = document.createElement("p");
+prompt.textContent = "I'm thinking of a number between 1 and 20. Guess it!";
+display.appendChild(prompt);
+
+const row = document.createElement("div");
+const input = document.createElement("input");
+input.type = "number";
+input.placeholder = "your guess";
+row.appendChild(input);
+
+const guessBtn = document.createElement("button");
+guessBtn.textContent = "GUESS";
+row.appendChild(guessBtn);
+display.appendChild(row);
+
+const feedback = document.createElement("p");
+display.appendChild(feedback);
+
+const attemptsLine = document.createElement("p");
+attemptsLine.style.fontSize = "12px";
+attemptsLine.style.opacity = "0.7";
+attemptsLine.textContent = "Attempts: 0";
+display.appendChild(attemptsLine);
+
+guessBtn.addEventListener("click", function () {
+  const guess = Number(input.value);
+
+  if (input.value.trim() === "" || Number.isNaN(guess)) {
+    feedback.textContent = "Type a number first, cadet.";
+    return;
+  }
+
+  attempts++;
+  attemptsLine.textContent = "Attempts: " + attempts;
+
+  if (guess === target) {
+    feedback.textContent = "\\u{1F3AF} CORRECT! The number was " + target + ".";
+    guessBtn.disabled = true;
+    input.disabled = true;
+  } else if (guess < target) {
+    feedback.textContent = "\\u{1F4C8} Too LOW \\u2014 try higher.";
+  } else {
+    feedback.textContent = "\\u{1F4C9} Too HIGH \\u2014 try lower.";
+  }
+});
+
+console.log("Game loaded. Guess a number between 1 and 20.");`;
+
+  const EXAMPLE_PLAYAGAIN = `// Extends the number-guess game with a real "PLAY AGAIN" — every piece of
+// state resets, and old listeners disappear along with the elements that had them.
+
+const display = document.querySelector("#shipDisplay");
+
+function newGame() {
+  const target = Math.floor(Math.random() * 20) + 1;
+  let attempts = 0;
+  let isOver = false;
+
+  display.innerHTML = "";
+
+  const prompt = document.createElement("p");
+  prompt.textContent = "New number, 1-20. Guess it!";
+  display.appendChild(prompt);
+
+  const input = document.createElement("input");
+  input.type = "number";
+  display.appendChild(input);
+
+  const guessBtn = document.createElement("button");
+  guessBtn.textContent = "GUESS";
+  display.appendChild(guessBtn);
+
+  const feedback = document.createElement("p");
+  display.appendChild(feedback);
+
+  guessBtn.addEventListener("click", function () {
+    if (isOver) return;
+    const guess = Number(input.value);
+    if (input.value.trim() === "" || Number.isNaN(guess)) {
+      feedback.textContent = "Type a number first.";
+      return;
+    }
+    attempts++;
+    if (guess === target) {
+      feedback.textContent = "\\u{1F3AF} Correct in " + attempts + " tries!";
+      isOver = true;
+      const againBtn = document.createElement("button");
+      againBtn.textContent = "PLAY AGAIN";
+      display.appendChild(againBtn);
+      againBtn.addEventListener("click", newGame);
+    } else if (guess < target) {
+      feedback.textContent = "Too LOW.";
+    } else {
+      feedback.textContent = "Too HIGH.";
+    }
+  });
+}
+
+newGame();
+console.log("Play, win, then hit PLAY AGAIN \\u2014 watch every value start over clean.");`;
+
+  const EXAMPLE_QUIZ = `// A minimal QUIZ APP starting point — swap this in if quizzes are more your style.
+// Notice: ONE delegated listener handles every answer button, current and future.
+
+const quizState = {
+  questions: [
+    { q: "Which keyword declares a variable that CAN be reassigned?", choices: ["const", "let", "final"], correct: 1 },
+    { q: "What does Array.prototype.map() return?", choices: ["A new array", "A single number", "Nothing"], correct: 0 },
+  ],
+  index: 0,
+  score: 0,
+};
+
+const display = document.querySelector("#shipDisplay");
+
+function renderQuestion() {
+  display.innerHTML = "";
+
+  if (quizState.index >= quizState.questions.length) {
+    const result = document.createElement("h3");
+    result.textContent = "Score: " + quizState.score + " / " + quizState.questions.length;
+    display.appendChild(result);
+    return;
+  }
+
+  const current = quizState.questions[quizState.index];
+
+  const qEl = document.createElement("p");
+  qEl.textContent = current.q;
+  display.appendChild(qEl);
+
+  const list = document.createElement("div");
+  current.choices.forEach(function (choice, i) {
+    const btn = document.createElement("button");
+    btn.textContent = choice;
+    btn.dataset.choiceIndex = i;
+    list.appendChild(btn);
+  });
+  display.appendChild(list);
+
+  list.addEventListener("click", function (event) {
+    if (event.target.tagName !== "BUTTON") return;
+    const picked = Number(event.target.dataset.choiceIndex);
+    if (picked === current.correct) quizState.score++;
+    quizState.index++;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+console.log("Quiz loaded \\u2014 click an answer to advance.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_PLAYAGAIN },
+        { btnId: "btnExample2", code: EXAMPLE_QUIZ },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

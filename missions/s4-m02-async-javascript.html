@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 4.2: Async JavaScript — Promises & async/await | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Sync vs. Async Timeline widget ---------- */
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  @media (max-width: 760px) {
+    .timeline-grid { grid-template-columns: 1fr; }
+  }
+  .timeline-col {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .timeline-run-btn {
+    background: var(--accent);
+    color: var(--bg-void);
+    border: none;
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .timeline-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .timeline-log {
+    min-height: 210px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 14px;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  .timeline-placeholder { color: var(--text-muted); font-style: italic; }
+  .timeline-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+    animation: timelineIn 0.25s ease;
+  }
+  @keyframes timelineIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .timeline-time {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    min-width: 58px;
+  }
+  .timeline-text { color: var(--text-secondary); }
+  .timeline-row.blocked .timeline-text { color: var(--accent-orange); }
+  .timeline-row.blocked-wait .timeline-text { color: var(--text-muted); font-style: italic; }
+  .timeline-row.immediate .timeline-text { color: var(--accent-cyan); }
+  .timeline-row.inflight .timeline-text { color: var(--accent-pink); }
+  .timeline-row.arrived .timeline-text { color: var(--accent-green); font-weight: 600; }
+  .timeline-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+  .timeline-badge.blocked { background: rgba(255,157,77,0.18); color: var(--accent-orange); }
+  .timeline-badge.arrived { background: rgba(77,255,180,0.18); color: var(--accent-green); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s4-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 4</div>
+    <h1>MISSION 4.2: ASYNC JAVASCRIPT</h1>
+    <div class="subtitle">Promises & async/await</div>
+    <p class="briefing-line">Some things a computer does are instant — add two numbers, check a condition, update a variable. Other things are <em>slow</em>: fetching data from a server on the other side of the planet, reading a file, waiting for a timer. JavaScript runs on a single thread, meaning it can only do one thing at a time — but it has a trick for the slow stuff: kick it off, keep working on everything else, and come back to it the moment it's ready. That trick is what this mission is about.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture a ship's comms officer sending a message to a distant relay station. Radio waves aren't instant — there's a real delay before a reply comes back. A bad comms officer would key the mic, then stand frozen at the console staring at the speaker, doing absolutely nothing else, until a reply crackles through. A good comms officer sends the message, notes that a reply is <em>expected</em>, and goes right back to monitoring life support, logging the stardate, and checking on the rest of the crew — then reacts the instant the reply actually arrives. Same message sent, same reply eventually received, but only one of those officers actually gets anything else done in the meantime.</p>
+      <p>JavaScript's engine is that comms officer, and it only has one set of hands — there is no second thread quietly working in the background. When your code does something slow (a network request, a timer, reading a large file), the <strong>event loop</strong> is the mechanism that lets the engine start that slow thing, immediately move on to the next line of code, and only come back to handle the result once it's actually ready. Nothing happens in true parallel — the engine is never doing two things at the exact same instant — but by not <em>waiting around</em> for slow things, it stays free to do other work while they're in flight.</p>
+      <p>Historically, JavaScript handled "come back to this later" with <strong>callbacks</strong>: you'd hand a slow function another function to run once it finished. That works, but nest several slow steps that each depend on the last and you get "callback hell" — deeply indented, hard-to-follow pyramids of nested functions. <strong>Promises</strong> were introduced to represent "a value that isn't ready yet, but will be" as an actual object you can work with, and <strong>async/await</strong> — built on top of Promises — lets you write that same waiting-for-things code so it <em>reads</em> top-to-bottom like ordinary, synchronous code, even though it isn't.</p>
+      <p>The diagram below lines up a synchronous sequence and an asynchronous one on the same clock. Watch what happens to the middle of the timeline.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <defs>
+            <pattern id="waitHatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="#131a2e"/>
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#3a4a75" stroke-width="2"/>
+            </pattern>
+            <marker id="tlArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#6b7699"/>
+            </marker>
+          </defs>
+
+          <!-- axis -->
+          <line x1="40" y1="270" x2="600" y2="270" stroke="#2e3d63" stroke-width="1.5"/>
+          <text x="600" y="290" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="end">TIME →</text>
+
+          <!-- SYNC row -->
+          <text x="40" y="40" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="12" font-weight="bold">SYNCHRONOUS — blocks until each step finishes</text>
+          <rect x="40" y="52" width="60" height="34" rx="5" fill="#1b2540" stroke="#ff9d4d" stroke-width="1.5"/>
+          <text x="70" y="73" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">STEP 1</text>
+          <rect x="100" y="52" width="140" height="34" fill="url(#waitHatch)" stroke="#3a4a75" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="170" y="100" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">waiting… (nothing else runs)</text>
+          <rect x="240" y="52" width="60" height="34" rx="5" fill="#1b2540" stroke="#ff9d4d" stroke-width="1.5"/>
+          <text x="270" y="73" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">STEP 2</text>
+          <rect x="300" y="52" width="140" height="34" fill="url(#waitHatch)" stroke="#3a4a75" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="440" y="52" width="60" height="34" rx="5" fill="#1b2540" stroke="#ff9d4d" stroke-width="1.5"/>
+          <text x="470" y="73" fill="#ff9d4d" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">STEP 3</text>
+          <rect x="500" y="52" width="80" height="34" rx="5" fill="#132b22" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="540" y="73" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">RESULT</text>
+          <line x1="540" y1="90" x2="540" y2="270" stroke="#4dffb4" stroke-width="1" stroke-dasharray="2 3"/>
+
+          <!-- ASYNC row -->
+          <text x="40" y="150" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" font-weight="bold">ASYNCHRONOUS — kicks off, keeps going, comes back later</text>
+          <rect x="40" y="162" width="60" height="34" rx="5" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="70" y="183" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">KICK OFF</text>
+          <rect x="100" y="162" width="70" height="34" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="135" y="183" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">STEP 2</text>
+          <rect x="170" y="162" width="70" height="34" rx="5" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="205" y="183" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">STEP 3</text>
+          <rect x="40" y="210" width="460" height="16" rx="4" fill="none" stroke="#ff6ec7" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="270" y="222" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">…relay request still in flight in the background…</text>
+          <rect x="500" y="162" width="80" height="64" rx="5" fill="#132b22" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="540" y="188" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">RESULT</text>
+          <text x="540" y="202" fill="#4dffb4" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">arrives later</text>
+          <line x1="500" y1="226" x2="500" y2="270" stroke="#4ee1ff" stroke-width="1" stroke-dasharray="2 3"/>
+
+          <path d="M240,240 L240,270" fill="none" stroke="#2e3d63" stroke-width="1" marker-end="url(#tlArrow)"/>
+        </svg>
+        <div class="diagram-caption">Same three jobs, same eventual result — but the synchronous run (top) sits frozen through every wait, while the asynchronous run (bottom) does Steps 2 and 3 <em>during</em> the wait instead of after it, so the result — while still arriving on its own schedule — costs far less idle time along the way.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The Event Loop, Intuitively</h3>
+        <p>JavaScript runs your code one line at a time, on one thread — it is never doing two of <em>your</em> instructions simultaneously. But the browser (or Node) around it can hand off slow work — a timer, a network request, reading a file — to be handled elsewhere, and notify JavaScript the moment that work is done. The <strong>event loop</strong> is the process that keeps checking: "is the main thread free right now, and is there a finished bit of async work waiting to be handled?" If both are true, it runs that follow-up code next. This is why async code never truly interrupts synchronous code — it only ever runs once the current stack of synchronous code has completely finished.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="console.log(&quot;1. First line&quot;);&#10;&#10;setTimeout(function () {&#10;  console.log(&quot;3. This runs later, after a 0ms delay&quot;);&#10;}, 0);&#10;&#10;console.log(&quot;2. Second line&quot;);">COPY</button></div>
+          <pre><code>console.<span class="fn">log</span>(<span class="str">"1. First line"</span>);
+
+<span class="fn">setTimeout</span>(<span class="kw">function</span> () {
+  console.<span class="fn">log</span>(<span class="str">"3. This runs later, after a 0ms delay"</span>);
+}, <span class="num">0</span>);
+
+console.<span class="fn">log</span>(<span class="str">"2. Second line"</span>);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Even with a <code>0</code> millisecond delay, the output is <code>1</code>, <code>2</code>, <code>3</code> — never <code>1</code>, <code>3</code>, <code>2</code>. <code>setTimeout</code>'s callback can only run once the main thread is completely free, and the main thread doesn't become free until every line of synchronous code below it (here, <code>"2. Second line"</code>) has already run. This is the single most important intuition in this whole mission: async code always waits its turn behind whatever is currently running synchronously.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Callbacks (and Why They Fall Apart)</h3>
+        <p>The original way to say "run this once that slow thing finishes" was to pass in a function — a <strong>callback</strong>. It still works today and you'll still see it. The problem shows up once you need several slow steps in sequence, each depending on the previous one's result.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="getCrewList(function (crew) {&#10;  getShipStatus(crew, function (status) {&#10;    getFuelLevel(status, function (fuel) {&#10;      console.log(&quot;Finally have everything:&quot;, fuel);&#10;      // one more nested step and this becomes unreadable&#10;    });&#10;  });&#10;});">COPY</button></div>
+          <pre><code><span class="fn">getCrewList</span>(<span class="kw">function</span> (crew) {
+  <span class="fn">getShipStatus</span>(crew, <span class="kw">function</span> (status) {
+    <span class="fn">getFuelLevel</span>(status, <span class="kw">function</span> (fuel) {
+      console.<span class="fn">log</span>(<span class="str">"Finally have everything:"</span>, fuel);
+      <span class="comment">// one more nested step and this becomes unreadable</span>
+    });
+  });
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each step only knows how to run "inside" the previous one, so the code marches to the right with every additional step — the infamous "callback hell" pyramid. It's not that callbacks are wrong; it's that they don't scale to multi-step sequences without becoming hard to read, hard to add error-handling to, and easy to get subtly wrong. Promises exist specifically to fix this shape.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Promises: Pending → Fulfilled / Rejected</h3>
+        <p>A <strong>Promise</strong> is an object representing a value that doesn't exist yet, but will eventually — either successfully (<strong>fulfilled</strong>) or unsuccessfully (<strong>rejected</strong>). Every Promise starts in a <strong>pending</strong> state, then settles into exactly one of the other two, exactly once. <code>.then()</code> attaches a function to run on fulfillment; <code>.catch()</code> attaches one to run on rejection.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function contactRelay() {&#10;  return new Promise(function (resolve, reject) {&#10;    setTimeout(function () {&#10;      resolve(&quot;Relay station acknowledges.&quot;);&#10;    }, 1500);&#10;  });&#10;}&#10;&#10;contactRelay()&#10;  .then(function (message) {&#10;    console.log(message);&#10;  })&#10;  .catch(function (error) {&#10;    console.error(error);&#10;  });&#10;&#10;console.log(&quot;Message sent — not blocking on a reply.&quot;);">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">contactRelay</span>() {
+  <span class="kw">return</span> <span class="kw">new</span> <span class="fn">Promise</span>(<span class="kw">function</span> (resolve, reject) {
+    <span class="fn">setTimeout</span>(<span class="kw">function</span> () {
+      resolve(<span class="str">"Relay station acknowledges."</span>);
+    }, <span class="num">1500</span>);
+  });
+}
+
+<span class="fn">contactRelay</span>()
+  .<span class="fn">then</span>(<span class="kw">function</span> (message) {
+    console.<span class="fn">log</span>(message);
+  })
+  .<span class="fn">catch</span>(<span class="kw">function</span> (error) {
+    console.<span class="fn">error</span>(error);
+  });
+
+console.<span class="fn">log</span>(<span class="str">"Message sent — not blocking on a reply."</span>);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>contactRelay()</code> returns a pending Promise immediately — the <code>setTimeout</code> inside it hasn't fired yet. The <code>"Message sent…"</code> line logs right away, before the relay ever responds, because attaching <code>.then()</code> doesn't pause anything; it just registers "call this function later, whenever the Promise settles." 1.5 seconds afterward, <code>resolve(...)</code> runs, the Promise becomes fulfilled, and <em>then</em> the <code>.then()</code> callback finally fires with that value.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>async/await — the Same Thing, Readable Top-to-Bottom</h3>
+        <p>Marking a function <code>async</code> lets you use <code>await</code> inside it. <code>await</code> pauses <em>that function</em> (and only that function — not the whole program) until the Promise it's waiting on settles, then hands back the fulfilled value directly, as if it were a normal synchronous return.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function reachRelay() {&#10;  console.log(&quot;Sending signal...&quot;);&#10;  const message = await contactRelay();&#10;  console.log(message);&#10;  console.log(&quot;Sequence complete.&quot;);&#10;}&#10;&#10;reachRelay();&#10;console.log(&quot;Not blocked — this still runs first.&quot;);">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">reachRelay</span>() {
+  console.<span class="fn">log</span>(<span class="str">"Sending signal..."</span>);
+  <span class="kw">const</span> message = <span class="kw">await</span> <span class="fn">contactRelay</span>();
+  console.<span class="fn">log</span>(message);
+  console.<span class="fn">log</span>(<span class="str">"Sequence complete."</span>);
+}
+
+<span class="fn">reachRelay</span>();
+console.<span class="fn">log</span>(<span class="str">"Not blocked — this still runs first."</span>);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Calling <code>reachRelay()</code> runs it up to the <code>await</code>, then immediately gives control back — which is why <code>"Not blocked…"</code> logs before <code>"Relay station acknowledges."</code> does, exactly like the <code>.then()</code> version above. The difference is purely how it <em>reads</em>: no nested callbacks, no chained <code>.then()</code>s — just instructions in order, even though line 3 (<code>await contactRelay()</code>) doesn't actually finish until 1.5 seconds after line 6 (<code>reachRelay()</code>) is called. <code>async</code>/<code>await</code> is "syntax sugar" over Promises — under the hood, it's still Promises doing the work.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Error Handling with try/catch</h3>
+        <p>A rejected Promise that nobody handles doesn't quietly disappear — it surfaces as an "unhandled promise rejection," which is exactly the kind of bug that's easy to miss until it breaks something in production. Wrapping an <code>await</code> in a <code>try</code>/<code>catch</code> block catches a rejection the same way it would catch a thrown error in ordinary synchronous code.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function attemptDocking() {&#10;  try {&#10;    const result = await riskyDock();&#10;    console.log(result);&#10;  } catch (err) {&#10;    console.error(&quot;Docking failed: &quot; + err);&#10;  }&#10;  console.log(&quot;Docking sequence complete either way.&quot;);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">attemptDocking</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">riskyDock</span>();
+    console.<span class="fn">log</span>(result);
+  } <span class="kw">catch</span> (err) {
+    console.<span class="fn">error</span>(<span class="str">"Docking failed: "</span> + err);
+  }
+  console.<span class="fn">log</span>(<span class="str">"Docking sequence complete either way."</span>);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          If <code>riskyDock()</code>'s Promise rejects, control jumps straight to the <code>catch</code> block — the line right after <code>await</code> never runs — and the program keeps going afterward instead of crashing. This is the async equivalent of wrapping risky synchronous code in <code>try</code>/<code>catch</code>, and it's the standard way to handle a network call that might fail, a file that might not exist, or any other slow operation with a real chance of going wrong.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: <code>Promise.all()</code> — waiting on several things at once</summary>
+          <p>Sometimes you need several independent slow operations, and none of them depends on the others' results — checking three different systems, for example. Awaiting them one after another wastes time, since each wait wastes the time the others could have used. <code>Promise.all([p1, p2, p3])</code> takes an array of Promises, starts them all essentially simultaneously, and gives you back a single Promise that fulfills once <em>every</em> one of them has — with an array of their results, in the same order you passed them in. If total wait time for three operations run one-by-one is 3 seconds, running them with <code>Promise.all</code> can bring that down to roughly however long the <em>slowest single one</em> takes — often close to 1 second. The catch: if any one of them rejects, the whole <code>Promise.all</code> immediately rejects, so it's best used when the operations don't depend on each other and you're fine treating "any failure" as "the batch failed."</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>First, watch the difference. Then write your own.</p>
+
+      <div class="subsection" style="border-bottom:none;padding-bottom:0;margin-bottom:28px;">
+        <h3>Sync vs. Async Timeline</h3>
+        <p>Both panels below run a simulated 3-step sequence. <strong>RUN SYNC</strong> blocks on each step — the button disables and nothing moves until each step finishes, one after another. <strong>RUN ASYNC</strong> kicks off one slow operation (contacting a relay station, ~2 seconds) and then keeps going immediately — watch the "arrived after the fact" line show up on its own, well after the lines around it already logged.</p>
+        <p style="color:var(--text-muted);font-size:13px;">Note: this widget uses short timers to <em>visualize</em> pacing, since true blocking (a giant loop with no timers at all) would freeze this entire page — animations included — which is exactly the failure mode async is designed to avoid.</p>
+
+        <div class="timeline-grid">
+          <div class="timeline-col">
+            <div class="timeline-header">
+              <span>SYNC — BLOCKING</span>
+              <button class="timeline-run-btn" id="runSyncBtn">▶ RUN SYNC</button>
+            </div>
+            <div class="timeline-log" id="syncLog"><div class="timeline-placeholder">Press RUN SYNC to begin.</div></div>
+          </div>
+          <div class="timeline-col">
+            <div class="timeline-header">
+              <span>ASYNC — NON-BLOCKING</span>
+              <button class="timeline-run-btn" id="runAsyncBtn">▶ RUN ASYNC</button>
+            </div>
+            <div class="timeline-log" id="asyncLog"><div class="timeline-placeholder">Press RUN ASYNC to begin.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection" style="border-bottom:none;padding-bottom:0;">
+        <h3>Write Your Own</h3>
+        <p>A real JavaScript sandbox. There's no real network in here, so the starter code gives you a <code>wait(ms)</code> helper function that <em>simulates</em> "waiting for something slow" — it returns a Promise that resolves after <code>ms</code> milliseconds, using <code>setTimeout</code> under the hood. Use it with <code>await</code> exactly like you'd use a real network call.</p>
+
+        <div class="sandbox-grid">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+            <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+          </div>
+          <div class="right-stack">
+            <div class="sandbox-pane">
+              <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+              <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+            </div>
+            <div class="sandbox-pane">
+              <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+              <div id="consoleOutput" class="sandbox-output"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="console-controls">
+          <button class="console-btn" id="btnReset">reset starter code</button>
+          <button class="console-btn" id="btnExample1">try: try/catch on a failure</button>
+          <button class="console-btn" id="btnExample2">try: sequential vs Promise.all</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above, build an <code>async</code> sequence that uses the provided <code>wait(ms)</code> helper.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Write an <code>async function</code> that uses <code>await</code> on <code>wait(ms)</code> at least once
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Chain at least <strong>two</strong> awaited steps in sequence inside that function, each with its own <code>console.log</code>
+          <span class="sub">e.g. <code>await wait(1000)</code>, log something, then <code>await wait(1000)</code> again</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Call your async function, then immediately log one more line right after the call
+          <span class="sub">Confirm in the console output that this line appears <em>before</em> your awaited steps finish</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Write a second function that returns a Promise which sometimes <code>reject()</code>s (simulate a failure, e.g. a comms glitch)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Wrap the <code>await</code> on that risky function in <code>try</code>/<code>catch</code>, and use <code>console.error()</code> in the <code>catch</code> block
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch6"><label for="ch6">Confirm your program keeps running and logs a final line after the <code>catch</code> block, instead of stopping on the error
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your console output shows nothing until everything is done, double-check that you actually put <code>await</code> before each call that returns a Promise — without it, you'll be holding onto a Promise <em>object</em> instead of the value inside it, and your code won't pause where you expect. And remember: a function that uses <code>await</code> inside it must itself be declared <code>async</code>, or you'll get a syntax error.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Take your two sequential <code>await wait(1000)</code> calls from the checklist and run them <em>concurrently</em> instead, using <code>await Promise.all([...])</code>. Log the time before and after with <code>console.log(Date.now())</code> in both versions and compare — sequential should take roughly the sum of both waits; <code>Promise.all</code> should take roughly the length of the longer one alone.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>new Promise((resolve, reject) => {})</code><span>Create a Promise; call one function to settle it</span></div>
+        <div class="cheat-card"><code>.then(fn)</code><span>Run <code>fn</code> when the Promise fulfills</span></div>
+        <div class="cheat-card"><code>.catch(fn)</code><span>Run <code>fn</code> when the Promise rejects</span></div>
+        <div class="cheat-card">pending / fulfilled / rejected</div>
+        <div class="cheat-card"><code>async function</code><span>Marks a function so it can use <code>await</code> inside</span></div>
+        <div class="cheat-card"><code>await</code><span>Pause this function until a Promise settles</span></div>
+        <div class="cheat-card"><code>try { await ... } catch (e) {}</code><span>Catch a rejected <code>await</code> like a thrown error</span></div>
+        <div class="cheat-card"><code>Promise.all([...])</code><span>Run several Promises concurrently; wait for all</span></div>
+        <div class="cheat-card"><code>setTimeout(fn, ms)</code><span>Schedule <code>fn</code> to run after a delay</span></div>
+        <div class="cheat-card">event loop<span>Runs async callbacks only once sync code has finished</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting <code>await</code> and getting a <code>Promise</code> object back instead of the actual resolved value — logging it just shows <code>Promise {&lt;pending&gt;}</code>, not your data.</li>
+          <li>Using <code>await</code> inside a function that isn't marked <code>async</code> — this is a syntax error, not a runtime bug.</li>
+          <li>Never attaching a <code>.catch()</code> (or a <code>try</code>/<code>catch</code> around an <code>await</code>) — an unhandled rejection doesn't just vanish quietly.</li>
+          <li>Running independent <code>await</code> calls one after another inside a loop when they don't depend on each other, wasting time that <code>Promise.all</code> could have overlapped.</li>
+          <li>Assuming <code>async</code>/<code>await</code> makes code run in parallel — it doesn't. It's still one Promise chain underneath, just written to read top-to-bottom.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does forgetting the <code>await</code> keyword in front of a function call that returns a Promise actually give you?</p>
+        <button class="quiz-btn" data-correct="false">an error is thrown immediately</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the Promise object itself, still pending or already settled, not the value inside it.">the Promise object, not the resolved value</button>
+        <button class="quiz-btn" data-correct="false">the code blocks until it resolves anyway</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Sync vs. Async Timeline ---------------- */
+  const syncLog = document.getElementById("syncLog");
+  const asyncLog = document.getElementById("asyncLog");
+  const runSyncBtn = document.getElementById("runSyncBtn");
+  const runAsyncBtn = document.getElementById("runAsyncBtn");
+
+  function addRow(container, startTime, text, variant) {
+    const elapsed = Date.now() - startTime;
+    const row = document.createElement("div");
+    row.className = "timeline-row" + (variant ? " " + variant : "");
+    const time = document.createElement("span");
+    time.className = "timeline-time";
+    time.textContent = "+" + elapsed + "ms";
+    const label = document.createElement("span");
+    label.className = "timeline-text";
+    label.textContent = text;
+    row.appendChild(time);
+    row.appendChild(label);
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function delay(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function runSync() {
+    runSyncBtn.disabled = true;
+    runAsyncBtn.disabled = true;
+    syncLog.innerHTML = "";
+    const t0 = Date.now();
+
+    addRow(syncLog, t0, "STEP 1: Checking hull integrity…", "blocked");
+    delay(900).then(function () {
+      addRow(syncLog, t0, "STEP 1 complete. (nothing else could run during that wait)", "blocked-wait");
+      addRow(syncLog, t0, "STEP 2: Calibrating nav sensors…", "blocked");
+      return delay(900);
+    }).then(function () {
+      addRow(syncLog, t0, "STEP 2 complete.", "blocked-wait");
+      addRow(syncLog, t0, "STEP 3: Confirming crew status…", "blocked");
+      return delay(900);
+    }).then(function () {
+      addRow(syncLog, t0, "STEP 3 complete. Sequence finished — total time, ~2.7s of solid blocking.", "arrived");
+      runSyncBtn.disabled = false;
+      runAsyncBtn.disabled = false;
+    });
+  }
+
+  function runAsync() {
+    runSyncBtn.disabled = true;
+    runAsyncBtn.disabled = true;
+    asyncLog.innerHTML = "";
+    const t0 = Date.now();
+
+    addRow(asyncLog, t0, "Kicking off: contacting relay station… (2s, in flight)", "inflight");
+    addRow(asyncLog, t0, "Not waiting — continuing other duties: checking O2 levels…", "immediate");
+    addRow(asyncLog, t0, "Not waiting — continuing other duties: logging stardate…", "immediate");
+
+    delay(2000).then(function () {
+      addRow(asyncLog, t0, "Relay response arrived — ARRIVED AFTER THE FACT, ~2s later.", "arrived");
+      runSyncBtn.disabled = false;
+      runAsyncBtn.disabled = false;
+    });
+  }
+
+  runSyncBtn.addEventListener("click", runSync);
+  runAsyncBtn.addEventListener("click", runAsync);
+
+  /* ---------------- JS Sandbox ---------------- */
+  const STARTER = `// wait(ms) simulates something slow — like a network request —
+// by returning a Promise that resolves after "ms" milliseconds.
+// This sandbox has no real network, so wait() stands in for one.
+function wait(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function contactRelay() {
+  console.log("Sending signal to relay station...");
+  await wait(1500);
+  console.log("Relay responded! (this line arrives ~1.5s later)");
+}
+
+contactRelay();
+console.log("This line runs immediately — we did not wait for the relay.");`;
+
+  const EXAMPLE_TRYCATCH = `function wait(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+function riskyDock(shouldFail) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      if (shouldFail) {
+        reject("Docking clamp misaligned!");
+      } else {
+        resolve("Docking successful.");
+      }
+    }, 1000);
+  });
+}
+
+async function attemptDocking() {
+  console.log("Attempting to dock...");
+  try {
+    const result = await riskyDock(true);
+    console.log(result);
+  } catch (err) {
+    console.error("Docking failed: " + err);
+  }
+  console.log("Docking sequence complete either way.");
+}
+
+attemptDocking();`;
+
+  const EXAMPLE_PROMISE_ALL = `function wait(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function sequentialChecks() {
+  console.log("--- Sequential: one at a time ---");
+  await wait(1000);
+  console.log("Life support check complete (1s)");
+  await wait(1000);
+  console.log("Navigation check complete (1s)");
+  console.log("Total: about 2 seconds.");
+}
+
+async function concurrentChecks() {
+  console.log("--- Concurrent: Promise.all ---");
+  await Promise.all([
+    wait(1000).then(function () { console.log("Life support check complete (1s)"); }),
+    wait(1000).then(function () { console.log("Navigation check complete (1s)"); })
+  ]);
+  console.log("Total: about 1 second — both ran at the same time.");
+}
+
+sequentialChecks();
+setTimeout(concurrentChecks, 2500);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_TRYCATCH },
+        { btnId: "btnExample2", code: EXAMPLE_PROMISE_ALL },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

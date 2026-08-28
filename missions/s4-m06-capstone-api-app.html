@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 4.6: Capstone — Live API App — Consume a Real Public API, Deployed | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Capstone dependency-chips strip (bespoke — not in academy.css) ---------- */
+  .capstone-strip {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .capstone-chip {
+    font-family: var(--font-code);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+  }
+  .capstone-chip.c-modules { border-color: rgba(78,225,255,0.4);  color: var(--accent-cyan); }
+  .capstone-chip.c-async   { border-color: rgba(255,110,199,0.4); color: var(--accent-pink); }
+  .capstone-chip.c-fetch   { border-color: rgba(255,157,77,0.4);  color: var(--accent-orange); }
+  .capstone-chip.c-storage { border-color: rgba(176,131,255,0.4); color: var(--accent-purple); }
+  .capstone-chip.c-deploy  { border-color: rgba(77,255,180,0.4);  color: var(--success); }
+
+  /* ---------- Field Manual: plain reference lists / API-choice cards ---------- */
+  .api-choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 14px; }
+  .api-choice-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 16px 18px; }
+  .api-choice-card h4 { margin: 0 0 8px; color: var(--accent); font-size: 14.5px; }
+  .api-choice-card p { margin: 0 0 8px; color: var(--text-secondary); font-size: 13.5px; }
+  .api-choice-card code { font-size: 12px; word-break: break-all; }
+  .ladder-note { margin: 10px 0 0; padding-left: 20px; color: var(--text-secondary); font-size: 14.5px; }
+  .ladder-note li { margin-bottom: 6px; }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s4-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 4 CAPSTONE</div>
+    <h1>MISSION 4.6: CAPSTONE — LIVE API APP</h1>
+    <div class="subtitle">Consume a Real Public API, Deployed</div>
+    <p class="briefing-line">Mission 4.3 taught you the mechanics of <code>fetch</code>. Mission 4.5 taught you how to put a project on a public URL. This capstone puts both to a harder test than either mission did alone: for the first time in this academy, "it runs" is not the finish line. A real visitor — on a slow connection, on their phone, typing something your API has never heard of — is going to open your app and expect it to behave. If it just sits there blank while the network is slow, or crashes silently on a bad search, that's not a small style issue. That's a broken product. Today you build one that doesn't break, and you ship it where anyone can try to break it.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~90 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c-modules">Mission 4.1 · Modules & Files</span>
+      <span class="capstone-chip c-async">Mission 4.2 · Async JavaScript</span>
+      <span class="capstone-chip c-fetch">Mission 4.3 · fetch & Public APIs</span>
+      <span class="capstone-chip c-storage">Mission 4.4 · State & Storage</span>
+      <span class="capstone-chip c-deploy">Mission 4.5 · Deploying to the Web</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Back in Mission 1.9, "done" meant <strong>Ladder Level L1</strong>: deployed to a public URL, works on mobile. That was the right bar for a personal site — mostly static, mostly forgiving. But an app that talks to a live API over the real internet has a whole category of ways to fail that a static page never faces: the network can be slow, the network can drop entirely, and the API itself can legitimately say "no results" instead of crashing. None of that is a bug in the API. It's just what happens when your code leaves your machine and starts depending on someone else's server, somewhere else in the world, that you don't control.</p>
+      <p>That's what <strong>Ladder Level L2</strong> is actually about. From Part F of the curriculum plan: <em>secrets in env vars — never in code; handles error and loading states; has a README.</em> Read that as a single idea rather than three separate chores: a production app has to survive contact with reality, and it has to leave behind enough of a trail that someone else — including future-you, six months from now — can understand what it does and run it again. L1 asked "can strangers reach this?" L2 asks "does it behave correctly when things go wrong, and could someone else pick it up?"</p>
+      <p>The good news is you already have every raw skill this needs. Mission 4.3 gave you <code>fetch</code> and JSON parsing. Mission 4.2 gave you <code>async/await</code> and the vocabulary for a promise that's pending, resolved, or rejected. Mission 4.4 gave you <code>localStorage</code> for remembering things across a reload. Mission 4.5 gave you a working deploy pipeline. This mission doesn't teach you a single new syntax feature — it teaches you the discipline of using all four together so the app never leaves a user staring at a blank screen or a silent failure.</p>
+      <p>Concretely, you're going to build a small search app against a real, free, no-key public API, and take it from "runs in the sandbox" to "lives on a public URL with a README a stranger could follow." The Field Manual below walks through the four things that actually separate a hobby fetch demo from a shippable L2 app — loading states, error states, remembering the last search, and writing that README — before you build the whole thing in the Command Console.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;">
+          <defs>
+            <marker id="statearrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+          </defs>
+
+          <!-- IDLE -->
+          <rect x="255" y="15" width="130" height="60" rx="10" fill="#1b2540" stroke="#a8b3d1" stroke-width="1.5"/>
+          <text x="320" y="40" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">IDLE</text>
+          <text x="320" y="58" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">waiting for a search</text>
+
+          <!-- LOADING -->
+          <rect x="255" y="130" width="130" height="60" rx="10" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="320" y="155" fill="#ffe66d" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">LOADING</text>
+          <text x="320" y="173" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">fetch() in flight</text>
+
+          <!-- SUCCESS -->
+          <rect x="60" y="245" width="150" height="60" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="135" y="270" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">SUCCESS</text>
+          <text x="135" y="288" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">render the result</text>
+
+          <!-- ERROR -->
+          <rect x="430" y="245" width="150" height="60" rx="10" fill="#1b2540" stroke="#ff6b6b" stroke-width="2"/>
+          <text x="505" y="270" fill="#ff6b6b" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">ERROR</text>
+          <text x="505" y="288" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">network fail or not-found</text>
+
+          <!-- arrows -->
+          <path d="M320,75 L320,130" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#statearrow)"/>
+          <text x="336" y="106" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="9.5">search fired</text>
+
+          <path d="M270,190 L155,245" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#statearrow)"/>
+          <text x="150" y="220" fill="#4dffb4" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">200 OK</text>
+
+          <path d="M370,190 L490,245" fill="none" stroke="#ff6b6b" stroke-width="2" marker-end="url(#statearrow)"/>
+          <text x="475" y="220" fill="#ff6b6b" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">404 / network down</text>
+
+          <path d="M135,245 C135,60 220,15 255,25" fill="none" stroke="#a8b3d1" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#statearrow)"/>
+          <path d="M505,245 C505,60 385,15 385,25" fill="none" stroke="#a8b3d1" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#statearrow)"/>
+          <text x="320" y="112" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle"></text>
+        </svg>
+        <div class="diagram-caption">Every search your app runs cycles through exactly these four states. A production app makes each one visible on screen — a demo that only ever shows SUCCESS is one bad network away from confusing its user. The dashed lines back to IDLE happen on the <em>next</em> search, whether the last one succeeded or failed.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">Four stops: making the wait visible, making failure honest, remembering what the user last searched, and writing the document that lets someone else understand what you built.</p>
+
+      <div class="subsection">
+        <h3>Loading States</h3>
+        <p>A <code>fetch</code> call is not instant. Between the moment you call it and the moment the response arrives, real time passes — milliseconds on a fast connection, seconds on a slow one, sometimes longer on a phone losing signal. If your code does nothing visible during that gap, the page looks frozen. The user doesn't know if it's thinking, broken, or ignoring them entirely — and the most common thing they do next is click the button again, which fires a second overlapping request into an app that was never designed to handle two.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — SHOWING AND HIDING A LOADING STATE</span><button class="copy-btn" data-copy="async function searchPokemon(name) {&#10;  loadingEl.hidden = false;&#10;  errorEl.hidden = true;&#10;  resultEl.hidden = true;&#10;&#10;  try {&#10;    const response = await fetch(&#10;      &quot;https://pokeapi.co/api/v2/pokemon/&quot; + name.toLowerCase()&#10;    );&#10;    // ...&#10;  } finally {&#10;    loadingEl.hidden = true;&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">searchPokemon</span>(name) {
+  loadingEl.hidden = <span class="kw">false</span>;
+  errorEl.hidden = <span class="kw">true</span>;
+  resultEl.hidden = <span class="kw">true</span>;
+
+  <span class="kw">try</span> {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(
+      <span class="str">"https://pokeapi.co/api/v2/pokemon/"</span> + name.<span class="fn">toLowerCase</span>()
+    );
+    <span class="comment">// ...</span>
+  } <span class="kw">finally</span> {
+    loadingEl.hidden = <span class="kw">true</span>;
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The loading indicator turns on <em>before</em> the <code>await</code>, and the <code>finally</code> block turns it off no matter what happens next — a successful response, a thrown error, anything. That's the detail that matters: if you only hide the spinner inside the success path, a failed request leaves it spinning forever, which is its own kind of broken UI.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Error States</h3>
+        <p>There are two genuinely different ways a search can fail, and a production app has to tell them apart instead of lumping everything into one vague "something went wrong." The first is a <strong>network failure</strong> — the request never even reached the server, because the connection dropped or the API is down. <code>fetch</code> reports that by <em>rejecting the promise</em>, which is what your <code>catch</code> block is for. The second is a <strong>valid response that says "not found"</strong> — the request worked fine, the server answered, and the answer is a 404 because no Pokémon named <code>"qwerty"</code> exists. <code>fetch</code> does <em>not</em> reject for this — <code>response.ok</code> is <code>false</code>, but the promise still resolves. Missing that distinction is the single most common reason a "working" fetch app still crashes on a bad search term.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — HANDLING BOTH FAILURE MODES</span><button class="copy-btn" data-copy="try {&#10;  const response = await fetch(url);&#10;&#10;  if (!response.ok) {&#10;    // The server answered — it just said &quot;no.&quot;&#10;    throw new Error(&quot;No Pokémon found with that name.&quot;);&#10;  }&#10;&#10;  const data = await response.json();&#10;  renderResult(data);&#10;&#10;} catch (err) {&#10;  // Network failure AND our own thrown &quot;not found&quot; both land here.&#10;  errorEl.textContent = err.message;&#10;  errorEl.hidden = false;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">try</span> {
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(url);
+
+  <span class="kw">if</span> (!response.ok) {
+    <span class="comment">// The server answered — it just said "no."</span>
+    <span class="kw">throw new</span> Error(<span class="str">"No Pok&#233;mon found with that name."</span>);
+  }
+
+  <span class="kw">const</span> data = <span class="kw">await</span> response.<span class="fn">json</span>();
+  <span class="fn">renderResult</span>(data);
+
+} <span class="kw">catch</span> (err) {
+  <span class="comment">// Network failure AND our own thrown "not found" both land here.</span>
+  errorEl.textContent = err.message;
+  errorEl.hidden = <span class="kw">false</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A rejected <code>fetch</code> promise (no connection at all) and a manually thrown <code>Error</code> (a resolved-but-unsuccessful response) both end up in the same <code>catch</code> block here — which is fine, since the user-facing fix is the same either way: show a clear message and let them try again. What's not fine is <em>never</em> checking <code>response.ok</code> at all — that's the gap where a real API's honest "not found" answer gets treated by your code as if it were a success.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Remembering the Last Search</h3>
+        <p>Mission 4.4 covered <code>localStorage</code> as a way to persist state across a reload. Here it earns its keep for real: nobody wants to reopen your app tomorrow and see a blank input, having to retype the same Pokémon they were looking at yesterday. Persisting the last search — and restoring it automatically when the page loads — is a small addition that makes the app feel like it actually remembers you.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — WRITE ON SEARCH, READ ON LOAD</span><button class="copy-btn" data-copy="const LAST_SEARCH_KEY = &quot;mcca_apiapp_lastSearch&quot;;&#10;&#10;// after a successful search:&#10;localStorage.setItem(LAST_SEARCH_KEY, name);&#10;&#10;// on page load:&#10;const remembered = localStorage.getItem(LAST_SEARCH_KEY);&#10;if (remembered) {&#10;  input.value = remembered;&#10;  searchPokemon(remembered);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">const</span> LAST_SEARCH_KEY = <span class="str">"mcca_apiapp_lastSearch"</span>;
+
+<span class="comment">// after a successful search:</span>
+localStorage.<span class="fn">setItem</span>(LAST_SEARCH_KEY, name);
+
+<span class="comment">// on page load:</span>
+<span class="kw">const</span> remembered = localStorage.<span class="fn">getItem</span>(LAST_SEARCH_KEY);
+<span class="kw">if</span> (remembered) {
+  input.value = remembered;
+  <span class="fn">searchPokemon</span>(remembered);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice the key name is specific and namespaced — <code>mcca_apiapp_lastSearch</code>, not just <code>"lastSearch"</code>. On a real domain, every script sharing that origin shares the same <code>localStorage</code>, so a generic key name is exactly how one script's data quietly gets overwritten by another's. Naming your keys like you'd never want to collide with anyone else's is a habit worth building now, not after it bites you.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Writing a README</h3>
+        <p>Every deployed project so far has been judged by whether it works when you click the link. A README is judged by something different: whether a person who has <em>never seen your code</em> can figure out what it does and how to run it, without asking you. That person is very often future-you, reopening a project you built months ago and no longer remember the details of. A good README is short — three things, honestly answered, beat ten vague ones:</p>
+        <ul class="ladder-note">
+          <li><strong>What does this project do?</strong> One or two real sentences, not just the project's name repeated.</li>
+          <li><strong>How do you run it?</strong> The actual steps — even if it's just "open <code>index.html</code>" or "visit the live URL below."</li>
+          <li><strong>What API does it use, and are there any limits?</strong> Name it, link it, and note anything a future user of your README should know (rate limits, no API key required, etc.).</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-tab"><span>MARKDOWN — README.md</span><button class="copy-btn" data-copy="# Pok&#233;dex Search&#10;&#10;A small web app that searches the PokeAPI for any Pok&#233;mon by name and&#10;shows its stats, types, and official artwork. Remembers your last search&#10;across reloads.&#10;&#10;## Live demo&#10;https://your-username.github.io/pokedex-search/&#10;&#10;## How to run it locally&#10;1. Clone this repository&#10;2. Open `index.html` in any browser — no build step, no install&#10;&#10;## API used&#10;[PokeAPI](https://pokeapi.co/) v2 — free, no API key required, no&#10;published rate limit for reasonable personal use.&#10;&#10;## Known limitations&#10;- Only searches by exact Pok&#233;mon name (no partial matches)&#10;- No offline support&#10;">COPY</button></div>
+          <pre><code><span class="comment"># Pok&#233;dex Search
+
+A small web app that searches the PokeAPI for any Pok&#233;mon by name and
+shows its stats, types, and official artwork. Remembers your last search
+across reloads.
+
+## Live demo
+https://your-username.github.io/pokedex-search/
+
+## How to run it locally
+1. Clone this repository
+2. Open `index.html` in any browser — no build step, no install
+
+## API used
+[PokeAPI](https://pokeapi.co/) v2 — free, no API key required, no
+published rate limit for reasonable personal use.
+
+## Known limitations
+- Only searches by exact Pok&#233;mon name (no partial matches)
+- No offline support</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          None of that took more than a few minutes to write, and every sentence in it is something only <em>you</em> know about your own project — no amount of reading your source code replaces it. That's the actual test for "does my project have production hygiene": would a stranger, or you in six months, get unstuck by this file, or would they be starting from zero?
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Debouncing — don't fetch on every keystroke</summary>
+          <p>If you wire your search to fire on every <code>input</code> event instead of a button click, typing "pikachu" fires seven separate fetch requests — one per letter — most of which are wasted the instant the next keystroke lands. The fix is called <strong>debouncing</strong>: instead of searching immediately, you start a short timer (150–400ms) every time the input changes, and cancel the previous timer if another keystroke arrives before it fires. Only when the user pauses does the timer actually complete and trigger the real search.</p>
+          <div class="code-block">
+            <div class="code-tab"><span>JAVASCRIPT — A MINIMAL DEBOUNCE</span><button class="copy-btn" data-copy="let debounceTimer;&#10;input.addEventListener(&quot;input&quot;, () =&gt; {&#10;  clearTimeout(debounceTimer);&#10;  debounceTimer = setTimeout(() =&gt; {&#10;    searchPokemon(input.value.trim());&#10;  }, 300);&#10;});">COPY</button></div>
+            <pre><code><span class="kw">let</span> debounceTimer;
+input.<span class="fn">addEventListener</span>(<span class="str">"input"</span>, () =&gt; {
+  <span class="fn">clearTimeout</span>(debounceTimer);
+  debounceTimer = <span class="fn">setTimeout</span>(() =&gt; {
+    <span class="fn">searchPokemon</span>(input.value.<span class="fn">trim</span>());
+  }, <span class="num">300</span>);
+});</code></pre>
+          </div>
+          <p style="margin-bottom:0;">This isn't required for the checklist below — a search button that only fires on click sidesteps the whole problem — but it's a real technique you'll see in almost every production search box, and it's worth trying once you have the core app working.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This starts you off with a genuinely working search app wired to the real <a href="https://pokeapi.co/" target="_blank" rel="noopener">PokeAPI</a> — hit RUN, then try searching <code>pikachu</code>, then try a name that doesn't exist like <code>qwertyzzz</code>, and watch the loading/error/success states actually change. Your job is to build it out further, harden the error handling, or swap it for a different free API entirely — this same loading→error→success shape works identically against the <a href="https://github.com/r-spacex/SpaceX-API" target="_blank" rel="noopener">SpaceX API</a> if you'd rather search launches than Pokémon.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>APP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (Pokédex search)</button>
+        <button class="console-btn" id="btnExample1">try: simulated network failure</button>
+        <button class="console-btn" id="btnExample2">try: SpaceX API version</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build your real app in the Command Console above (or a real code editor, if you have one), then ship it. Every task below must be true of your finished, <em>deployed</em> app — a demo that only worked once in the sandbox doesn't count.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">A real search flow: an input, a search action, and a <code>fetch</code> call to a live public API (PokeAPI or another equally reliable no-key, CORS-enabled API)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">A visible loading state that appears the moment the fetch starts and disappears when it finishes — success <strong>or</strong> failure
+          <span class="sub">Test this on a throttled/slow connection if you can — DevTools → Network → Slow 3G makes it obvious whether it's really there</span></label>
+        </li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">A visible error state for a genuine network failure (the request never reaches the server)</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">A <strong>separate, correctly triggered</strong> error state for a valid "not found" response — checking <code>response.ok</code>, not assuming every resolved fetch was a success</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Previous error and result state clearly reset at the start of every new search — no stale error message lingering under a fresh, successful result</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">The last successful search persisted to <code>localStorage</code> under a specific, namespaced key, and automatically restored when the page reloads</label></li>
+        <li><input type="checkbox" id="ch7"><label for="ch7">A real <code>README.md</code> file in your project, written from scratch, covering: what the project does, how to run it, and what API it uses
+          <span class="sub">This is an actual file you create and commit — not a comment in your HTML</span></label>
+        </li>
+        <li><input type="checkbox" id="ch8"><label for="ch8">Deployed live via GitHub Pages or Cloudflare Pages (Mission 4.5), with the public URL confirmed working on your phone over a real mobile network connection, not just your home Wi-Fi</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your app "mostly" works but occasionally shows both an old result <em>and</em> a leftover error message at the same time, you almost certainly never reset one of them at the top of your search function. Every search should start by hiding the error box, hiding the old result, and showing the loading indicator — all three, every time — before the <code>fetch</code> call even begins.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Store the last <strong>five</strong> searches (not just one) in <code>localStorage</code> as an array, and render them as a clickable history list — clicking a past search re-runs it instantly. This is the same persistence technique as the checklist above, just holding a small array instead of a single string.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>fetch(url)</code><span>Send an HTTP request to a real API (4.3)</span></div>
+        <div class="cheat-card"><code>async / await</code><span>Write asynchronous code in a readable, top-to-bottom order (4.2)</span></div>
+        <div class="cheat-card"><code>response.ok</code><span>Check for a "not found"-type failure that didn't reject the promise</span></div>
+        <div class="cheat-card"><code>try / catch / finally</code><span><code>finally</code> is what guarantees a spinner always turns off</span></div>
+        <div class="cheat-card"><code>localStorage.setItem/getItem</code><span>Persist and restore state across reloads (4.4)</span></div>
+        <div class="cheat-card">Loading state<span>Something visible on screen the instant a fetch begins</span></div>
+        <div class="cheat-card">Error state<span>A real, honest message — not a silent failure or a frozen page</span></div>
+        <div class="cheat-card">README.md<span>What it does, how to run it, what API it uses</span></div>
+        <div class="cheat-card">Ladder Level L2<span>Env-var secrets, error/loading states, a README (Part F)</span></div>
+        <div class="cheat-card">Debouncing<span>Wait for a pause in typing before firing a search</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>A loading spinner that only gets hidden inside the success path — if the fetch fails, it spins forever, and the user has no idea the search already ended.</li>
+          <li>An error handler that only catches network failures, never checking <code>response.ok</code> — a legitimate "no results" answer from the API gets rendered as if it were a real Pokémon, usually crashing on <code>undefined</code> somewhere downstream.</li>
+          <li>Forgetting to reset the previous error message or previous result at the start of a new search — a failed search followed by a successful one can leave both messages on screen at once.</li>
+          <li>Using a generic, unnamespaced <code>localStorage</code> key like <code>"data"</code> or <code>"lastSearch"</code> that silently collides with another script on the same page or origin.</li>
+          <li>Shipping without a README — the app runs fine today, but six months from now, not even you remember which API it calls or how to run it locally.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — your app's <code>fetch</code> call for a Pokémon named "qwertyzzz" resolves successfully (no thrown error), but your code renders a broken-looking result instead of a clean "not found" message. What's most likely missing?</p>
+        <button class="quiz-btn" data-correct="false">A <code>try/catch</code> block around the fetch call</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — fetch only rejects on a true network failure. A 404 still resolves normally, so you have to check response.ok yourself and treat a false value as an error.">A check of <code>response.ok</code> before trying to use the response as valid data</button>
+        <button class="quiz-btn" data-correct="false">A loading state on the input field</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// POKÉDEX SEARCH — a real, working loading/error/success app.
+// Hit RUN, then try "pikachu", then try "qwertyzzz" to see the error state.
+// Uses the REAL PokeAPI (https://pokeapi.co) — no key needed.
+
+const LAST_SEARCH_KEY = "mcca_apiapp_lastSearch";
+
+const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const row = document.createElement("div");
+const input = document.createElement("input");
+input.type = "text";
+input.placeholder = "e.g. pikachu";
+row.appendChild(input);
+
+const searchBtn = document.createElement("button");
+searchBtn.textContent = "SEARCH";
+row.appendChild(searchBtn);
+display.appendChild(row);
+
+const loadingEl = document.createElement("p");
+loadingEl.textContent = "⏳ Searching...";
+loadingEl.hidden = true;
+display.appendChild(loadingEl);
+
+const errorEl = document.createElement("p");
+errorEl.style.color = "#ff6b6b";
+errorEl.hidden = true;
+display.appendChild(errorEl);
+
+const resultEl = document.createElement("div");
+resultEl.hidden = true;
+display.appendChild(resultEl);
+
+async function searchPokemon(name) {
+  if (!name) return;
+
+  // Reset every visible state before the new request begins.
+  loadingEl.hidden = false;
+  errorEl.hidden = true;
+  resultEl.hidden = true;
+
+  try {
+    const response = await fetch("https://pokeapi.co/api/v2/pokemon/" + name.toLowerCase().trim());
+
+    if (!response.ok) {
+      throw new Error("No Pokémon found named \\"" + name + "\\".");
+    }
+
+    const data = await response.json();
+
+    resultEl.innerHTML = "";
+    const title = document.createElement("h3");
+    title.textContent = data.name.toUpperCase() + " (#" + data.id + ")";
+    resultEl.appendChild(title);
+
+    const types = document.createElement("p");
+    types.textContent = "Type: " + data.types.map(t => t.type.name).join(", ");
+    resultEl.appendChild(types);
+
+    const height = document.createElement("p");
+    height.textContent = "Height: " + data.height + " · Weight: " + data.weight;
+    resultEl.appendChild(height);
+
+    resultEl.hidden = false;
+
+    // Persist ONLY on success — a failed search shouldn't overwrite a good one.
+    localStorage.setItem(LAST_SEARCH_KEY, name);
+    console.log("Saved last search:", name);
+
+  } catch (err) {
+    errorEl.textContent = "⚠ " + err.message;
+    errorEl.hidden = false;
+    console.error(err.message);
+  } finally {
+    // Runs on EVERY path — success, thrown "not found", or real network failure.
+    loadingEl.hidden = true;
+  }
+}
+
+searchBtn.addEventListener("click", function () {
+  searchPokemon(input.value);
+});
+
+// Restore the last search on load, if one exists.
+const remembered = localStorage.getItem(LAST_SEARCH_KEY);
+if (remembered) {
+  input.value = remembered;
+  console.log("Restoring last search:", remembered);
+  searchPokemon(remembered);
+} else {
+  console.log("No previous search saved yet. Try searching \\"pikachu\\".");
+}`;
+
+  const EXAMPLE_NETWORK_FAIL = `// Same app, but with the fetch pointed at a URL that can never resolve —
+// this simulates a REAL network failure (no connection, DNS down, etc.),
+// which is different from a 404. Watch: this rejects the promise directly,
+// so it lands in catch() WITHOUT ever reaching the response.ok check.
+
+const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const loadingEl = document.createElement("p");
+loadingEl.textContent = "⏳ Searching...";
+display.appendChild(loadingEl);
+
+const errorEl = document.createElement("p");
+errorEl.style.color = "#ff6b6b";
+errorEl.hidden = true;
+display.appendChild(errorEl);
+
+async function simulateNetworkFailure() {
+  loadingEl.hidden = false;
+  errorEl.hidden = true;
+
+  try {
+    // A bogus host — the request never reaches any real server.
+    const response = await fetch("https://this-host-does-not-exist.invalid/api");
+    const data = await response.json();
+    console.log(data);
+  } catch (err) {
+    // This IS the network-failure path — no response.ok check was
+    // possible because there was never a response at all.
+    errorEl.textContent = "⚠ Network error: could not reach the server. Check your connection and try again.";
+    errorEl.hidden = false;
+    console.error("Network failure caught:", err.message);
+  } finally {
+    loadingEl.hidden = true;
+  }
+}
+
+simulateNetworkFailure();
+console.log("This is the OTHER failure mode — compare it to a 404 from a real search.");`;
+
+  const EXAMPLE_SPACEX = `// The exact same loading/error/success shape, against a DIFFERENT free
+// no-key API — proof the pattern isn't tied to PokeAPI specifically.
+
+const display = document.querySelector("#shipDisplay");
+display.innerHTML = "";
+
+const loadingEl = document.createElement("p");
+loadingEl.textContent = "⏳ Fetching latest launch...";
+display.appendChild(loadingEl);
+
+const errorEl = document.createElement("p");
+errorEl.style.color = "#ff6b6b";
+errorEl.hidden = true;
+display.appendChild(errorEl);
+
+const resultEl = document.createElement("div");
+resultEl.hidden = true;
+display.appendChild(resultEl);
+
+async function fetchLatestLaunch() {
+  loadingEl.hidden = false;
+  errorEl.hidden = true;
+  resultEl.hidden = true;
+
+  try {
+    const response = await fetch("https://api.spacexdata.com/v4/launches/latest");
+
+    if (!response.ok) {
+      throw new Error("SpaceX API responded with an error.");
+    }
+
+    const data = await response.json();
+
+    resultEl.innerHTML = "";
+    const title = document.createElement("h3");
+    title.textContent = data.name;
+    resultEl.appendChild(title);
+
+    const details = document.createElement("p");
+    details.textContent = data.details || "No mission details provided.";
+    resultEl.appendChild(details);
+
+    resultEl.hidden = false;
+  } catch (err) {
+    errorEl.textContent = "⚠ " + err.message;
+    errorEl.hidden = false;
+  } finally {
+    loadingEl.hidden = true;
+  }
+}
+
+fetchLatestLaunch();
+console.log("Same shape, different API — loading, then success or error.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_NETWORK_FAIL },
+        { btnId: "btnExample2", code: EXAMPLE_SPACEX },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

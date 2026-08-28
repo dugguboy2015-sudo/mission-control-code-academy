@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 4.3: fetch, JSON & Public APIs — Talking to Other Ships | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-cyan" data-mission-id="s4-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 4</div>
+    <h1>MISSION 4.3: FETCH, JSON & PUBLIC APIS</h1>
+    <div class="subtitle">Talking to Other Ships</div>
+    <p class="briefing-line">Mission 0.2 taught you what happens when a browser asks a server for a page: a request goes out, a response comes back, wrapped in a status code. That was the theory. This is the mission where you actually make that conversation happen from your own code — reaching across the internet, in real time, to a server you don't control, and pulling back real data to put on your own page. This is how every weather app, every game leaderboard, and every dashboard on Earth actually works under the hood.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 INTERNET REQUIRED</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Back in Mission 0.2 you learned that a webpage is really the result of an HTTP conversation — a client sends a request, a server sends back a response, and a status code tells you what happened. Everything in that mission was something the <em>browser</em> did automatically the moment you typed a URL. Today you take the wheel yourself. JavaScript has a built-in function, <code>fetch()</code>, that lets your own code start that exact same conversation, on demand, while the page is already running — no reload, no address bar involved.</p>
+      <p>An <strong>API</strong> (Application Programming Interface) is just a server that's designed to be talked to by code instead of by a human clicking around a page. Instead of HTML meant for a browser to display, it sends back <strong>JSON</strong> — a compact, structured text format built entirely out of the same building blocks JavaScript already uses: objects, arrays, strings, numbers, booleans. Before you write a line of fetch code, look at the whole trip a request takes, because every gotcha in this mission comes from misunderstanding one leg of this journey.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <defs>
+            <marker id="fetcharrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4ee1ff"/>
+            </marker>
+            <marker id="fetcharrow-green" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#4dffb4"/>
+            </marker>
+            <marker id="fetcharrow-pink" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#ff6ec7"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="40" width="170" height="80" rx="10" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="105" y="72" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">BROWSER</text>
+          <text x="105" y="92" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">your fetch() call runs</text>
+
+          <rect x="510" y="40" width="170" height="80" rx="10" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="595" y="68" fill="#4dffb4" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">POKEAPI SERVER</text>
+          <text x="595" y="86" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">/api/v2/pokemon/pikachu</text>
+          <text x="595" y="100" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">somewhere else on the internet</text>
+
+          <path d="M190,75 L510,75" fill="none" stroke="#4ee1ff" stroke-width="2" marker-end="url(#fetcharrow)"/>
+          <text x="350" y="65" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">1. HTTP GET — over the internet, to pokeapi.co</text>
+
+          <path d="M510,105 L190,105" fill="none" stroke="#4dffb4" stroke-width="2" marker-end="url(#fetcharrow-green)"/>
+          <text x="350" y="130" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">2. HTTP RESPONSE — 200 OK, body is a JSON string</text>
+
+          <path d="M105,120 L105,230" fill="none" stroke="#ff6ec7" stroke-width="2" marker-end="url(#fetcharrow-pink)"/>
+
+          <rect x="20" y="240" width="280" height="80" rx="10" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="160" y="270" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" text-anchor="middle">RENDERED PAGE (the DOM)</text>
+          <text x="160" y="290" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">3. response.json() parses the JSON text</text>
+          <text x="160" y="304" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">into a real object — your code writes it to the page</text>
+        </svg>
+        <div class="diagram-caption">Three legs, every time: your code sends a request across the internet, the server sends structured JSON back, and only then does your own code turn that data into something visible.</div>
+      </div>
+
+      <p>Notice that nothing in that diagram is instant. Steps 1 and 2 involve an actual round trip across real infrastructure — sometimes a few milliseconds, sometimes a full second or more if the connection is slow. JavaScript can't just pause and wait, frozen, for that to finish (that would lock up the whole page). Instead, <code>fetch()</code> hands you back a placeholder for a value that doesn't exist yet, and lets the rest of your code keep running. That placeholder is called a <strong>Promise</strong>, and understanding exactly how to unwrap one is 80% of this mission.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>JSON — The Data Format Everyone Speaks</h3>
+        <p>JSON (JavaScript Object Notation) is plain text, built from the same shapes JavaScript already has: curly braces for objects, square brackets for arrays, quoted strings, plain numbers, <code>true</code>/<code>false</code>, and <code>null</code>. It's the universal language APIs use to send structured data, because nearly every programming language on Earth can read and write it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JSON — WHAT PIKACHU'S DATA LOOKS LIKE (SIMPLIFIED)</span><button class="copy-btn" data-copy="{&#10;  &quot;name&quot;: &quot;pikachu&quot;,&#10;  &quot;height&quot;: 4,&#10;  &quot;weight&quot;: 60,&#10;  &quot;sprites&quot;: {&#10;    &quot;front_default&quot;: &quot;https://.../pikachu.png&quot;&#10;  }&#10;}">COPY</button></div>
+          <pre><code>{
+  <span class="str">"name"</span>: <span class="str">"pikachu"</span>,
+  <span class="str">"height"</span>: <span class="num">4</span>,
+  <span class="str">"weight"</span>: <span class="num">60</span>,
+  <span class="str">"sprites"</span>: {
+    <span class="str">"front_default"</span>: <span class="str">"https://.../pikachu.png"</span>
+  }
+}</code></pre>
+        </div>
+        <p>Two built-in functions convert between JSON text and real JavaScript values: <code>JSON.parse(text)</code> turns a JSON string into a live object you can use (<code>data.name</code>, <code>data.sprites.front_default</code>), and <code>JSON.stringify(obj)</code> does the reverse — turning a JavaScript value into JSON text, which is what you'd do to send data <em>to</em> an API.</p>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          You will almost never call <code>JSON.parse()</code> yourself when using <code>fetch()</code> — as you're about to see, the Response object has a built-in <code>.json()</code> method that calls <code>JSON.parse()</code> for you. It's worth knowing it exists underneath, because you'll meet raw <code>JSON.parse</code>/<code>JSON.stringify</code> constantly once you start using <code>localStorage</code> in Mission 4.4.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>fetch() Returns a Promise</h3>
+        <p>Calling <code>fetch(url)</code> immediately sends the HTTP request and immediately hands you back a <strong>Promise</strong> — not the data itself, but an object representing "a value that will exist once the request finishes." A Promise can be pending, fulfilled (it succeeded, with a value), or rejected (it failed, with a reason). The cleanest way to wait for a Promise to settle is the <code>await</code> keyword, used inside a function marked <code>async</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function loadPikachu() {&#10;  const response = await fetch(&quot;https://pokeapi.co/api/v2/pokemon/pikachu&quot;);&#10;  console.log(response); // a Response object, NOT the data yet&#10;}&#10;&#10;loadPikachu();">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">loadPikachu</span>() {
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://pokeapi.co/api/v2/pokemon/pikachu"</span>);
+  console.<span class="fn">log</span>(response); <span class="comment">// a Response object, NOT the data yet</span>
+}
+
+<span class="fn">loadPikachu</span>();</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>await fetch(...)</code> pauses this function (only this function — the rest of the page keeps running) until the HTTP round trip finishes, then unwraps the Promise into a <strong>Response object</strong>. That Response is a wrapper around the reply: it carries the status code, the headers, and a raw, not-yet-read body. It is <em>not</em> the JSON data you actually want — that's the next step, and skipping it is the single most common mistake in this whole mission.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Double-Await: Response → .json()</h3>
+        <p>Here's the part that trips almost everyone up the first time: getting the actual data takes <em>two</em> asynchronous steps, not one. <code>fetch()</code> resolves to a Response. Calling <code>.json()</code> on that Response reads and parses its body — and <code>.json()</code> <em>itself</em> also returns a Promise, because reading the body can take time too. So you need a second <code>await</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function loadPikachu() {&#10;  const response = await fetch(&quot;https://pokeapi.co/api/v2/pokemon/pikachu&quot;);&#10;  // response is a Response object — headers + status, body still unread&#10;&#10;  const data = await response.json();&#10;  // data is now the REAL parsed object: data.name, data.height, ...&#10;&#10;  console.log(data.name, data.height, data.weight);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">loadPikachu</span>() {
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://pokeapi.co/api/v2/pokemon/pikachu"</span>);
+  <span class="comment">// response is a Response object — headers + status, body still unread</span>
+
+  <span class="kw">const</span> data = <span class="kw">await</span> response.<span class="fn">json</span>();
+  <span class="comment">// data is now the REAL parsed object: data.name, data.height, ...</span>
+
+  console.<span class="fn">log</span>(data.name, data.height, data.weight);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED — TRACED STEP BY STEP</strong>
+          (1) <code>fetch(url)</code> returns Promise #1. (2) <code>await</code> unwraps Promise #1 into a <strong>Response object</strong> — call it the "envelope." (3) <code>response.json()</code> opens the envelope and starts parsing the JSON text inside it, returning Promise #2. (4) The second <code>await</code> unwraps Promise #2 into the actual data — the "letter" inside the envelope. Two Promises, two <code>await</code>s. If you only await once and try to read <code>response.name</code> directly, you'll get <code>undefined</code> — the Response object doesn't have a <code>name</code> property; the data inside it does, but you never opened the envelope.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Rendering Fetched Data Into the DOM</h3>
+        <p>Once you have the real data, putting it on the page is exactly the DOM work you already know from Sector 2 — find an element, then set its content. The only new part is that this now happens <em>after</em> a network round trip, so the page usually starts in a "loading" state and updates once the data arrives.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function loadPikachu() {&#10;  const display = document.querySelector(&quot;#shipDisplay&quot;);&#10;  display.textContent = &quot;Loading...&quot;;&#10;&#10;  const response = await fetch(&quot;https://pokeapi.co/api/v2/pokemon/pikachu&quot;);&#10;  const data = await response.json();&#10;&#10;  display.innerHTML = `&#10;    &lt;strong&gt;${data.name}&lt;/strong&gt; — height ${data.height}, weight ${data.weight}&#10;    &lt;img src=&quot;${data.sprites.front_default}&quot; alt=&quot;${data.name}&quot;&gt;&#10;  `;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">loadPikachu</span>() {
+  <span class="kw">const</span> display = document.<span class="fn">querySelector</span>(<span class="str">"#shipDisplay"</span>);
+  display.textContent = <span class="str">"Loading..."</span>;
+
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://pokeapi.co/api/v2/pokemon/pikachu"</span>);
+  <span class="kw">const</span> data = <span class="kw">await</span> response.<span class="fn">json</span>();
+
+  display.innerHTML = <span class="str">`
+    &lt;strong&gt;${data.name}&lt;/strong&gt; — height ${data.height}, weight ${data.weight}
+    &lt;img src="${data.sprites.front_default}" alt="${data.name}"&gt;
+  `</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Setting a loading message <em>before</em> the <code>await</code> line matters — the cadet sees immediate feedback instead of a frozen blank screen while the request is in flight. The template literal (backticks, <code>${...}</code>) makes it easy to weave live values straight into HTML you're about to insert with <code>innerHTML</code>. Note the field is literally called <code>sprites.front_default</code> in the real PokeAPI response — it's a URL string, and the browser fetches and displays that image the moment it hits an <code>&lt;img&gt;</code> tag, no extra fetch call needed on your part.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Handling Errors: response.ok and Network Failures</h3>
+        <p>Here's the second classic gotcha, and it's a big one: <code>fetch()</code>'s Promise does <em>not</em> reject just because the server said "no." A 404 Not Found, a 500 Internal Server Error — <code>fetch()</code> treats all of these as a <em>successful</em> HTTP conversation, because technically it was: the request went out, and a response came back. The Promise only rejects for a true network-level failure — no internet connection, DNS couldn't resolve the domain, the connection was refused entirely.</p>
+        <p>That means checking whether the request "succeeded" from your app's point of view is <em>your</em> job, using <code>response.ok</code> (true only for status codes 200–299) or <code>response.status</code> directly.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function loadPokemon(name) {&#10;  const display = document.querySelector(&quot;#shipDisplay&quot;);&#10;  display.textContent = &quot;Loading &quot; + name + &quot;...&quot;;&#10;&#10;  try {&#10;    const response = await fetch(&quot;https://pokeapi.co/api/v2/pokemon/&quot; + name);&#10;&#10;    if (!response.ok) {&#10;      display.textContent = &quot;No Pokémon named \&quot;&quot; + name + &quot;\&quot; (status &quot; + response.status + &quot;)&quot;;&#10;      return;&#10;    }&#10;&#10;    const data = await response.json();&#10;    display.textContent = data.name + &quot; — height &quot; + data.height;&#10;  } catch (err) {&#10;    // only reaches here on a TRUE network failure&#10;    display.textContent = &quot;Network error: &quot; + err.message;&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">loadPokemon</span>(name) {
+  <span class="kw">const</span> display = document.<span class="fn">querySelector</span>(<span class="str">"#shipDisplay"</span>);
+  display.textContent = <span class="str">"Loading "</span> + name + <span class="str">"..."</span>;
+
+  <span class="kw">try</span> {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://pokeapi.co/api/v2/pokemon/"</span> + name);
+
+    <span class="kw">if</span> (!response.ok) {
+      display.textContent = <span class="str">"No Pokémon named \""</span> + name + <span class="str">"\" (status "</span> + response.status + <span class="str">")"</span>;
+      <span class="kw">return</span>;
+    }
+
+    <span class="kw">const</span> data = <span class="kw">await</span> response.<span class="fn">json</span>();
+    display.textContent = data.name + <span class="str">" — height "</span> + data.height;
+  } <span class="kw">catch</span> (err) {
+    <span class="comment">// only reaches here on a TRUE network failure</span>
+    display.textContent = <span class="str">"Network error: "</span> + err.message;
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice there are two separate failure paths, and they are not the same thing: the <code>if (!response.ok)</code> branch handles a server that answered but said "not found" (a 404 for a Pokémon name that doesn't exist), while the <code>catch</code> block only ever runs if the request couldn't complete at all (offline, DNS failure, the server is completely unreachable). Mixing these up — expecting a 404 to land in <code>catch</code> — is exactly the bug this section exists to prevent.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: Why doesn't fetch() just reject on a 404?</summary>
+          <p>From the network's point of view, a 404 response is a complete, well-formed, successful HTTP exchange — the server received your request and sent back a valid answer; it just happens to be "I don't have that." <code>fetch()</code>'s Promise is only about whether the <em>network operation</em> succeeded, not whether you're happy with the result. This is a deliberate design choice (older tools like jQuery's <code>$.ajax</code> did auto-reject on bad status codes, and it caused constant confusion about what counted as an "error"). The tradeoff: you must always check <code>response.ok</code> yourself, every single time, or a 404/500 will silently sail past your error handling and crash later when you try to read a field that doesn't exist on an error payload.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>This sandbox makes a <strong>real</strong> network call to the live <a href="https://pokeapi.co" target="_blank" rel="noopener">PokeAPI</a> — a free, public, no-API-key-required API used by developers everywhere for exactly this kind of practice. Unlike every sandbox before this one, it needs an actual internet connection to work; if you're offline, the <code>catch</code> block will fire and you'll see a network error message instead of data, which is itself a useful thing to watch happen on purpose.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: fetch a different pokémon</button>
+        <button class="console-btn" id="btnExample2">try: trigger a 404</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox above, build a Pokémon lookup that actually handles both success and failure gracefully.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Change the URL to fetch a different Pokémon by editing the name at the end (try <code>charizard</code>, <code>bulbasaur</code>, or <code>squirtle</code>)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Render at least three fields from the response onto the ship display — for example <code>name</code>, <code>height</code>, <code>weight</code>, or the count of <code>data.types</code></label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Confirm <code>response.ok</code> is checked, and that a made-up name (like <code>notapokemon123</code>) shows a clear error message instead of crashing</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Rewrite the starter code's <code>.then()</code> chain as an <code>async</code> function using <code>await</code> instead — same behavior, different syntax
+          <span class="sub">Don't forget: <code>await</code> only works inside a function declared <code>async</code></span></label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Add the Pokémon's sprite image to the display using <code>data.sprites.front_default</code></label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">Log something to the console at each stage — before the fetch, after the response arrives, and after the data is parsed — so you can see the timing for yourself</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If the display just says "Loading..." forever, open the console output panel — a typo in the Pokémon name usually shows up as your own "no Pokémon named..." message (since PokeAPI 404s on unknown names), while a genuinely broken URL or an offline connection shows up as the message from your <code>catch</code> block instead. Read which one you're actually seeing before you start debugging the wrong thing.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a text <code>&lt;input&gt;</code> and a button to the display (build them with <code>document.createElement</code>, same as Mission 2.7). Read whatever the cadet types with <code>inputElement.value</code>, lowercase it, and fetch <em>that</em> Pokémon on click — turning this into a real, reusable lookup tool instead of one hardcoded name.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>fetch(url)</code><span>Sends an HTTP request, returns a Promise</span></div>
+        <div class="cheat-card"><code>await fetch(url)</code><span>Pauses until that Promise resolves to a Response object</span></div>
+        <div class="cheat-card"><code>response.json()</code><span>Parses the body — and ALSO returns a Promise</span></div>
+        <div class="cheat-card"><code>await response.json()</code><span>Pauses again, unwraps the actual parsed data</span></div>
+        <div class="cheat-card"><code>response.ok</code><span>True only for status codes 200–299</span></div>
+        <div class="cheat-card"><code>response.status</code><span>The raw numeric status code</span></div>
+        <div class="cheat-card"><code>JSON.parse() / .stringify()</code><span>Text ↔ JS values, manually (fetch's .json() does this for you)</span></div>
+        <div class="cheat-card"><code>async function</code><span>A function allowed to use await inside it</span></div>
+        <div class="cheat-card"><code>try / catch</code><span>Catches a true network failure, NOT a 404</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Forgetting the second <code>await</code>/<code>.then()</code> for <code>.json()</code> and trying to read data straight off the raw Response object.</li>
+          <li>Assuming <code>fetch()</code> throws or rejects on a 404 — it doesn't; you must check <code>response.ok</code> yourself.</li>
+          <li>Using <code>await</code> inside a function that isn't declared <code>async</code> — this is a syntax error, not a runtime one.</li>
+          <li>Never handling the case where the network itself fails (offline, DNS down) — without a <code>catch</code> or a <code>.catch()</code>, that Promise rejection crashes silently.</li>
+          <li>Building the URL with a typo'd path (like forgetting the <code>/v2/</code>) and assuming the API is broken instead of checking the actual status code that came back.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — by default, what does <code>fetch()</code>'s Promise actually reject on?</p>
+        <button class="quiz-btn" data-correct="false">Any response with a status code outside the 200s, like a 404</button>
+        <button class="quiz-btn" data-correct="false">Any response whose body isn't valid JSON</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — fetch() only rejects on a true network-level failure. A 404 or 500 is still a &quot;successful&quot; HTTP exchange as far as fetch() is concerned; checking response.ok is on you.">Only a true network-level failure — no connection, DNS couldn't resolve, the request never completed</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `// Real network call — needs an internet connection.
+const display = document.querySelector("#shipDisplay");
+
+display.textContent = "Loading pikachu...";
+
+fetch("https://pokeapi.co/api/v2/pokemon/pikachu")
+  .then(function (response) {
+    if (!response.ok) {
+      throw new Error("Status " + response.status);
+    }
+    return response.json();
+  })
+  .then(function (data) {
+    display.innerHTML =
+      "<strong>" + data.name.toUpperCase() + "</strong><br>" +
+      "Height: " + data.height + " &middot; Weight: " + data.weight + "<br>" +
+      "<img src='" + data.sprites.front_default + "' alt='" + data.name + "' style='width:96px;height:96px;'>";
+    console.log("Loaded " + data.name);
+  })
+  .catch(function (err) {
+    display.textContent = "ERROR: " + err.message;
+    console.error(err.message);
+  });`;
+
+  const EXAMPLE_DIFFERENT_POKEMON = `// Same pattern, different Pokémon
+const display = document.querySelector("#shipDisplay");
+display.textContent = "Loading charizard...";
+
+fetch("https://pokeapi.co/api/v2/pokemon/charizard")
+  .then(function (response) {
+    if (!response.ok) {
+      throw new Error("Status " + response.status);
+    }
+    return response.json();
+  })
+  .then(function (data) {
+    display.innerHTML =
+      "<strong>" + data.name.toUpperCase() + "</strong><br>" +
+      "Height: " + data.height + " &middot; Weight: " + data.weight + "<br>" +
+      "<img src='" + data.sprites.front_default + "' alt='" + data.name + "' style='width:96px;height:96px;'>";
+    console.log("Loaded " + data.name);
+  })
+  .catch(function (err) {
+    display.textContent = "ERROR: " + err.message;
+    console.error(err.message);
+  });`;
+
+  const EXAMPLE_404 = `// A name that doesn't exist — watch response.ok catch it,
+// NOT the .catch() block. This is a 404, not a network failure.
+const display = document.querySelector("#shipDisplay");
+display.textContent = "Loading notapokemon123...";
+
+fetch("https://pokeapi.co/api/v2/pokemon/notapokemon123")
+  .then(function (response) {
+    console.log("status:", response.status, "ok:", response.ok);
+    if (!response.ok) {
+      throw new Error("No Pokémon found (status " + response.status + ")");
+    }
+    return response.json();
+  })
+  .then(function (data) {
+    display.textContent = data.name;
+  })
+  .catch(function (err) {
+    display.textContent = "ERROR: " + err.message;
+    console.error(err.message);
+  });`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_DIFFERENT_POKEMON },
+        { btnId: "btnExample2", code: EXAMPLE_404 },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

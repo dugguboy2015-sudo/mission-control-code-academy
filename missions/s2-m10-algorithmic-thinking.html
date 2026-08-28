@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2.10: Thinking Like a Programmer — Problem-Solving & Simple Algorithms | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Bespoke: Sort & Search Animator ---------- */
+  .ss-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .ss-status {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    padding: 7px 12px;
+  }
+  .ss-status.is-sorted { color: var(--success); border-color: var(--success); }
+  .ss-stage {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    box-shadow: var(--glow-shadow);
+    padding: 20px 14px 10px;
+    margin-bottom: 10px;
+  }
+  .ss-array {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 150px;
+    justify-content: center;
+  }
+  .ss-box {
+    flex: 1 1 0;
+    max-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .ss-box .ss-value {
+    font-family: var(--font-code);
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+  .ss-box .ss-bar {
+    width: 100%;
+    border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(160deg, #1b2540, #131a2e);
+    border: 1.5px solid var(--accent-cyan);
+    transition: all 0.25s ease;
+  }
+  .ss-box .ss-index {
+    font-family: var(--font-code);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+  .ss-box.ss-compare { transform: translateY(-8px); }
+  .ss-box.ss-compare .ss-bar { border-color: var(--accent-yellow); box-shadow: 0 0 10px rgba(255,230,109,0.35); }
+  .ss-box.ss-compare .ss-value { color: var(--accent-yellow); }
+  .ss-box.ss-swap .ss-bar { border-color: var(--accent-pink); box-shadow: 0 0 12px rgba(255,110,199,0.45); }
+  .ss-box.ss-swap .ss-value { color: var(--accent-pink); }
+  .ss-box.ss-found .ss-bar { border-color: var(--accent-green); box-shadow: 0 0 14px rgba(77,255,180,0.55); }
+  .ss-box.ss-found .ss-value { color: var(--accent-green); }
+  .ss-box.ss-eliminated { opacity: 0.25; }
+  .ss-box.ss-sorted .ss-bar { border-color: var(--accent-green); }
+  .ss-steps {
+    text-align: center;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding: 10px 0 4px;
+  }
+  .ss-search-panel {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border-glow);
+  }
+  .ss-search-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .ss-search-row label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  #ssTarget {
+    width: 90px;
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    color: var(--text-primary);
+    font-family: var(--font-code);
+    font-size: 14px;
+    padding: 7px 10px;
+    border-radius: 6px;
+  }
+  #ssTarget:focus { outline: none; border-color: var(--accent); }
+  .ss-warning {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.35);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .ss-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 600px) { .ss-results { grid-template-columns: 1fr; } }
+  .ss-result-card {
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .ss-result-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .ss-result-value {
+    display: block;
+    font-family: var(--font-code);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .ss-result-value.is-final { color: var(--accent); }
+  .ss-bigo-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-family: var(--font-code); font-size: 13px; }
+  .ss-bigo-table th, .ss-bigo-table td { border: 1px solid var(--border-glow); padding: 8px 12px; text-align: center; }
+  .ss-bigo-table th { color: var(--accent); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.05em; background: var(--bg-panel-alt); }
+  .ss-bigo-table td { color: var(--text-secondary); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s2-m10">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 2</div>
+    <h1>MISSION 2.10: THINKING LIKE A PROGRAMMER</h1>
+    <div class="subtitle">Problem-Solving & Simple Algorithms</div>
+    <p class="briefing-line">You've spent this whole sector learning JavaScript's grammar — variables, functions, loops, the DOM. This mission is different: it's about the thinking that happens <em>before</em> any of that grammar gets typed. Every real program starts as a fuzzy goal in someone's head and has to become a precise, ordered sequence of steps before a single line of code is worth writing. You already know this discipline — Mission 0.1's Literal Robot only ever did exactly what it was told, no more, no less. Now you'll apply that same discipline to two of computing's oldest, most useful problems: finding something in a list, and putting a list in order.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Back in Mission 0.1, the Literal Robot taught you that a computer never fills in gaps — it does exactly what you tell it, and an <strong>algorithm</strong> is just a precise, ordered sequence of steps for accomplishing something. That was true with plain-English sandwich instructions, and it's still true now that you're writing real JavaScript. The difference is that real code raises the stakes: a vague step in an English instruction list produces a silly robot; a vague step in a real program produces a bug, a crash, or — worse — code that runs fine and quietly gives the wrong answer.</p>
+      <p>The habit that separates confident programmers from people who stare at a blinking cursor is <strong>decomposition</strong>: breaking a big, fuzzy problem into small, ordered sub-steps <em>before</em> writing any code. Sketch the steps in plain language (or pseudocode, like Mission 0.1's fuel-check example) first. Once every step is unambiguous, translating it into JavaScript syntax is almost mechanical — the hard thinking already happened.</p>
+      <p>This mission puts that habit to work on two classic problems every programmer eventually needs: <strong>searching</strong> a list for a value, and <strong>sorting</strong> a list into order. You'll meet two search strategies — linear search (check everything, one at a time) and binary search (repeatedly cut the search space in half) — and you'll see why the second one only works when the data is already sorted. Along the way you'll pick up your first real vocabulary for <em>comparing</em> algorithms: <strong>Big-O notation</strong>, a way of describing how the amount of work grows as the input grows.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 680 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <defs>
+            <marker id="algoarrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#a8b3d1"/>
+            </marker>
+          </defs>
+
+          <!-- ===== LINEAR SEARCH ROW ===== -->
+          <text x="20" y="26" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="13" font-weight="bold">LINEAR SEARCH — target: 63</text>
+
+          <!-- 8 boxes: values 5,10,17,28,42,63,71,89 -->
+          <g font-family="Fira Code, monospace">
+            <!-- box template repeated manually -->
+            <rect x="38"  y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="67"  y="68" fill="#e8ecfb" font-size="14" text-anchor="middle">5</text>
+            <rect x="110" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="139" y="68" fill="#e8ecfb" font-size="14" text-anchor="middle">10</text>
+            <rect x="182" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="211" y="68" fill="#e8ecfb" font-size="14" text-anchor="middle">17</text>
+            <rect x="254" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="283" y="68" fill="#e8ecfb" font-size="14" text-anchor="middle">28</text>
+            <rect x="326" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="355" y="68" fill="#e8ecfb" font-size="14" text-anchor="middle">42</text>
+            <rect x="398" y="40" width="58" height="46" rx="6" fill="#131a2e" stroke="#4dffb4" stroke-width="2.5"/>
+            <text x="427" y="68" fill="#4dffb4" font-size="14" text-anchor="middle" font-weight="bold">63</text>
+            <rect x="470" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5" opacity="0.4"/>
+            <text x="499" y="68" fill="#6b7699" font-size="14" text-anchor="middle" opacity="0.6">71</text>
+            <rect x="542" y="40" width="58" height="46" rx="6" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5" opacity="0.4"/>
+            <text x="571" y="68" fill="#6b7699" font-size="14" text-anchor="middle" opacity="0.6">89</text>
+
+            <!-- check numbers under each checked box -->
+            <text x="67"  y="102" fill="#a8b3d1" font-size="11" text-anchor="middle">check 1</text>
+            <text x="139" y="102" fill="#a8b3d1" font-size="11" text-anchor="middle">check 2</text>
+            <text x="211" y="102" fill="#a8b3d1" font-size="11" text-anchor="middle">check 3</text>
+            <text x="283" y="102" fill="#a8b3d1" font-size="11" text-anchor="middle">check 4</text>
+            <text x="355" y="102" fill="#a8b3d1" font-size="11" text-anchor="middle">check 5</text>
+            <text x="427" y="102" fill="#4dffb4" font-size="11" text-anchor="middle" font-weight="bold">check 6 — found!</text>
+          </g>
+          <text x="340" y="128" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Scans left to right, one box at a time — 6 checks to reach 63</text>
+
+          <!-- ===== BINARY SEARCH ROW ===== -->
+          <text x="20" y="180" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="13" font-weight="bold">BINARY SEARCH — same target, same sorted array</text>
+
+          <g font-family="Fira Code, monospace">
+            <rect x="38"  y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5" opacity="0.35"/>
+            <text x="67"  y="222" fill="#6b7699" font-size="14" text-anchor="middle" opacity="0.6">5</text>
+            <rect x="110" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5" opacity="0.35"/>
+            <text x="139" y="222" fill="#6b7699" font-size="14" text-anchor="middle" opacity="0.6">10</text>
+            <rect x="182" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#2e3d63" stroke-width="1.5" opacity="0.35"/>
+            <text x="211" y="222" fill="#6b7699" font-size="14" text-anchor="middle" opacity="0.6">17</text>
+            <rect x="254" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#ffe66d" stroke-width="2.5"/>
+            <text x="283" y="222" fill="#ffe66d" font-size="14" text-anchor="middle" font-weight="bold">28</text>
+            <rect x="326" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="355" y="222" fill="#e8ecfb" font-size="14" text-anchor="middle">42</text>
+            <rect x="398" y="194" width="58" height="46" rx="6" fill="#131a2e" stroke="#4dffb4" stroke-width="2.5"/>
+            <text x="427" y="222" fill="#4dffb4" font-size="14" text-anchor="middle" font-weight="bold">63</text>
+            <rect x="470" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="499" y="222" fill="#e8ecfb" font-size="14" text-anchor="middle">71</text>
+            <rect x="542" y="194" width="58" height="46" rx="6" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="571" y="222" fill="#e8ecfb" font-size="14" text-anchor="middle">89</text>
+
+            <!-- check 1 bracket over full range, arrow to mid (index 3, value 28) -->
+            <path d="M38,182 L600,182" fill="none" stroke="#ffe66d" stroke-width="1.5"/>
+            <path d="M38,182 L38,188 M600,182 L600,188" fill="none" stroke="#ffe66d" stroke-width="1.5"/>
+            <path d="M283,182 L283,192" fill="none" stroke="#ffe66d" stroke-width="1.5" marker-end="url(#algoarrow)"/>
+            <text x="283" y="172" fill="#ffe66d" font-size="11" text-anchor="middle">check 1: mid = 28, too small → drop everything ≤ it</text>
+
+            <!-- check 2 bracket over remaining range (indices 4-7), arrow to mid (index 5, value 63) -->
+            <path d="M326,258 L600,258" fill="none" stroke="#4dffb4" stroke-width="1.5"/>
+            <path d="M326,258 L326,252 M600,258 L600,252" fill="none" stroke="#4dffb4" stroke-width="1.5"/>
+            <path d="M427,258 L427,248" fill="none" stroke="#4dffb4" stroke-width="1.5" marker-end="url(#algoarrow)"/>
+            <text x="463" y="273" fill="#4dffb4" font-size="11" text-anchor="middle" font-weight="bold">check 2: mid = 63 — found!</text>
+          </g>
+          <text x="340" y="310" fill="#6b7699" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Jumps to the middle, eliminates half the remaining boxes each time — 2 checks to reach 63</text>
+          <text x="340" y="332" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="12" text-anchor="middle" font-weight="bold">Same array, same target — 6 checks vs. 2. The gap only gets bigger as the list grows.</text>
+        </svg>
+        <div class="diagram-caption">Both searches run on the same sorted array, hunting for the same value (63). Linear search has no shortcut — it walks the boxes in order. Binary search uses the fact that the data is sorted to throw away half the possibilities with every single check.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Decomposition: Pseudocode to Code</h3>
+        <p>Before touching a keyboard, describe the problem in plain steps. Take "find the highest score in a list of exam scores." Decomposed: (1) assume the first score is the highest so far, (2) look at every other score one at a time, (3) whenever you find one bigger than your current "highest," update it, (4) after checking everything, report whatever "highest" ended up holding. Only now is it worth opening the editor.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function findHighestScore(scores) {&#10;  let highest = scores[0]; // step 1: assume the first is highest&#10;&#10;  for (let i = 1; i &lt; scores.length; i++) { // step 2: check the rest&#10;    if (scores[i] &gt; highest) {&#10;      highest = scores[i]; // step 3: update when we find bigger&#10;    }&#10;  }&#10;&#10;  return highest; // step 4: report the result&#10;}&#10;&#10;console.log(findHighestScore([72, 95, 61, 88, 95, 70])); // 95">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">findHighestScore</span>(scores) {
+  <span class="kw">let</span> highest = scores[<span class="num">0</span>]; <span class="comment">// step 1: assume the first is highest</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt; scores.length; i++) { <span class="comment">// step 2: check the rest</span>
+    <span class="kw">if</span> (scores[i] &gt; highest) {
+      highest = scores[i]; <span class="comment">// step 3: update when we find bigger</span>
+    }
+  }
+
+  <span class="kw">return</span> highest; <span class="comment">// step 4: report the result</span>
+}
+
+console.<span class="fn">log</span>(<span class="fn">findHighestScore</span>([<span class="num">72</span>, <span class="num">95</span>, <span class="num">61</span>, <span class="num">88</span>, <span class="num">95</span>, <span class="num">70</span>])); <span class="comment">// 95</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Every line of real code maps back to one of the four decomposed steps — there's nothing in the function that wasn't already decided in plain English first. This is the move: decompose in words (or pseudocode), <em>then</em> transcribe into syntax. Skipping straight to code usually means redoing the thinking mid-way through, tangled up with semicolons.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Linear Search</h3>
+        <p><strong>Linear search</strong> is the most obvious way to find something: start at the beginning, check each item, and stop the moment you find a match (or run out of items). It works on <em>any</em> list — sorted or not — because it never assumes anything about the order.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function linearSearch(arr, target) {&#10;  for (let i = 0; i &lt; arr.length; i++) {&#10;    if (arr[i] === target) {&#10;      return i; // found it — report where&#10;    }&#10;  }&#10;  return -1; // checked everything, no match&#10;}&#10;&#10;const crewIds = [104, 88, 231, 15, 76];&#10;console.log(linearSearch(crewIds, 231)); // 2&#10;console.log(linearSearch(crewIds, 999)); // -1">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">linearSearch</span>(arr, target) {
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; arr.length; i++) {
+    <span class="kw">if</span> (arr[i] === target) {
+      <span class="kw">return</span> i; <span class="comment">// found it — report where</span>
+    }
+  }
+  <span class="kw">return</span> -<span class="num">1</span>; <span class="comment">// checked everything, no match</span>
+}
+
+<span class="kw">const</span> crewIds = [<span class="num">104</span>, <span class="num">88</span>, <span class="num">231</span>, <span class="num">15</span>, <span class="num">76</span>];
+console.<span class="fn">log</span>(<span class="fn">linearSearch</span>(crewIds, <span class="num">231</span>)); <span class="comment">// 2</span>
+console.<span class="fn">log</span>(<span class="fn">linearSearch</span>(crewIds, <span class="num">999</span>)); <span class="comment">// -1</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Returning <code>-1</code> for "not found" is a long-standing convention (an array can never have a real index of <code>-1</code>, so it's an unambiguous signal). In the worst case — the target is last, or missing entirely — linear search checks every single element. If the list has <code>n</code> items, that's up to <code>n</code> checks.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Binary Search (On Sorted Data)</h3>
+        <p><strong>Binary search</strong> is dramatically faster, but it comes with a non-negotiable requirement: the data must already be sorted. It tracks a <code>low</code> and <code>high</code> boundary around the range that could still contain the target, checks the middle (<code>mid</code>) of that range, and — because the data is sorted — instantly knows which entire half to throw away.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function binarySearch(sortedArr, target) {&#10;  let low = 0;&#10;  let high = sortedArr.length - 1;&#10;&#10;  while (low &lt;= high) {&#10;    const mid = Math.floor((low + high) / 2);&#10;    if (sortedArr[mid] === target) {&#10;      return mid; // found it&#10;    } else if (sortedArr[mid] &lt; target) {&#10;      low = mid + 1; // target must be in the right half&#10;    } else {&#10;      high = mid - 1; // target must be in the left half&#10;    }&#10;  }&#10;  return -1; // range shrank to nothing — not present&#10;}&#10;&#10;const sorted = [5, 10, 17, 28, 42, 63, 71, 89];&#10;console.log(binarySearch(sorted, 63)); // 5, in just 2 checks">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">binarySearch</span>(sortedArr, target) {
+  <span class="kw">let</span> low = <span class="num">0</span>;
+  <span class="kw">let</span> high = sortedArr.length - <span class="num">1</span>;
+
+  <span class="kw">while</span> (low &lt;= high) {
+    <span class="kw">const</span> mid = Math.<span class="fn">floor</span>((low + high) / <span class="num">2</span>);
+    <span class="kw">if</span> (sortedArr[mid] === target) {
+      <span class="kw">return</span> mid; <span class="comment">// found it</span>
+    } <span class="kw">else if</span> (sortedArr[mid] &lt; target) {
+      low = mid + <span class="num">1</span>; <span class="comment">// target must be in the right half</span>
+    } <span class="kw">else</span> {
+      high = mid - <span class="num">1</span>; <span class="comment">// target must be in the left half</span>
+    }
+  }
+  <span class="kw">return</span> -<span class="num">1</span>; <span class="comment">// range shrank to nothing — not present</span>
+}
+
+<span class="kw">const</span> sorted = [<span class="num">5</span>, <span class="num">10</span>, <span class="num">17</span>, <span class="num">28</span>, <span class="num">42</span>, <span class="num">63</span>, <span class="num">71</span>, <span class="num">89</span>];
+console.<span class="fn">log</span>(<span class="fn">binarySearch</span>(sorted, <span class="num">63</span>)); <span class="comment">// 5, in just 2 checks</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>mid</code> compares once, and that single comparison eliminates an entire half of the remaining range — not one element, <em>half of everything left</em>. That's why it's so much faster: an 8-element array takes at most 4 checks; a 1,024-element array takes at most 11. Trace it below in the Command Console until <code>low &gt; high</code> feels automatic.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: What if the data isn't sorted?</summary>
+          <p>Binary search's entire trick depends on one guarantee: everything to the left of <code>mid</code> is smaller, everything to the right is bigger. Break that guarantee and the algorithm doesn't crash — it just silently trusts a lie. Run <code>binarySearch([42, 17, 89, 5, 63, 28, 71, 10], 63)</code> — an <em>unsorted</em> array where 63 sits plainly at index 4 — and trace it by hand: <code>mid = 3</code> is <code>5</code>, which is less than 63, so the algorithm sets <code>low = 4</code>, discarding indices 0–3 (correctly, this time). Next, <code>mid = 5</code> is <code>28</code>, still less than 63, so <code>low = 6</code>. Next, <code>mid = 6</code> is <code>71</code>, which is <em>greater</em> than 63, so <code>high = 5</code>. Now <code>low</code> (6) is greater than <code>high</code> (5) — the loop ends and the function returns <code>-1</code>, "not found," after only 3 checks. But 63 was sitting right there the whole time, at index 4. The algorithm never lied to itself on purpose — it just followed its rules perfectly on data that broke the one assumption those rules depend on. This is exactly why "is this actually sorted?" has to be answered <em>before</em> you reach for binary search, not after something goes wrong.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>A Simple Sort: Bubble Sort</h3>
+        <p><strong>Bubble sort</strong> repeatedly walks through the list comparing neighbors, swapping any pair that's out of order. After one full pass, the largest remaining value has "bubbled" all the way to the end. Repeat, ignoring the part that's already settled, until a full pass makes zero swaps — at that point, everything is in order. It's not fast (real-world code almost never uses it), but it's the clearest possible window into what "sorting" actually means, step by step.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function bubbleSort(arr) {&#10;  const a = [...arr]; // copy — don&#39;t mutate the original&#10;&#10;  for (let i = 0; i &lt; a.length - 1; i++) {&#10;    let swapped = false;&#10;&#10;    for (let j = 0; j &lt; a.length - 1 - i; j++) {&#10;      if (a[j] &gt; a[j + 1]) {&#10;        [a[j], a[j + 1]] = [a[j + 1], a[j]]; // swap&#10;        swapped = true;&#10;      }&#10;    }&#10;&#10;    if (!swapped) break; // already sorted — stop early&#10;  }&#10;&#10;  return a;&#10;}&#10;&#10;console.log(bubbleSort([42, 17, 89, 5, 63, 28, 71, 10]));&#10;// [5, 10, 17, 28, 42, 63, 71, 89]">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">bubbleSort</span>(arr) {
+  <span class="kw">const</span> a = [...arr]; <span class="comment">// copy — don't mutate the original</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; a.length - <span class="num">1</span>; i++) {
+    <span class="kw">let</span> swapped = <span class="kw">false</span>;
+
+    <span class="kw">for</span> (<span class="kw">let</span> j = <span class="num">0</span>; j &lt; a.length - <span class="num">1</span> - i; j++) {
+      <span class="kw">if</span> (a[j] &gt; a[j + <span class="num">1</span>]) {
+        [a[j], a[j + <span class="num">1</span>]] = [a[j + <span class="num">1</span>], a[j]]; <span class="comment">// swap</span>
+        swapped = <span class="kw">true</span>;
+      }
+    }
+
+    <span class="kw">if</span> (!swapped) <span class="kw">break</span>; <span class="comment">// already sorted — stop early</span>
+  }
+
+  <span class="kw">return</span> a;
+}
+
+console.<span class="fn">log</span>(<span class="fn">bubbleSort</span>([<span class="num">42</span>, <span class="num">17</span>, <span class="num">89</span>, <span class="num">5</span>, <span class="num">63</span>, <span class="num">28</span>, <span class="num">71</span>, <span class="num">10</span>]));
+<span class="comment">// [5, 10, 17, 28, 42, 63, 71, 89]</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The inner loop shrinks each pass (<code>a.length - 1 - i</code>) because the last <code>i</code> elements are already correctly placed — no point re-checking them. The <code>swapped</code> flag is a small but real optimization: if a whole pass makes no swaps, the list is already sorted and there's no reason to keep looping. Watch every comparison and swap happen live in the Command Console below.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Gentle Intro to Big-O</h3>
+        <p><strong>Big-O notation</strong> is just a way to describe how the <em>amount of work</em> an algorithm does grows as the input gets bigger — without getting bogged down in exact numbers. Linear search is <strong>O(n)</strong>: double the list, and in the worst case you double the checks. Binary search is <strong>O(log n)</strong>: double the list, and you only need <em>one more check</em>, because each check cuts the remaining space in half.</p>
+        <table class="ss-bigo-table">
+          <tr><th>Array size (n)</th><th>Linear search — worst case</th><th>Binary search — worst case</th></tr>
+          <tr><td>8</td><td>8 checks</td><td>4 checks</td></tr>
+          <tr><td>16</td><td>16 checks</td><td>5 checks</td></tr>
+          <tr><td>64</td><td>64 checks</td><td>7 checks</td></tr>
+          <tr><td>1,024</td><td>1,024 checks</td><td>11 checks</td></tr>
+          <tr><td>1,000,000</td><td>1,000,000 checks</td><td>20 checks</td></tr>
+        </table>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Nobody's counting exact CPU cycles here — Big-O is about the <em>shape</em> of the growth curve, not a stopwatch reading. O(n) means "work scales in a straight line with input size." O(log n) means "work barely grows at all." Bubble sort, for what it's worth, is O(n²) — its nested loops mean doubling the input roughly <em>quadruples</em> the work, which is exactly why it's a teaching tool and not something you'd run on a million-row spreadsheet.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The Sort & Search Animator below starts with the same unsorted array from the Field Manual. Hit <strong>SORT</strong> to watch bubble sort work through it comparison by comparison. Then pick a target value and run both search strategies against it — the step counters below will make the O(n) vs. O(log n) gap impossible to miss. Try running <strong>BINARY</strong> <em>before</em> sorting, too — see what the Deep Dive above was warning you about.</p>
+
+      <div class="ss-toolbar">
+        <button class="console-btn" id="ssSortBtn">▶ SORT (bubble sort)</button>
+        <button class="console-btn" id="ssResetBtn">🔀 reset array</button>
+        <span class="ss-status" id="ssSortStatus">STATUS: UNSORTED</span>
+      </div>
+
+      <div class="ss-stage">
+        <div class="ss-array" id="ssArray"></div>
+      </div>
+      <div class="ss-steps" id="ssSortSteps">Comparisons: 0 · Swaps: 0</div>
+
+      <div class="ss-search-panel">
+        <div class="ss-search-row">
+          <label for="ssTarget">TARGET VALUE</label>
+          <input type="number" id="ssTarget" value="63">
+          <button class="console-btn" id="ssLinearBtn">🔍 RUN LINEAR</button>
+          <button class="console-btn" id="ssBinaryBtn">🔍 RUN BINARY</button>
+        </div>
+        <div class="ss-warning" id="ssWarning" hidden>⚠ The array isn't sorted right now. Binary search will still run — but it assumes sorted data, so watch closely: it may report "not found" even when the value is sitting right there.</div>
+        <div class="ss-results">
+          <div class="ss-result-card">
+            <span class="ss-result-label">LINEAR SEARCH — O(n)</span>
+            <span class="ss-result-value" id="ssLinearResult">— run to test —</span>
+          </div>
+          <div class="ss-result-card">
+            <span class="ss-result-label">BINARY SEARCH — O(log n)</span>
+            <span class="ss-result-value" id="ssBinaryResult">— run to test —</span>
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top:20px;">Now practice writing the logic yourself. The sandbox below runs real JavaScript — write a <code>linearSearch</code> function and call it with <code>console.log</code> to see the result.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="right-stack">
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SHIP DISPLAY</span><span>●</span></div>
+            <div id="shipDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: search a crew roster</button>
+        <button class="console-btn" id="btnExample2">try: linear vs. missing target</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using the sandbox and the animator above, complete every task below.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">In the sandbox, write your own <code>linearSearch(arr, target)</code> function that returns the matching index, or <code>-1</code></label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Test it with <code>console.log</code> against at least three targets — one near the start, one near the end, and one that isn't in the array at all</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Before pressing RUN BINARY in the animator, pick a target and write down (on paper or in a comment) which index you predict binary search will check <em>first</em>
+        <span class="sub">Hint: it's always the middle of the whole array, no matter what the target is</span></label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Run it and confirm your predicted first check was correct</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">Reset the array, then run SORT and watch the first full pass — write down every pair of adjacent values that gets swapped</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">Run LINEAR and BINARY on the same target back-to-back and, in one sentence, explain why the step counts differ</label></label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>For task 3, <code>mid = Math.floor((low + high) / 2)</code> where <code>low</code> starts at <code>0</code> and <code>high</code> starts at <code>array.length - 1</code>. For an 8-element array, that's always index 3 on the very first check — the target doesn't matter yet, because the algorithm hasn't looked at anything.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write your own <code>binarySearch(sortedArr, target)</code> function in the sandbox from scratch, without looking back at the Field Manual. Test it on a sorted array of your own, including a target that isn't present — confirm it returns <code>-1</code> and doesn't loop forever.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>Decomposition</code><span>Break a problem into small, ordered steps before writing code</span></div>
+        <div class="cheat-card"><code>Pseudocode</code><span>Plain-language draft of your logic before real syntax</span></div>
+        <div class="cheat-card"><code>Linear Search — O(n)</code><span>Check every item in order; works on any list</span></div>
+        <div class="cheat-card"><code>Binary Search — O(log n)</code><span>Repeatedly halve a SORTED range</span></div>
+        <div class="cheat-card"><code>low / mid / high</code><span>The three variables binary search tracks each step</span></div>
+        <div class="cheat-card"><code>Bubble Sort</code><span>Repeatedly swap adjacent out-of-order pairs</span></div>
+        <div class="cheat-card"><code>swapped flag</code><span>Lets bubble sort stop early once a full pass makes no changes</span></div>
+        <div class="cheat-card"><code>Big-O notation</code><span>Describes how work grows as input size grows</span></div>
+        <div class="cheat-card"><code>O(n) vs O(log n)</code><span>Double the input: linear doubles the work, logarithmic adds one step</span></div>
+        <div class="cheat-card"><code>O(n²)</code><span>Bubble sort's growth rate — fine to learn from, bad at scale</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Running binary search on unsorted data and trusting a "not found" result that's actually wrong.</li>
+          <li>Off-by-one errors in the midpoint math — using <code>low = mid</code> instead of <code>low = mid + 1</code> can cause an infinite loop.</li>
+          <li>Writing code before decomposing the problem, then getting lost halfway through a tangle of half-finished logic.</li>
+          <li>Treating "sorted" as automatic — forgetting that binary search requires you to sort first, and that sorting itself costs time.</li>
+          <li>Assuming bubble sort (or any O(n²) algorithm) is fine for large, real-world datasets — it's a teaching tool, not production code.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why does binary search require the data to already be sorted?</p>
+        <button class="quiz-btn" data-correct="false">It doesn't, really — sorting first is just a nice-to-have</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — comparing to the middle only tells you which half to discard if everything on one side is guaranteed smaller and everything on the other is guaranteed bigger.">Each step throws away half the range based on comparing to the middle — that's only safe if one side is guaranteed smaller and the other guaranteed bigger</button>
+        <button class="quiz-btn" data-correct="false">Sorted arrays are stored differently in memory, so unsorted ones can't be searched at all</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Sort & Search Animator ================= */
+  const ORIGINAL = [42, 17, 89, 5, 63, 28, 71, 10];
+  let arr = ORIGINAL.slice();
+  let sortedIndices = new Set();
+  let isSorted = false;
+  let busy = false;
+
+  const ssArrayEl = document.getElementById("ssArray");
+  const ssSortStepsEl = document.getElementById("ssSortSteps");
+  const ssSortStatusEl = document.getElementById("ssSortStatus");
+  const ssWarningEl = document.getElementById("ssWarning");
+  const ssLinearResultEl = document.getElementById("ssLinearResult");
+  const ssBinaryResultEl = document.getElementById("ssBinaryResult");
+  const ssSortBtn = document.getElementById("ssSortBtn");
+  const ssResetBtn = document.getElementById("ssResetBtn");
+  const ssLinearBtn = document.getElementById("ssLinearBtn");
+  const ssBinaryBtn = document.getElementById("ssBinaryBtn");
+  const ssTargetInput = document.getElementById("ssTarget");
+
+  function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+  function barHeight(v) { return 22 + Math.round(v * 0.9); }
+
+  function render(a, classMap) {
+    classMap = classMap || {};
+    ssArrayEl.innerHTML = a.map(function (v, i) {
+      let cls = "ss-box";
+      if (sortedIndices.has(i)) cls += " ss-sorted";
+      if (classMap[i]) cls += " ss-" + classMap[i];
+      return (
+        '<div class="' + cls + '">' +
+        '<span class="ss-value">' + v + "</span>" +
+        '<div class="ss-bar" style="height:' + barHeight(v) + 'px"></div>' +
+        '<span class="ss-index">[' + i + "]</span>" +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  function updateWarning() {
+    ssWarningEl.hidden = isSorted;
+  }
+
+  function setBusy(state) {
+    busy = state;
+    [ssSortBtn, ssResetBtn, ssLinearBtn, ssBinaryBtn].forEach(function (btn) {
+      btn.disabled = state;
+    });
+  }
+
+  async function runBubbleSort() {
+    if (busy) return;
+    setBusy(true);
+    sortedIndices = new Set();
+    let a = arr.slice();
+    let comparisons = 0;
+    let swaps = 0;
+    const n = a.length;
+
+    for (let i = 0; i < n - 1; i++) {
+      let swappedThisPass = false;
+      for (let j = 0; j < n - 1 - i; j++) {
+        comparisons++;
+        render(a, { [j]: "compare", [j + 1]: "compare" });
+        ssSortStepsEl.textContent = "Comparisons: " + comparisons + " · Swaps: " + swaps;
+        await sleep(380);
+
+        if (a[j] > a[j + 1]) {
+          swaps++;
+          const tmp = a[j];
+          a[j] = a[j + 1];
+          a[j + 1] = tmp;
+          swappedThisPass = true;
+          render(a, { [j]: "swap", [j + 1]: "swap" });
+          ssSortStepsEl.textContent = "Comparisons: " + comparisons + " · Swaps: " + swaps;
+          await sleep(320);
+        }
+      }
+      sortedIndices.add(n - 1 - i);
+      if (!swappedThisPass) break;
+    }
+    // whatever remains is sorted too
+    for (let k = 0; k < n; k++) sortedIndices.add(k);
+
+    arr = a;
+    isSorted = true;
+    render(arr, {});
+    ssSortStatusEl.textContent = "STATUS: SORTED";
+    ssSortStatusEl.classList.add("is-sorted");
+    updateWarning();
+    setBusy(false);
+  }
+
+  function resetArray() {
+    if (busy) return;
+    arr = ORIGINAL.slice();
+    sortedIndices = new Set();
+    isSorted = false;
+    ssSortStepsEl.textContent = "Comparisons: 0 · Swaps: 0";
+    ssSortStatusEl.textContent = "STATUS: UNSORTED";
+    ssSortStatusEl.classList.remove("is-sorted");
+    ssLinearResultEl.textContent = "— run to test —";
+    ssLinearResultEl.classList.remove("is-final");
+    ssBinaryResultEl.textContent = "— run to test —";
+    ssBinaryResultEl.classList.remove("is-final");
+    updateWarning();
+    render(arr, {});
+  }
+
+  async function runLinearSearch() {
+    if (busy) return;
+    const target = parseInt(ssTargetInput.value, 10);
+    if (isNaN(target)) return;
+    setBusy(true);
+    let checks = 0;
+    let foundIndex = -1;
+
+    for (let i = 0; i < arr.length; i++) {
+      checks++;
+      render(arr, { [i]: "compare" });
+      ssLinearResultEl.textContent = "checking… " + checks + " check(s) so far";
+      await sleep(420);
+      if (arr[i] === target) {
+        foundIndex = i;
+        render(arr, { [i]: "found" });
+        break;
+      }
+    }
+
+    ssLinearResultEl.textContent =
+      foundIndex === -1
+        ? checks + " checks — NOT FOUND"
+        : checks + " checks — found at index " + foundIndex;
+    ssLinearResultEl.classList.add("is-final");
+    render(arr, {});
+    setBusy(false);
+  }
+
+  async function runBinarySearch() {
+    if (busy) return;
+    const target = parseInt(ssTargetInput.value, 10);
+    if (isNaN(target)) return;
+    setBusy(true);
+    let checks = 0;
+    let low = 0;
+    let high = arr.length - 1;
+    let foundIndex = -1;
+    const eliminated = {};
+
+    while (low <= high) {
+      checks++;
+      const mid = Math.floor((low + high) / 2);
+      const classMap = Object.assign({}, eliminated, { [mid]: "compare" });
+      render(arr, classMap);
+      ssBinaryResultEl.textContent = "checking index " + mid + "… " + checks + " check(s) so far";
+      await sleep(600);
+
+      if (arr[mid] === target) {
+        foundIndex = mid;
+        render(arr, Object.assign({}, eliminated, { [mid]: "found" }));
+        break;
+      } else if (arr[mid] < target) {
+        for (let k = low; k <= mid; k++) eliminated[k] = "eliminated";
+        low = mid + 1;
+      } else {
+        for (let k = mid; k <= high; k++) eliminated[k] = "eliminated";
+        high = mid - 1;
+      }
+      render(arr, eliminated);
+    }
+
+    ssBinaryResultEl.textContent =
+      foundIndex === -1
+        ? checks + " checks — NOT FOUND"
+        : checks + " checks — found at index " + foundIndex;
+    ssBinaryResultEl.classList.add("is-final");
+    setBusy(false);
+  }
+
+  ssSortBtn.addEventListener("click", runBubbleSort);
+  ssResetBtn.addEventListener("click", resetArray);
+  ssLinearBtn.addEventListener("click", runLinearSearch);
+  ssBinaryBtn.addEventListener("click", runBinarySearch);
+
+  render(arr, {});
+  updateWarning();
+
+  /* ================= JS Sandbox ================= */
+  const STARTER = `// Write your own linear search, then call it below.
+function linearSearch(arr, target) {
+  // your code here
+}
+
+const crewIds = [104, 88, 231, 15, 76];
+console.log(linearSearch(crewIds, 231));`;
+
+  const EXAMPLE_ROSTER = `function linearSearch(arr, target) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+const crewIds = [104, 88, 231, 15, 76];
+console.log("Looking for 15:", linearSearch(crewIds, 15));
+console.log("Looking for 76:", linearSearch(crewIds, 76));
+console.log("Looking for 999:", linearSearch(crewIds, 999));
+
+const display = document.querySelector("#shipDisplay");
+display.textContent = "SEARCH COMPLETE";`;
+
+  const EXAMPLE_MISSING = `function linearSearch(arr, target) {
+  let checks = 0;
+  for (let i = 0; i < arr.length; i++) {
+    checks++;
+    if (arr[i] === target) {
+      console.log("Found " + target + " after " + checks + " check(s).");
+      return i;
+    }
+  }
+  console.log("Checked all " + checks + " item(s) — " + target + " is not here.");
+  return -1;
+}
+
+const sorted = [5, 10, 17, 28, 42, 63, 71, 89];
+linearSearch(sorted, 63); // present — but linear still checks one by one
+linearSearch(sorted, 100); // missing — worst case, every item gets checked`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "shipDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_ROSTER },
+        { btnId: "btnExample2", code: EXAMPLE_MISSING },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
