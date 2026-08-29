@@ -245,7 +245,7 @@
     } else {
       html += `<a class="disabled" href="#">◂ START OF ACADEMY</a>`;
     }
-    html += `<a href="../index.html">MISSION INDEX</a>`;
+    html += `<a href="../dashboard.html">MISSION INDEX</a>`;
     if (next && next.status !== "planned") {
       html += `<a href="${filename(next.file)}">MISSION ${next.num}: ${next.title.toUpperCase()} ▸</a>`;
     } else if (next) {
@@ -320,7 +320,7 @@
     aside.className = "mcca-sidebar";
     aside.innerHTML =
       `<div class="mcca-sidebar-head">`
-      + `<a class="mcca-home" href="../index.html">◈ MISSION CONTROL</a>`
+      + `<a class="mcca-home" href="../dashboard.html">◈ MISSION CONTROL</a>`
       + `<button class="mcca-theme-toggle" data-theme-toggle aria-label="Toggle theme"></button>`
       + `</div>`
       + `<div class="mcca-sidebar-progress"><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="lbl">${done} / ${total} MISSIONS COMPLETE</div></div>`

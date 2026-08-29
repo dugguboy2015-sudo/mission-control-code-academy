@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadet Login — Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+<style>
+  .cadet-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; position: relative; z-index: 1; }
+  .cadet-card { width: 100%; max-width: 380px; text-align: center; }
+  .cadet-avatar { font-size: 56px; margin-bottom: 12px; }
+  .cadet-name { font-family: var(--font-display); font-size: 22px; margin-bottom: 24px; }
+  .cadet-field { margin-bottom: 16px; text-align: left; }
+  .cadet-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-family: var(--font-display); letter-spacing: 0.03em; }
+  .cadet-field input {
+    width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px;
+    padding: 11px 14px; color: var(--text-primary); font-family: var(--font-body); font-size: 14px; text-align: center;
+    box-sizing: border-box;
+  }
+  .cadet-field input[type="password"] { letter-spacing: 8px; font-size: 20px; }
+  .cadet-submit {
+    width: 100%; background: var(--accent); color: var(--bg-void); border: none; border-radius: 8px;
+    padding: 13px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.05em; cursor: pointer; margin-top: 4px;
+  }
+  .cadet-submit:disabled { opacity: 0.5; cursor: default; }
+  .cadet-msg { margin-top: 16px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .cadet-msg.error { display: block; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); color: var(--danger); }
+  .cadet-switch { display: block; text-align: center; margin-top: 20px; font-size: 12px; color: var(--text-muted); text-decoration: none; }
+  .cadet-switch:hover { color: var(--accent); }
+  .parent-link { display: block; text-align: center; margin-top: 28px; font-size: 12px; color: var(--text-muted); text-decoration: none; }
+  .parent-link:hover { color: var(--accent); }
+</style>
+</head>
+<body class="accent-pink">
+
+<canvas id="starfield"></canvas>
+
+<div class="cadet-page">
+  <div class="card cadet-card" id="cadetCard">
+    <!-- Filled in by JS depending on whether ?c=&t= are present -->
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const card = document.getElementById("cadetCard");
+  const params = new URLSearchParams(window.location.search);
+  const childId = params.get("c");
+  const accessToken = params.get("t");
+
+  function goIn() {
+    window.location.replace("/dashboard.html");
+  }
+
+  function renderUsernameForm(errorText) {
+    card.innerHTML = `
+      <div class="cadet-avatar">🚀</div>
+      <div class="cadet-name">CADET LOGIN</div>
+      <form id="userForm">
+        <div class="cadet-field">
+          <label for="uname">USERNAME</label>
+          <input type="text" id="uname" autocomplete="username" required autofocus>
+        </div>
+        <div class="cadet-field">
+          <label for="upin">PIN</label>
+          <input type="password" id="upin" maxlength="4" inputmode="numeric" autocomplete="current-password">
+        </div>
+        <button type="submit" class="cadet-submit" id="userSubmit">ENTER</button>
+      </form>
+      <div class="cadet-msg ${errorText ? "error" : ""}" ${errorText ? 'style="display:block;"' : ""}>${errorText || ""}</div>
+      <a class="parent-link" href="/index.html">◂ Parent sign-in</a>
+    `;
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submit = document.getElementById("userSubmit");
+      submit.disabled = true;
+      const username = document.getElementById("uname").value.trim();
+      const pin = document.getElementById("upin").value.trim();
+      try {
+        const result = await window.Academy.childLink.loginByUsername(username, pin);
+        if (result) { goIn(); return; }
+        renderUsernameForm("Username or PIN not recognized.");
+      } catch (err) {
+        renderUsernameForm(err.message || "Something went wrong.");
+      }
+    });
+  }
+
+  async function renderLinkFlow() {
+    let info;
+    try {
+      info = await window.Academy.childLink.publicInfo(childId, accessToken);
+    } catch (err) {
+      renderUsernameForm("That link didn't work. Try logging in with your username instead.");
+      return;
+    }
+    if (!info) {
+      renderUsernameForm("That link didn't work. Try logging in with your username instead.");
+      return;
+    }
+
+    if (!info.has_pin) {
+      // No PIN set on this profile — the link alone (the real security
+      // boundary) is enough.
+      window.Academy.childLink.loginWithLink(childId, accessToken, "").then((ok) => {
+        if (ok) goIn();
+        else renderUsernameForm("That link didn't work. Try logging in with your username instead.");
+      });
+      card.innerHTML = `<div class="cadet-avatar">${info.avatar}</div><div class="cadet-name">Welcome back, ${info.name}…</div>`;
+      return;
+    }
+
+    card.innerHTML = `
+      <div class="cadet-avatar">${info.avatar}</div>
+      <div class="cadet-name">Hi, ${info.name}!</div>
+      <form id="pinForm">
+        <div class="cadet-field">
+          <label for="lpin">ENTER YOUR PIN</label>
+          <input type="password" id="lpin" maxlength="4" inputmode="numeric" autofocus>
+        </div>
+        <button type="submit" class="cadet-submit" id="pinSubmit">GO</button>
+      </form>
+      <div class="cadet-msg" id="linkMsg"></div>
+      <a class="cadet-switch" href="child.html">Not ${info.name}? Log in with a different username ▸</a>
+    `;
+    document.getElementById("pinForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submit = document.getElementById("pinSubmit");
+      const msg = document.getElementById("linkMsg");
+      submit.disabled = true;
+      const pin = document.getElementById("lpin").value.trim();
+      try {
+        const ok = await window.Academy.childLink.loginWithLink(childId, accessToken, pin);
+        if (ok) { goIn(); return; }
+        msg.textContent = "Incorrect PIN.";
+        msg.className = "cadet-msg error";
+        submit.disabled = false;
+      } catch (err) {
+        msg.textContent = err.message || "Something went wrong.";
+        msg.className = "cadet-msg error";
+        submit.disabled = false;
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    if (!window.Academy.auth.isConfigured()) {
+      card.innerHTML = `<p style="color:var(--warning);font-size:14px;">Supabase isn't configured yet — cadet login isn't available.</p><a class="parent-link" href="/index.html">◂ Back</a>`;
+      return;
+    }
+
+    // Already logged in on this device? Skip straight in.
+    const existingLink = window.Academy.childLink.getSession();
+    if (existingLink && existingLink.childId && existingLink.accessToken) { goIn(); return; }
+    const parentSession = await window.Academy.auth.getSession();
+    if (parentSession) { goIn(); return; }
+
+    if (childId && accessToken) {
+      renderLinkFlow();
+    } else {
+      renderUsernameForm();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

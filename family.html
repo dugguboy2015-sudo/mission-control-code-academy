@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
 <title>Family Dashboard — Mission Control Code Academy</title>
 <link rel="stylesheet" href="assets/academy.css">
 <style>
@@ -19,7 +20,8 @@
   .fam-btn.primary { background: var(--accent); color: var(--bg-void); border-color: var(--accent); }
 
   .child-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
-  .child-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; }
+  .child-card { padding: 18px 20px; }
+  .child-top { display: flex; align-items: center; gap: 16px; }
   .child-avatar { font-size: 32px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--bg-panel-alt); border-radius: 12px; flex-shrink: 0; }
   .child-info { flex: 1; min-width: 0; }
   .child-info .name { font-family: var(--font-display); font-size: 16px; }
@@ -32,18 +34,34 @@
   .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
   .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
 
+  .access-panel { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-glow); }
+  .access-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .access-row:last-child { margin-bottom: 0; }
+  .access-label { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.05em; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+  .access-value {
+    flex: 1; min-width: 160px; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 6px;
+    padding: 7px 10px; font-family: var(--font-code); font-size: 12.5px; color: var(--accent); overflow-x: auto; white-space: nowrap;
+  }
+  .copy-icon-btn {
+    background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    padding: 7px 12px; border-radius: 6px; cursor: pointer; font-family: var(--font-display); font-size: 11px; flex-shrink: 0;
+  }
+  .copy-icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-icon-btn.copied { color: var(--success); border-color: var(--success); }
+
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal-overlay.open { display: flex; }
-  .modal { width: 100%; max-width: 400px; }
+  .modal { width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
   .modal h2 { font-size: 18px; margin: 0 0 18px; }
   .avatar-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
   .avatar-opt { font-size: 22px; width: 44px; height: 44px; border-radius: 10px; background: var(--bg-panel-alt); border: 2px solid var(--border-glow); cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .avatar-opt.selected { border-color: var(--accent); }
   .modal-field { margin-bottom: 14px; }
   .modal-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-family: var(--font-display); }
-  .modal-field input { width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px; }
+  .modal-field input { width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px; box-sizing: border-box; }
+  .modal-field .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
   .modal-actions button { flex: 1; }
   .modal-msg { margin-top: 12px; font-size: 13px; color: var(--danger); min-height: 18px; }
@@ -57,13 +75,13 @@
   <div class="fam-head">
     <h1>👨‍👩‍👧 FAMILY DASHBOARD</h1>
     <div class="fam-actions">
-      <a class="fam-btn" href="index.html">◈ Mission Control</a>
+      <a class="fam-btn" href="dashboard.html">◈ Mission Control</a>
       <button class="fam-btn" id="signOutBtn">Sign Out</button>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:20px;">
-    <p style="margin:0;color:var(--text-secondary);font-size:14px;">Cadet profiles for your family. Each one keeps its own progress and theme — no email or password needed for kids.</p>
+    <p style="margin:0;color:var(--text-secondary);font-size:14px;">Cadet profiles for your family. Each one keeps its own progress and theme. Give each cadet their own link below — it's a private, hard-to-guess URL, so it's what actually keeps their account secure; the PIN on top is just a convenience lock, not the real protection.</p>
   </div>
 
   <div class="child-list" id="childList"></div>
@@ -81,6 +99,11 @@
       <input type="text" id="childName" placeholder="Cadet call sign" maxlength="30">
     </div>
     <div class="modal-field">
+      <label for="childUsername">USERNAME (for logging in on other devices)</label>
+      <input type="text" id="childUsername" placeholder="Leave blank to auto-generate" maxlength="20">
+      <div class="hint">Letters/numbers only. Auto-generated from the name if left blank.</div>
+    </div>
+    <div class="modal-field">
       <label for="childPin">PIN (optional, 4 digits — a soft lock, not real security)</label>
       <input type="text" id="childPin" placeholder="Leave blank for none" maxlength="4" inputmode="numeric">
     </div>
@@ -95,25 +118,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/config.js"></script>
 <script src="assets/supabase.js"></script>
-<script src="assets/academy.js"></script>
+<script src="assets/auth-guard.js"></script>
 <script>
 (function () {
   "use strict";
 
   const AVATARS = ["🚀", "👾", "🛰️", "🪐", "👨‍🚀", "👩‍🚀", "🤖", "⭐", "🌌", "🔭"];
   let editingChildId = null;
-
-  async function requireAuth() {
-    const session = await window.Academy.auth.getSession();
-    if (!session) {
-      window.location.href = "login.html";
-      // location.href doesn't halt execution — throw to stop the caller's
-      // async chain (renderChildren, etc.) from running against no session
-      // during the brief window before the browser actually navigates away.
-      throw new Error("not signed in — redirecting");
-    }
-    return session;
-  }
 
   async function renderChildren() {
     const list = document.getElementById("childList");
@@ -127,14 +138,28 @@
       const card = document.createElement("div");
       card.className = "card child-card";
       card.innerHTML = `
-        <div class="child-avatar">${c.avatar}</div>
-        <div class="child-info">
-          <div class="name">${c.name}</div>
-          <div class="meta">${c.theme === "light" ? "☀ Light theme" : "☾ Dark theme"} ${c.hasPin ? "· 🔒 PIN set" : ""}</div>
+        <div class="child-top">
+          <div class="child-avatar">${c.avatar}</div>
+          <div class="child-info">
+            <div class="name">${c.name}</div>
+            <div class="meta">${c.theme === "light" ? "☀ Light theme" : "☾ Dark theme"} ${c.hasPin ? "· 🔒 PIN set" : "· no PIN"}</div>
+          </div>
+          <div class="child-row-actions">
+            <button class="icon-btn" data-edit="${c.id}" title="Edit">✎</button>
+            <button class="icon-btn danger" data-delete="${c.id}" title="Remove">🗑</button>
+          </div>
         </div>
-        <div class="child-row-actions">
-          <button class="icon-btn" data-edit="${c.id}" title="Edit">✎</button>
-          <button class="icon-btn danger" data-delete="${c.id}" title="Remove">🗑</button>
+        <div class="access-panel">
+          <div class="access-row">
+            <span class="access-label">CADET LINK</span>
+            <span class="access-value">${c.accessUrl}</span>
+            <button class="copy-icon-btn" data-copy="${c.accessUrl}">COPY</button>
+          </div>
+          <div class="access-row">
+            <span class="access-label">USERNAME</span>
+            <span class="access-value">${c.username || "—"}</span>
+            <button class="copy-icon-btn" data-copy="${c.username || ""}">COPY</button>
+          </div>
         </div>
       `;
       list.appendChild(card);
@@ -152,12 +177,25 @@
         }
       });
     });
+    list.querySelectorAll(".copy-icon-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const text = btn.getAttribute("data-copy");
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+          const original = btn.textContent;
+          btn.textContent = "COPIED";
+          btn.classList.add("copied");
+          setTimeout(() => { btn.textContent = original; btn.classList.remove("copied"); }, 1400);
+        });
+      });
+    });
   }
 
   function openModal(child) {
     editingChildId = child ? child.id : null;
     document.getElementById("modalTitle").textContent = child ? "Edit Cadet" : "Add a Cadet";
     document.getElementById("childName").value = child ? child.name : "";
+    document.getElementById("childUsername").value = child ? (child.username || "") : "";
     document.getElementById("childPin").value = "";
     document.getElementById("modalMsg").textContent = "";
     renderAvatarPicker(child ? child.avatar : AVATARS[0]);
@@ -187,11 +225,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
-    try {
-      await requireAuth();
-    } catch (e) {
-      return; // not signed in — requireAuth() already redirected to login.html
-    }
+    // auth-guard.js has already confirmed a parent session and revealed the page.
     await renderChildren();
 
     document.getElementById("addChildBtn").addEventListener("click", () => openModal(null));
@@ -200,16 +234,20 @@
 
     document.getElementById("modalSave").addEventListener("click", async () => {
       const name = document.getElementById("childName").value.trim();
+      const username = document.getElementById("childUsername").value.trim();
       const pin = document.getElementById("childPin").value.trim();
       const msgEl = document.getElementById("modalMsg");
       if (!name) { msgEl.textContent = "Give your cadet a name."; return; }
+      if (username && !/^[a-zA-Z0-9]{3,20}$/.test(username)) { msgEl.textContent = "Username must be 3-20 letters/numbers, no spaces."; return; }
       if (pin && !/^\d{4}$/.test(pin)) { msgEl.textContent = "PIN must be exactly 4 digits, or left blank."; return; }
       try {
         if (editingChildId) {
-          await window.Academy.family.updateChild(editingChildId, { name, avatar: selectedAvatar });
+          const patch = { name, avatar: selectedAvatar };
+          if (username) patch.username = username;
+          await window.Academy.family.updateChild(editingChildId, patch);
           if (pin) await window.Academy.family.setPin(editingChildId, pin);
         } else {
-          await window.Academy.family.createChild({ name, avatar: selectedAvatar, pin: pin || null });
+          await window.Academy.family.createChild({ name, avatar: selectedAvatar, pin: pin || null, username });
         }
         closeModal();
         renderChildren();
@@ -220,7 +258,7 @@
 
     document.getElementById("signOutBtn").addEventListener("click", async () => {
       await window.Academy.auth.signOut();
-      window.location.href = "login.html";
+      window.location.href = "/index.html";
     });
   });
 })();

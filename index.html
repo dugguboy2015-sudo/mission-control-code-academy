@@ -3,287 +3,236 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mission Control Code Academy</title>
+<title>Mission Control Code Academy — Turn Your Kid Into an AI-Native Builder</title>
+<meta name="description" content="A 69-mission, zero-to-AI-native coding curriculum with real interactive practice built into every lesson — for parents who want their kid building real software, not just watching tutorials.">
 <link rel="stylesheet" href="assets/academy.css">
 <style>
-  .account-bar {
-    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
-    padding: 10px 20px; margin: 0 auto 0; max-width: 980px; font-size: 13px; color: var(--text-secondary);
+  .landing { min-height: 100vh; display: flex; align-items: stretch; position: relative; z-index: 1; }
+  .landing-pitch, .landing-auth { padding: 64px 48px; display: flex; flex-direction: column; justify-content: flex-start; }
+  .landing-pitch { flex: 1.3; max-width: 640px; }
+  .landing-auth { flex: 1; min-width: 380px; max-width: 480px; background: rgba(30,40,66,0.65); border-left: 1px solid var(--border-glow); }
+  @media (max-width: 900px) {
+    .landing { flex-direction: column; }
+    .landing-pitch, .landing-auth { max-width: none; padding: 40px 24px; }
+    .landing-auth { border-left: none; border-top: 1px solid var(--border-glow); }
   }
-  .account-bar a, .account-bar button {
-    color: var(--text-secondary); text-decoration: none; background: transparent; border: none; cursor: pointer;
-    font-family: var(--font-body); font-size: 13px;
-  }
-  .account-bar a:hover, .account-bar button:hover { color: var(--accent); }
-  .account-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12px; color: var(--accent); }
-  .signin-banner {
-    max-width: 640px; margin: 0 auto 8px; text-align: center; font-size: 13px; color: var(--text-muted);
-    padding: 10px 16px;
-  }
-  .signin-banner a { color: var(--accent); }
 
-  .picker-overlay { position: fixed; inset: 0; background: var(--bg-void); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
-  .picker-overlay.open { display: flex; }
-  .picker-box { text-align: center; max-width: 640px; }
-  .picker-box h1 { font-size: 28px; margin-bottom: 8px; }
-  .picker-box p { color: var(--text-secondary); margin-bottom: 32px; }
-  .picker-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-  .picker-child {
-    width: 130px; background: var(--bg-panel); border: 2px solid var(--border-glow); border-radius: 14px;
-    padding: 20px 12px; cursor: pointer; color: var(--text-primary);
+  .pitch-eyebrow { display: inline-block; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.2em; color: var(--accent-pink); margin-bottom: 20px; }
+  .pitch-headline { font-family: var(--font-display); font-size: clamp(32px, 4.2vw, 50px); line-height: 1.12; margin: 0 0 20px; text-shadow: 0 0 30px rgba(78,225,255,0.25); }
+  .pitch-headline em { font-style: normal; color: var(--accent-cyan); }
+  .pitch-sub { font-size: 18px; color: var(--text-secondary); max-width: 560px; margin-bottom: 36px; }
+
+  .pitch-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 40px; }
+  .pitch-stat .num { font-family: var(--font-display); font-size: 30px; color: var(--accent-cyan); text-shadow: 0 0 18px rgba(78,225,255,0.35); }
+  .pitch-stat .lbl { font-size: 12px; color: var(--text-muted); letter-spacing: 0.04em; }
+
+  .pitch-features { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 40px; }
+  @media (max-width: 560px) { .pitch-features { grid-template-columns: 1fr; } }
+  .pitch-feature { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 18px 20px; }
+  .pitch-feature .icon { font-size: 22px; margin-bottom: 8px; display: block; }
+  .pitch-feature h3 { font-family: var(--font-display); font-size: 14px; margin: 0 0 6px; color: var(--text-primary); }
+  .pitch-feature p { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+
+  .pitch-path { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 20px 22px; }
+  .pitch-path h3 { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.04em; color: var(--accent); margin: 0 0 12px; }
+  .pitch-path-track { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pitch-chip { font-family: var(--font-code); font-size: 11.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-secondary); white-space: nowrap; }
+
+  /* ---- Auth card ---- */
+  .auth-card-inner { width: 100%; max-width: 380px; margin: 0 auto; }
+  .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .auth-tab {
+    flex: 1; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-secondary);
+    padding: 10px; border-radius: 8px; cursor: pointer; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em;
   }
-  .picker-child:hover { border-color: var(--accent); }
-  .picker-child .av { font-size: 40px; margin-bottom: 10px; }
-  .picker-child .nm { font-family: var(--font-display); font-size: 14px; }
-  .picker-add { width: 130px; border: 2px dashed var(--border-glow); border-radius: 14px; padding: 20px 12px; color: var(--text-muted); text-decoration: none; }
-  .picker-add:hover { border-color: var(--accent); color: var(--accent); }
-  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 210; display: none; align-items: center; justify-content: center; }
-  .pin-overlay.open { display: flex; }
-  .pin-box { text-align: center; }
-  .pin-box input { width: 160px; text-align: center; font-size: 24px; letter-spacing: 10px; padding: 12px; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; color: var(--text-primary); margin: 16px 0; }
-  .pin-msg { color: var(--danger); font-size: 13px; min-height: 18px; }
+  .auth-tab.active { color: var(--accent); border-color: var(--accent); background: rgba(78,225,255,0.08); }
+  .auth-field { margin-bottom: 16px; }
+  .auth-field label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-family: var(--font-display); letter-spacing: 0.03em; }
+  .auth-field input {
+    width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px;
+    padding: 11px 14px; color: var(--text-primary); font-family: var(--font-body); font-size: 14px;
+  }
+  .auth-field input:focus { outline: none; border-color: var(--accent); }
+  .auth-submit {
+    width: 100%; background: var(--accent); color: var(--bg-void); border: none; border-radius: 8px;
+    padding: 13px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.05em; cursor: pointer; margin-top: 4px;
+  }
+  .auth-submit:disabled { opacity: 0.5; cursor: default; }
+  .auth-msg { margin-top: 16px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .auth-msg.error { display: block; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); color: var(--danger); }
+  .auth-msg.success { display: block; background: rgba(77,255,180,0.08); border: 1px solid rgba(77,255,180,0.3); color: var(--success); }
+  .auth-note { margin-top: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+  .cadet-login-link { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: var(--accent-pink); text-decoration: none; }
+  .cadet-login-link:hover { text-decoration: underline; }
+  .config-warning {
+    max-width: 380px; margin: 0 auto 20px; padding: 14px 18px; border-radius: 10px;
+    background: rgba(255,207,77,0.08); border: 1px solid rgba(255,207,77,0.35); color: var(--warning); font-size: 13px;
+  }
 </style>
 </head>
-<body class="accent-cyan">
+<body class="accent-pink">
 
 <canvas id="starfield"></canvas>
 
-<!-- "Who's learning?" profile picker (shown when a parent is signed in with no active child) -->
-<div class="picker-overlay" id="pickerOverlay">
-  <div class="picker-box">
-    <h1>WHO'S LEARNING TODAY?</h1>
-    <p>Pick a cadet profile to continue their training record.</p>
-    <div class="picker-grid" id="pickerGrid"></div>
-  </div>
-</div>
+<div class="landing">
 
-<!-- PIN entry -->
-<div class="pin-overlay" id="pinOverlay">
-  <div class="card pin-box">
-    <div id="pinChildName" style="font-family:var(--font-display);margin-bottom:6px;"></div>
-    <div style="color:var(--text-muted);font-size:12px;">Enter 4-digit PIN</div>
-    <div><input type="password" id="pinInput" maxlength="4" inputmode="numeric" autofocus></div>
-    <div class="pin-msg" id="pinMsg"></div>
-    <button class="fam-btn, tag-pill" id="pinCancel" style="background:transparent;border:1px solid var(--border-glow);color:var(--text-secondary);padding:8px 16px;border-radius:8px;cursor:pointer;">Cancel</button>
-  </div>
-</div>
+  <div class="landing-pitch">
+    <div class="pitch-eyebrow">MISSION CONTROL CODE ACADEMY</div>
+    <h1 class="pitch-headline">Turn your kid into an <em>AI-native</em> builder — not just a tutorial-watcher.</h1>
+    <p class="pitch-sub">A real, structured curriculum that takes a curious kid from "what is a variable" all the way to designing, building, and deploying AI-powered applications — with hands-on practice built into every single lesson.</p>
 
-<div class="content-wrap">
-
-  <div class="account-bar" id="accountBar"></div>
-
-  <header class="dashboard-hero">
-    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
-    <h1>CADET TRAINING RECORD</h1>
-    <p class="briefing-line">Ten sectors. Zero to AI-native. Every mission ends with something you can run, break, and fix yourself — and every capstone ships to a real, working URL.</p>
-    <div class="overall-progress">
-      <div class="progress-track"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
-      <div class="progress-label" id="overallLabel">0 / 0 MISSIONS COMPLETE</div>
+    <div class="pitch-stats">
+      <div class="pitch-stat"><div class="num">69</div><div class="lbl">REAL MISSIONS</div></div>
+      <div class="pitch-stat"><div class="num">10</div><div class="lbl">SECTORS, ZERO → AI-NATIVE</div></div>
+      <div class="pitch-stat"><div class="num">100%</div><div class="lbl">RUN-IT-YOURSELF PRACTICE</div></div>
     </div>
-  </header>
 
-  <div class="legend">
-    <span><span class="dot" style="background:var(--success)"></span> Live &amp; ready</span>
-    <span><span class="dot" style="background:var(--text-muted)"></span> Planned</span>
-    <span><span class="dot" style="background:var(--accent-yellow)"></span> Capstone</span>
-    <span>🟢 Cadet &nbsp; 🟡 Officer &nbsp; 🔴 Commander</span>
+    <div class="pitch-features">
+      <div class="pitch-feature">
+        <span class="icon">🧪</span>
+        <h3>Never just reading</h3>
+        <p>Every mission ships a live JavaScript sandbox, a real in-browser Python interpreter, or a hands-on simulator — kids run real code, not watch someone else's.</p>
+      </div>
+      <div class="pitch-feature">
+        <span class="icon">🎯</span>
+        <h3>A real curriculum, not a playlist</h3>
+        <p>Sequenced from first principles through Git, JavaScript, databases, and deployment — up to prompt engineering, RAG, and building real AI agents.</p>
+      </div>
+      <div class="pitch-feature">
+        <span class="icon">👨‍👩‍👧</span>
+        <h3>Built for families</h3>
+        <p>One parent account, independent progress per kid, and a private link only your family can use to get in.</p>
+      </div>
+      <div class="pitch-feature">
+        <span class="icon">🚀</span>
+        <h3>Ships real, deployed work</h3>
+        <p>Capstone missions end with a real live URL — kids learn that "done" means deployed, not just running on one laptop.</p>
+      </div>
+    </div>
+
+    <div class="pitch-path">
+      <h3>THE PATH</h3>
+      <div class="pitch-path-track">
+        <span class="pitch-chip">0 · Ground School</span>
+        <span class="pitch-chip">1 · Web Building</span>
+        <span class="pitch-chip">2 · JavaScript</span>
+        <span class="pitch-chip">3 · Git</span>
+        <span class="pitch-chip">4 · APIs & Deploy</span>
+        <span class="pitch-chip">5 · Data & Backends</span>
+        <span class="pitch-chip">6 · Python</span>
+        <span class="pitch-chip">7 · AI-Enabled Apps</span>
+        <span class="pitch-chip">8 · AI Agents</span>
+        <span class="pitch-chip">9 · Engineering Craft</span>
+      </div>
+    </div>
   </div>
 
-  <div class="sector-list" id="sectorList"></div>
+  <div class="landing-auth">
+    <div class="auth-card-inner">
 
-  <footer class="mission-footer" style="margin-top:56px;">
-    <p style="color:var(--text-muted);font-size:13px;">Progress is stored locally in this browser. <a href="CURRICULUM-PLAN.md" style="color:var(--text-secondary);">View the full curriculum plan ▸</a></p>
-  </footer>
+      <div id="configWarning" class="config-warning" style="display:none;">
+        Supabase isn't configured yet (<code>assets/config.js</code> is blank) — accounts can't be created until that's filled in.
+      </div>
+
+      <header style="text-align:center;margin-bottom:24px;">
+        <h2 style="font-size:22px;margin:0 0 6px;">PARENT ACCOUNT</h2>
+        <p style="color:var(--text-secondary);font-size:13px;margin:0;">One account for the whole family. Add each kid's profile after signing in.</p>
+      </header>
+
+      <div class="card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabSignIn">SIGN IN</button>
+          <button class="auth-tab" id="tabSignUp">CREATE ACCOUNT</button>
+        </div>
+
+        <form id="authForm">
+          <div class="auth-field">
+            <label for="authEmail">EMAIL</label>
+            <input type="email" id="authEmail" required autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label for="authPassword">PASSWORD</label>
+            <input type="password" id="authPassword" required autocomplete="current-password" minlength="6">
+          </div>
+          <button type="submit" class="auth-submit" id="authSubmit">SIGN IN</button>
+        </form>
+
+        <div class="auth-msg" id="authMsg"></div>
+      </div>
+
+      <a class="cadet-login-link" href="child.html">🚀 Cadet login (kids click here) ▸</a>
+      <p class="auth-note">Kids don't need their own email or password — you'll get a private link, username, and PIN for each one from the family dashboard.</p>
+    </div>
+  </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/config.js"></script>
 <script src="assets/supabase.js"></script>
-<script src="assets/missions-data.js"></script>
-<script src="assets/academy.js"></script>
 <script>
 (function () {
   "use strict";
 
-  const DIFF_ICON = { cadet: "🟢", officer: "🟡", commander: "🔴" };
-
-  /* ---------------- Account bar / profile picker (Phase 2) ---------------- */
-  async function renderAccountArea() {
-    const bar = document.getElementById("accountBar");
-    if (!window.Academy || !window.Academy.auth.isConfigured()) {
-      bar.innerHTML = "";
-      return null; // not configured — behave exactly like the guest-only Phase 1 site
-    }
-
-    const session = await window.Academy.auth.getSession();
-    if (!session) {
-      bar.innerHTML = `<span class="signin-banner" style="margin:0;padding:0;">Progress in this browser only. <a href="login.html">Sign in</a> to save it to a cadet profile.</span>`;
-      return null;
-    }
-
-    const activeChildId = window.Academy.session.getActiveChild();
-    const children = await window.Academy.family.listChildren();
-    const activeChild = activeChildId ? children.find((c) => c.id === activeChildId) : null;
-
-    if (!activeChild) {
-      showPicker(children);
-      bar.innerHTML = "";
-      return null;
-    }
-
-    bar.innerHTML = `
-      <span class="account-chip">${activeChild.avatar} ${activeChild.name}</span>
-      <button id="switchProfileBtn">Switch Profile</button>
-      <a href="family.html">Family Settings</a>
-      <button id="signOutBtn2">Sign Out</button>
-    `;
-    document.getElementById("switchProfileBtn").addEventListener("click", () => {
-      window.Academy.session.clearActiveChild();
-      window.location.reload();
-    });
-    document.getElementById("signOutBtn2").addEventListener("click", async () => {
-      await window.Academy.auth.signOut();
-      window.location.href = "login.html";
-    });
-    return activeChild;
+  if (!window.Academy.auth.isConfigured()) {
+    document.getElementById("configWarning").style.display = "block";
   }
 
-  function showPicker(children) {
-    const overlay = document.getElementById("pickerOverlay");
-    const grid = document.getElementById("pickerGrid");
-    grid.innerHTML = "";
-    children.forEach((c) => {
-      const btn = document.createElement("div");
-      btn.className = "picker-child";
-      btn.innerHTML = `<div class="av">${c.avatar}</div><div class="nm">${c.name}</div>`;
-      btn.addEventListener("click", () => selectChild(c));
-      grid.appendChild(btn);
-    });
-    const addLink = document.createElement("a");
-    addLink.className = "picker-add";
-    addLink.href = "family.html";
-    addLink.innerHTML = `<div class="av">+</div><div class="nm">Add Cadet</div>`;
-    grid.appendChild(addLink);
-    overlay.classList.add("open");
+  let mode = "signin";
+  const tabSignIn = document.getElementById("tabSignIn");
+  const tabSignUp = document.getElementById("tabSignUp");
+  const submitBtn = document.getElementById("authSubmit");
+  const form = document.getElementById("authForm");
+  const msgEl = document.getElementById("authMsg");
+
+  function setMode(next) {
+    mode = next;
+    tabSignIn.classList.toggle("active", mode === "signin");
+    tabSignUp.classList.toggle("active", mode === "signup");
+    submitBtn.textContent = mode === "signin" ? "SIGN IN" : "CREATE ACCOUNT";
+    msgEl.className = "auth-msg";
+    msgEl.textContent = "";
+  }
+  tabSignIn.addEventListener("click", () => setMode("signin"));
+  tabSignUp.addEventListener("click", () => setMode("signup"));
+
+  function showMsg(text, kind) {
+    msgEl.textContent = text;
+    msgEl.className = "auth-msg " + kind;
   }
 
-  async function selectChild(child) {
-    // A reload (rather than re-rendering in place) lets academy.js's own boot
-    // sequence do the remote progress/theme sync it already does on every page
-    // load — one source of truth for that logic instead of two.
-    if (!child.hasPin) {
-      window.Academy.session.setActiveChild(child.id);
-      window.location.reload();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!window.Academy.auth.isConfigured()) {
+      showMsg("Supabase isn't configured yet — fill in assets/config.js first.", "error");
       return;
     }
-    const pinOverlay = document.getElementById("pinOverlay");
-    const pinInput = document.getElementById("pinInput");
-    const pinMsg = document.getElementById("pinMsg");
-    document.getElementById("pinChildName").textContent = `${child.avatar} ${child.name}`;
-    pinInput.value = "";
-    pinMsg.textContent = "";
-    pinOverlay.classList.add("open");
-    pinInput.focus();
-
-    function cleanup() {
-      pinOverlay.classList.remove("open");
-      pinInput.removeEventListener("keydown", onKey);
-      document.getElementById("pinCancel").removeEventListener("click", onCancel);
-    }
-    function onCancel() { cleanup(); }
-    async function onKey(e) {
-      if (e.key !== "Enter") return;
-      const ok = await window.Academy.family.verifyPin(child.id, pinInput.value.trim());
-      if (ok) {
-        cleanup();
-        window.Academy.session.setActiveChild(child.id);
-        window.location.reload();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    submitBtn.disabled = true;
+    try {
+      if (mode === "signin") {
+        await window.Academy.auth.signIn(email, password);
+        showMsg("Signed in — redirecting…", "success");
       } else {
-        pinMsg.textContent = "Incorrect PIN.";
-        pinInput.value = "";
+        await window.Academy.auth.signUp(email, password);
+        showMsg("Account created — redirecting…", "success");
       }
+      setTimeout(() => { window.location.href = "/dashboard.html"; }, 500);
+    } catch (err) {
+      showMsg(err.message || "Something went wrong. Try again.", "error");
+      submitBtn.disabled = false;
     }
-    pinInput.addEventListener("keydown", onKey);
-    document.getElementById("pinCancel").addEventListener("click", onCancel);
-  }
+  });
 
-  function render() {
-    const manifest = window.MISSION_MANIFEST;
-    const progress = window.MCCA.getProgress();
-    const listEl = document.getElementById("sectorList");
-    listEl.innerHTML = "";
-
-    let totalMissions = 0;
-    let totalDone = 0;
-
-    manifest.sectors.forEach((sector) => {
-      const missions = sector.missions;
-      const doneInSector = missions.filter((m) => progress[m.id]).length;
-      totalMissions += missions.length;
-      totalDone += doneInSector;
-      const pct = Math.round((doneInSector / missions.length) * 100);
-
-      const card = document.createElement("div");
-      card.className = "sector-card accent-" + sector.accent;
-
-      const head = document.createElement("div");
-      head.className = "sector-head";
-      head.innerHTML = `
-        <div class="sector-num">S${sector.num}</div>
-        <div class="sector-head-text">
-          <h2>${sector.name}</h2>
-          <p>${sector.subtitle}</p>
-        </div>
-        <div class="sector-progress-mini">
-          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
-          <span>${doneInSector}/${missions.length}</span>
-        </div>
-        <div class="sector-caret">▾</div>
-      `;
-      head.addEventListener("click", () => card.classList.toggle("open"));
-
-      const rows = document.createElement("div");
-      rows.className = "mission-rows";
-      missions.forEach((m) => {
-        const isDone = !!progress[m.id];
-        const isPlanned = m.status === "planned";
-        const row = document.createElement(isPlanned ? "div" : "a");
-        row.className = "mission-row" + (isPlanned ? " is-planned" : "");
-        if (!isPlanned) row.href = m.file;
-        row.innerHTML = `
-          <div class="mission-check${isDone ? " done" : ""}">${isDone ? "✓" : ""}</div>
-          <div class="mission-row-text">
-            <span class="m-num">${m.num}</span><span class="m-title">${DIFF_ICON[m.difficulty] || ""} ${m.title}</span>
-            <span class="m-sub">${m.subtitle || ""}</span>
-          </div>
-          <div class="mission-row-tags">
-            ${m.capstone ? '<span class="tag-pill capstone">CAPSTONE</span>' : ""}
-            <span class="tag-pill ${isPlanned ? "planned" : "live"}">${isPlanned ? "PLANNED" : "LIVE"}</span>
-          </div>
-        `;
-        rows.appendChild(row);
-      });
-
-      card.appendChild(head);
-      card.appendChild(rows);
-      listEl.appendChild(card);
-    });
-
-    document.getElementById("overallFill").style.width = Math.round((totalDone / totalMissions) * 100) + "%";
-    document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
-  }
-
+  // Already signed in as a parent, or this device already has a child-link
+  // session? Skip the marketing page and go straight in.
   document.addEventListener("DOMContentLoaded", async () => {
-    await renderAccountArea();
-    // Explicitly await the same remote sync academy.js's own boot handler runs —
-    // two independent async DOMContentLoaded listeners give no ordering guarantee,
-    // so this is called here too (idempotent) to be certain it's done before render().
-    if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
-    render();
-    // First sector open by default
-    const first = document.querySelector(".sector-card");
-    if (first) first.classList.add("open");
+    if (!window.Academy.auth.isConfigured()) return;
+    const session = await window.Academy.auth.getSession();
+    if (session) { window.location.replace("/dashboard.html"); return; }
+    const link = window.Academy.childLink.getSession();
+    if (link && link.childId && link.accessToken) { window.location.replace("/dashboard.html"); return; }
   });
 })();
 </script>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Cadet Training Record — Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+<style>
+  .account-bar {
+    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 20px; margin: 0 auto 0; max-width: 980px; font-size: 13px; color: var(--text-secondary);
+  }
+  .account-bar a, .account-bar button {
+    color: var(--text-secondary); text-decoration: none; background: transparent; border: none; cursor: pointer;
+    font-family: var(--font-body); font-size: 13px;
+  }
+  .account-bar a:hover, .account-bar button:hover { color: var(--accent); }
+  .account-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12px; color: var(--accent); }
+
+  .picker-overlay { position: fixed; inset: 0; background: var(--bg-void); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .picker-overlay.open { display: flex; }
+  .picker-box { text-align: center; max-width: 640px; }
+  .picker-box h1 { font-size: 28px; margin-bottom: 8px; }
+  .picker-box p { color: var(--text-secondary); margin-bottom: 32px; }
+  .picker-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .picker-child {
+    width: 130px; background: var(--bg-panel); border: 2px solid var(--border-glow); border-radius: 14px;
+    padding: 20px 12px; cursor: pointer; color: var(--text-primary);
+  }
+  .picker-child:hover { border-color: var(--accent); }
+  .picker-child .av { font-size: 40px; margin-bottom: 10px; }
+  .picker-child .nm { font-family: var(--font-display); font-size: 14px; }
+  .picker-add { width: 130px; border: 2px dashed var(--border-glow); border-radius: 14px; padding: 20px 12px; color: var(--text-muted); text-decoration: none; }
+  .picker-add:hover { border-color: var(--accent); color: var(--accent); }
+  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 210; display: none; align-items: center; justify-content: center; }
+  .pin-overlay.open { display: flex; }
+  .pin-box { text-align: center; }
+  .pin-box input { width: 160px; text-align: center; font-size: 24px; letter-spacing: 10px; padding: 12px; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 8px; color: var(--text-primary); margin: 16px 0; }
+  .pin-msg { color: var(--danger); font-size: 13px; min-height: 18px; }
+</style>
+</head>
+<body class="accent-cyan">
+
+<canvas id="starfield"></canvas>
+
+<!-- "Who's learning?" profile picker (shown when a parent is signed in with no active child) -->
+<div class="picker-overlay" id="pickerOverlay">
+  <div class="picker-box">
+    <h1>WHO'S LEARNING TODAY?</h1>
+    <p>Pick a cadet profile to continue their training record.</p>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<!-- PIN entry -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="card pin-box">
+    <div id="pinChildName" style="font-family:var(--font-display);margin-bottom:6px;"></div>
+    <div style="color:var(--text-muted);font-size:12px;">Enter 4-digit PIN</div>
+    <div><input type="password" id="pinInput" maxlength="4" inputmode="numeric" autofocus></div>
+    <div class="pin-msg" id="pinMsg"></div>
+    <button id="pinCancel" style="background:transparent;border:1px solid var(--border-glow);color:var(--text-secondary);padding:8px 16px;border-radius:8px;cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <div class="account-bar" id="accountBar"></div>
+
+  <header class="dashboard-hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>CADET TRAINING RECORD</h1>
+    <p class="briefing-line">Ten sectors. Zero to AI-native. Every mission ends with something you can run, break, and fix yourself — and every capstone ships to a real, working URL.</p>
+    <div class="overall-progress">
+      <div class="progress-track"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
+      <div class="progress-label" id="overallLabel">0 / 0 MISSIONS COMPLETE</div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--success)"></span> Live &amp; ready</span>
+    <span><span class="dot" style="background:var(--text-muted)"></span> Planned</span>
+    <span><span class="dot" style="background:var(--accent-yellow)"></span> Capstone</span>
+    <span>🟢 Cadet &nbsp; 🟡 Officer &nbsp; 🔴 Commander</span>
+  </div>
+
+  <div class="sector-list" id="sectorList"></div>
+
+  <footer class="mission-footer" style="margin-top:56px;">
+    <p style="color:var(--text-muted);font-size:13px;">Progress syncs to this cadet's account. <a href="CURRICULUM-PLAN.md" style="color:var(--text-secondary);">View the full curriculum plan ▸</a></p>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/auth-guard.js"></script>
+<script src="assets/missions-data.js"></script>
+<script src="assets/academy.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const DIFF_ICON = { cadet: "🟢", officer: "🟡", commander: "🔴" };
+
+  /* ---------------- Account bar / profile picker ---------------- */
+  async function renderAccountArea() {
+    const bar = document.getElementById("accountBar");
+
+    // The auth-guard already guarantees a parent session exists to reach this
+    // page at all — this only needs to handle "which child, if any, is active."
+    const activeChildId = window.Academy.session.getActiveChild();
+    const children = await window.Academy.family.listChildren();
+    const activeChild = activeChildId ? children.find((c) => c.id === activeChildId) : null;
+
+    if (!activeChild) {
+      showPicker(children);
+      bar.innerHTML = "";
+      return null;
+    }
+
+    bar.innerHTML = `
+      <span class="account-chip">${activeChild.avatar} ${activeChild.name}</span>
+      <button id="switchProfileBtn">Switch Profile</button>
+      <a href="family.html">Family Settings</a>
+      <button id="signOutBtn2">Sign Out</button>
+    `;
+    document.getElementById("switchProfileBtn").addEventListener("click", () => {
+      window.Academy.session.clearActiveChild();
+      window.location.reload();
+    });
+    document.getElementById("signOutBtn2").addEventListener("click", async () => {
+      await window.Academy.auth.signOut();
+      window.location.href = "/index.html";
+    });
+    return activeChild;
+  }
+
+  function showPicker(children) {
+    const overlay = document.getElementById("pickerOverlay");
+    const grid = document.getElementById("pickerGrid");
+    grid.innerHTML = "";
+    children.forEach((c) => {
+      const btn = document.createElement("div");
+      btn.className = "picker-child";
+      btn.innerHTML = `<div class="av">${c.avatar}</div><div class="nm">${c.name}</div>`;
+      btn.addEventListener("click", () => selectChild(c));
+      grid.appendChild(btn);
+    });
+    const addLink = document.createElement("a");
+    addLink.className = "picker-add";
+    addLink.href = "family.html";
+    addLink.innerHTML = `<div class="av">+</div><div class="nm">Add Cadet</div>`;
+    grid.appendChild(addLink);
+    overlay.classList.add("open");
+  }
+
+  async function selectChild(child) {
+    // A reload (rather than re-rendering in place) lets academy.js's own boot
+    // sequence do the remote progress/theme sync it already does on every page
+    // load — one source of truth for that logic instead of two.
+    if (!child.hasPin) {
+      window.Academy.session.setActiveChild(child.id);
+      window.location.reload();
+      return;
+    }
+    const pinOverlay = document.getElementById("pinOverlay");
+    const pinInput = document.getElementById("pinInput");
+    const pinMsg = document.getElementById("pinMsg");
+    document.getElementById("pinChildName").textContent = `${child.avatar} ${child.name}`;
+    pinInput.value = "";
+    pinMsg.textContent = "";
+    pinOverlay.classList.add("open");
+    pinInput.focus();
+
+    function cleanup() {
+      pinOverlay.classList.remove("open");
+      pinInput.removeEventListener("keydown", onKey);
+      document.getElementById("pinCancel").removeEventListener("click", onCancel);
+    }
+    function onCancel() { cleanup(); }
+    async function onKey(e) {
+      if (e.key !== "Enter") return;
+      const ok = await window.Academy.family.verifyPin(child.id, pinInput.value.trim());
+      if (ok) {
+        cleanup();
+        window.Academy.session.setActiveChild(child.id);
+        window.location.reload();
+      } else {
+        pinMsg.textContent = "Incorrect PIN.";
+        pinInput.value = "";
+      }
+    }
+    pinInput.addEventListener("keydown", onKey);
+    document.getElementById("pinCancel").addEventListener("click", onCancel);
+  }
+
+  function render() {
+    const manifest = window.MISSION_MANIFEST;
+    const progress = window.MCCA.getProgress();
+    const listEl = document.getElementById("sectorList");
+    listEl.innerHTML = "";
+
+    let totalMissions = 0;
+    let totalDone = 0;
+
+    manifest.sectors.forEach((sector) => {
+      const missions = sector.missions;
+      const doneInSector = missions.filter((m) => progress[m.id]).length;
+      totalMissions += missions.length;
+      totalDone += doneInSector;
+      const pct = Math.round((doneInSector / missions.length) * 100);
+
+      const card = document.createElement("div");
+      card.className = "sector-card accent-" + sector.accent;
+
+      const head = document.createElement("div");
+      head.className = "sector-head";
+      head.innerHTML = `
+        <div class="sector-num">S${sector.num}</div>
+        <div class="sector-head-text">
+          <h2>${sector.name}</h2>
+          <p>${sector.subtitle}</p>
+        </div>
+        <div class="sector-progress-mini">
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span>${doneInSector}/${missions.length}</span>
+        </div>
+        <div class="sector-caret">▾</div>
+      `;
+      head.addEventListener("click", () => card.classList.toggle("open"));
+
+      const rows = document.createElement("div");
+      rows.className = "mission-rows";
+      missions.forEach((m) => {
+        const isDone = !!progress[m.id];
+        const isPlanned = m.status === "planned";
+        const row = document.createElement(isPlanned ? "div" : "a");
+        row.className = "mission-row" + (isPlanned ? " is-planned" : "");
+        if (!isPlanned) row.href = m.file;
+        row.innerHTML = `
+          <div class="mission-check${isDone ? " done" : ""}">${isDone ? "✓" : ""}</div>
+          <div class="mission-row-text">
+            <span class="m-num">${m.num}</span><span class="m-title">${DIFF_ICON[m.difficulty] || ""} ${m.title}</span>
+            <span class="m-sub">${m.subtitle || ""}</span>
+          </div>
+          <div class="mission-row-tags">
+            ${m.capstone ? '<span class="tag-pill capstone">CAPSTONE</span>' : ""}
+            <span class="tag-pill ${isPlanned ? "planned" : "live"}">${isPlanned ? "PLANNED" : "LIVE"}</span>
+          </div>
+        `;
+        rows.appendChild(row);
+      });
+
+      card.appendChild(head);
+      card.appendChild(rows);
+      listEl.appendChild(card);
+    });
+
+    document.getElementById("overallFill").style.width = Math.round((totalDone / totalMissions) * 100) + "%";
+    document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await renderAccountArea();
+    // Explicitly await the same remote sync academy.js's own boot handler runs —
+    // two independent async DOMContentLoaded listeners give no ordering guarantee,
+    // so this is called here too (idempotent) to be certain it's done before render().
+    if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
+    render();
+    // First sector open by default
+    const first = document.querySelector(".sector-card");
+    if (first) first.classList.add("open");
+  });
+})();
+</script>
+
+</body>
+</html>
