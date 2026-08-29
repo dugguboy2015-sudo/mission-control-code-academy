@@ -226,7 +226,16 @@
 
   document.addEventListener("DOMContentLoaded", async () => {
     // auth-guard.js has already confirmed a parent session and revealed the page.
-    await renderChildren();
+    try {
+      await renderChildren();
+    } catch (err) {
+      console.error("[family] failed to load children:", err);
+      document.getElementById("childList").innerHTML =
+        '<div class="card" style="text-align:center;padding:32px;color:var(--danger);">'
+        + 'Something went wrong loading your family: <code>' + (err && err.message ? err.message : String(err)) + '</code>'
+        + '<br><br><button onclick="location.reload()" style="background:var(--accent);color:var(--bg-void);border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:var(--font-display);">RETRY</button>'
+        + '</div>';
+    }
 
     document.getElementById("addChildBtn").addEventListener("click", () => openModal(null));
     document.getElementById("modalCancel").addEventListener("click", closeModal);

@@ -264,15 +264,28 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
-    await renderAccountArea();
-    // Explicitly await the same remote sync academy.js's own boot handler runs —
-    // two independent async DOMContentLoaded listeners give no ordering guarantee,
-    // so this is called here too (idempotent) to be certain it's done before render().
-    if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
-    render();
-    // First sector open by default
-    const first = document.querySelector(".sector-card");
-    if (first) first.classList.add("open");
+    try {
+      await renderAccountArea();
+      // Explicitly await the same remote sync academy.js's own boot handler runs —
+      // two independent async DOMContentLoaded listeners give no ordering guarantee,
+      // so this is called here too (idempotent) to be certain it's done before render().
+      if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
+      render();
+      // First sector open by default
+      const first = document.querySelector(".sector-card");
+      if (first) first.classList.add("open");
+    } catch (err) {
+      // Without this, any error above (a bad query, an RLS mismatch, a
+      // network hiccup) leaves the page revealed-but-blank forever — the
+      // auth-guard already made it visible, so silence here looks exactly
+      // like an infinite, invisible "loading" state with nothing to click.
+      console.error("[dashboard] failed to load:", err);
+      document.getElementById("sectorList").innerHTML =
+        '<div class="card" style="text-align:center;padding:32px;color:var(--danger);">'
+        + 'Something went wrong loading your dashboard: <code>' + (err && err.message ? err.message : String(err)) + '</code>'
+        + '<br><br><button onclick="location.reload()" style="background:var(--accent);color:var(--bg-void);border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:var(--font-display);">RETRY</button>'
+        + '</div>';
+    }
   });
 })();
 </script>
