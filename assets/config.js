@@ -10,6 +10,6 @@
      - "anon" / "public" key    → SUPABASE_ANON_KEY
    ============================================================ */
 window.MCCA_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://orfqqwollyvwlmowuast.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_jZflsfaHy9loyASVG7RUUA_G2TM7K6H",
 };
