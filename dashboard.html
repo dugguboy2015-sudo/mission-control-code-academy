@@ -263,22 +263,34 @@
     document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
   }
 
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(label + " timed out after " + ms + "ms")), ms)),
+    ]);
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     try {
-      await renderAccountArea();
-      // Explicitly await the same remote sync academy.js's own boot handler runs —
-      // two independent async DOMContentLoaded listeners give no ordering guarantee,
-      // so this is called here too (idempotent) to be certain it's done before render().
-      if (window.MCCA.syncFromRemote) await window.MCCA.syncFromRemote();
+      console.log("[dashboard] checking account/child picker…");
+      await withTimeout(renderAccountArea(), 10000, "renderAccountArea");
+
+      console.log("[dashboard] syncing progress from Supabase…");
+      if (window.MCCA.syncFromRemote) await withTimeout(window.MCCA.syncFromRemote(), 10000, "syncFromRemote");
+
+      console.log("[dashboard] rendering sector list…");
       render();
       // First sector open by default
       const first = document.querySelector(".sector-card");
       if (first) first.classList.add("open");
+      console.log("[dashboard] done.");
     } catch (err) {
-      // Without this, any error above (a bad query, an RLS mismatch, a
+      // Without this, any error/hang above (a bad query, an RLS mismatch, a
       // network hiccup) leaves the page revealed-but-blank forever — the
       // auth-guard already made it visible, so silence here looks exactly
       // like an infinite, invisible "loading" state with nothing to click.
+      // The checkpoint logs above mean the LAST one printed pinpoints
+      // exactly which step hung, even before this timeout fires.
       console.error("[dashboard] failed to load:", err);
       document.getElementById("sectorList").innerHTML =
         '<div class="card" style="text-align:center;padding:32px;color:var(--danger);">'
