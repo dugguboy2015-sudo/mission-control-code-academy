@@ -7,14 +7,19 @@
 <meta name="description" content="A 69-mission, zero-to-AI-native coding curriculum with real interactive practice built into every lesson — for parents who want their kid building real software, not just watching tutorials.">
 <link rel="stylesheet" href="assets/academy.css">
 <style>
-  .landing { min-height: 100vh; display: flex; align-items: stretch; position: relative; z-index: 1; }
+  .landing { min-height: 100vh; width: 100%; display: flex; align-items: stretch; position: relative; z-index: 1; }
   .landing-pitch, .landing-auth { padding: 64px 48px; display: flex; flex-direction: column; justify-content: flex-start; }
-  .landing-pitch { flex: 1.3; max-width: 640px; }
-  .landing-auth { flex: 1; min-width: 380px; max-width: 480px; background: rgba(30,40,66,0.65); border-left: 1px solid var(--border-glow); }
+  /* Pitch side grows to absorb ALL leftover width on wide screens — its own
+     content is capped via .pitch-inner below so lines stay readable, but the
+     column itself (and the auth panel's background/border) still reach the
+     true edges of the viewport instead of leaving dead space beside them. */
+  .landing-pitch { flex: 1 1 0%; min-width: 0; }
+  .pitch-inner { max-width: 640px; }
+  .landing-auth { flex: 0 0 460px; background: rgba(30,40,66,0.65); border-left: 1px solid var(--border-glow); }
   @media (max-width: 900px) {
     .landing { flex-direction: column; }
-    .landing-pitch, .landing-auth { max-width: none; padding: 40px 24px; }
-    .landing-auth { border-left: none; border-top: 1px solid var(--border-glow); }
+    .landing-auth { flex-basis: auto; border-left: none; border-top: 1px solid var(--border-glow); padding: 40px 24px; }
+    .landing-pitch { padding: 40px 24px; }
   }
 
   .pitch-eyebrow { display: inline-block; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.2em; color: var(--accent-pink); margin-bottom: 20px; }
@@ -77,6 +82,7 @@
 <div class="landing">
 
   <div class="landing-pitch">
+   <div class="pitch-inner">
     <div class="pitch-eyebrow">MISSION CONTROL CODE ACADEMY</div>
     <h1 class="pitch-headline">Turn your kid into an <em>AI-native</em> builder — not just a tutorial-watcher.</h1>
     <p class="pitch-sub">A real, structured curriculum that takes a curious kid from "what is a variable" all the way to designing, building, and deploying AI-powered applications — with hands-on practice built into every single lesson.</p>
@@ -125,6 +131,7 @@
         <span class="pitch-chip">9 · Engineering Craft</span>
       </div>
     </div>
+   </div>
   </div>
 
   <div class="landing-auth">
