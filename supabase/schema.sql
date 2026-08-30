@@ -132,7 +132,9 @@ begin
     where id = p_child_id and parent_id = auth.uid();
   end if;
 end;
-$$ language plpgsql security definer set search_path = public;
+-- Supabase installs pgcrypto into an `extensions` schema by default, not
+-- `public` — search_path must include it or gen_salt()/crypt() "don't exist".
+$$ language plpgsql security definer set search_path = public, extensions;
 
 create or replace function verify_child_pin(p_child_id uuid, p_pin text)
 returns boolean as $$
@@ -149,7 +151,7 @@ begin
 
   return stored_hash = crypt(p_pin, stored_hash);
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer set search_path = public, extensions;
 
 grant execute on function set_child_pin(uuid, text) to authenticated;
 grant execute on function verify_child_pin(uuid, text) to authenticated;
@@ -211,7 +213,7 @@ begin
   end if;
   return stored_hash = crypt(p_pin, stored_hash);
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer set search_path = public, extensions;
 
 -- Fallback login from a device that doesn't have the link: username + PIN
 -- only. On success, hands back the (child_id, access_token) pair so the
@@ -239,7 +241,7 @@ begin
   avatar := rec.avatar;
   return next;
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer set search_path = public, extensions;
 
 -- ---- Child-scoped data access (progress / checklist / theme) ----
 -- Every one of these re-verifies (p_child_id, p_access_token) itself.
