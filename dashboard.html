@@ -109,8 +109,33 @@
   async function renderAccountArea() {
     const bar = document.getElementById("accountBar");
 
-    // The auth-guard already guarantees a parent session exists to reach this
-    // page at all — this only needs to handle "which child, if any, is active."
+    // A child arriving via their own private link (or the username+PIN
+    // fallback) never sees the parent's multi-child picker — there's only
+    // ever ONE child on this path, the one the link/session belongs to —
+    // so skip straight to their own account bar instead of trying (and
+    // failing) to list "my children" as if this were a parent session.
+    const childLink = window.Academy.childLink.getSession();
+    if (childLink && childLink.childId && childLink.accessToken) {
+      const info = await window.Academy.childLink.publicInfo(childLink.childId, childLink.accessToken);
+      if (!info) {
+        // Stored session no longer matches a real child (e.g. removed by a parent) — start over.
+        window.Academy.childLink.clearSession();
+        window.location.replace("/child.html");
+        return null;
+      }
+      bar.innerHTML = `
+        <span class="account-chip">${info.avatar} ${info.name}</span>
+        <button id="signOutBtn2">Log Out</button>
+      `;
+      document.getElementById("signOutBtn2").addEventListener("click", () => {
+        window.Academy.childLink.clearSession();
+        window.location.href = "/index.html";
+      });
+      return { avatar: info.avatar, name: info.name };
+    }
+
+    // Otherwise this is a parent session — the auth-guard already guarantees
+    // one exists to reach this page at all.
     const activeChildId = window.Academy.session.getActiveChild();
     const children = await window.Academy.family.listChildren();
     const activeChild = activeChildId ? children.find((c) => c.id === activeChildId) : null;
