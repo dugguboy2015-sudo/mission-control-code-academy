@@ -14,7 +14,13 @@
   "use strict";
 
   function reveal() {
-    document.documentElement.style.visibility = "";
+    // The hiding rule is `html{visibility:hidden}` in a <style> block in
+    // <head> — a real stylesheet rule, not an inline style. Setting the
+    // inline style to "" clears any inline OVERRIDE but does nothing to
+    // beat that stylesheet rule, so the page stayed invisible forever
+    // regardless of whether the rest of the page's JS succeeded. Setting
+    // it to an actual value ("visible") is what wins the cascade.
+    document.documentElement.style.visibility = "visible";
   }
   function bounce() {
     window.location.replace("/index.html");
@@ -22,7 +28,7 @@
   function showStuckError(message) {
     // Never leave the page invisible with zero feedback — that's
     // indistinguishable from "stuck loading forever" to a real visitor.
-    document.documentElement.style.visibility = "";
+    document.documentElement.style.visibility = "visible";
     document.body.innerHTML =
       '<div style="max-width:480px;margin:80px auto;padding:24px;text-align:center;font-family:sans-serif;color:#e8ecfb;">'
       + '<p>' + message + '</p>'
