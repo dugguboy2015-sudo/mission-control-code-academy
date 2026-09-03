@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.2: Prompt Engineering Fundamentals — Talking to the Model Precisely | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Chat message rendering (bespoke to this mission) ---------- */
+  .chat-msg { padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+  .chat-msg.system { background: rgba(255,110,199,0.08); border: 1px solid rgba(255,110,199,0.3); color: var(--text-secondary); }
+  .chat-msg.user { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary); }
+  .chat-msg.assistant { background: rgba(78,225,255,0.08); border: 1px solid rgba(78,225,255,0.3); color: var(--text-primary); white-space: pre-wrap; }
+  .chat-role { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.2: PROMPT ENGINEERING FUNDAMENTALS</h1>
+    <div class="subtitle">Talking to the Model Precisely</div>
+    <p class="briefing-line">Mission 7.1 established that an LLM predicts the most statistically plausible continuation of the text you give it. That single fact has a direct, practical consequence: the exact wording, structure, and framing of your input — the <strong>prompt</strong> — is the single biggest lever you have over the quality of what comes back. A vague prompt narrows nothing; a precise one narrows the model toward exactly what you actually wanted. This is a real engineering skill, learned by writing, testing, and refining — not a lucky guess.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Real LLM APIs don't take one plain string as input — they take a list of <strong>messages</strong>, each tagged with a <strong>role</strong>. This shape matters enough that you'll use it in every remaining mission of this sector.</p>
+
+      <div class="diagram-box">
+        <table class="sample-table" style="font-size:12px;">
+          <tr><th>role</th><th>content</th><th>purpose</th></tr>
+          <tr><td class="pk-cell">system</td><td>"You are a helpful, concise assistant."</td><td>Persistent instructions/persona — set once</td></tr>
+          <tr><td class="pk-cell">user</td><td>"Summarize this in 3 bullet points."</td><td>The actual request, this turn</td></tr>
+          <tr><td class="pk-cell">assistant</td><td>(the model's reply)</td><td>What comes back</td></tr>
+        </table>
+        <div class="diagram-caption">Almost every LLM API — regardless of provider — expects this three-role message shape. You'll build this exact array in Mission 7.3.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>System vs User Messages</h3>
+        <p>The <strong>system</strong> message sets standing instructions and persona that apply to the whole conversation — tone, role, constraints. The <strong>user</strong> message is the specific request for this turn. Separating them means you don't have to repeat "respond concisely, as a friendly tutor" in every single message — say it once in the system message, and it shapes everything that follows.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Being Specific Narrows the Possibilities</h3>
+        <p>"Tell me about dogs" could reasonably be answered a thousand different ways — history, breeds, care tips, biology — and the model has to guess which one you meant, usually landing on something generic. "List 3 low-shedding dog breeds good for apartments, one sentence each" leaves almost no ambiguity about what a good answer looks like.</p>
+        <div class="whatjusthappened">
+          <strong>WHY THIS WORKS, MECHANICALLY</strong>
+          Every extra specific detail in your prompt shifts the probability distribution over what comes next — Mission 7.1's exact mechanism. Vague input keeps that distribution wide and generic; specific input concentrates it toward what you actually asked for.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Few-Shot Examples: Show, Don't Just Tell</h3>
+        <p>Describing a format in words is often less reliable than simply showing 1-3 examples of exactly the input/output shape you want, right inside the prompt — called <strong>few-shot prompting</strong>. The model pattern-matches the shape of your examples far more consistently than it interprets an abstract description of that shape.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PROMPT TEXT</span><button class="copy-btn" data-copy="Convert each sentence to past tense.&#10;&#10;Example: &quot;I eat breakfast.&quot; -&gt; &quot;I ate breakfast.&quot;&#10;Example: &quot;She runs fast.&quot; -&gt; &quot;She ran fast.&quot;&#10;&#10;Now convert: &quot;They build a robot.&quot;">COPY</button></div>
+          <pre><code>Convert each sentence to past tense.
+
+Example: <span class="str">"I eat breakfast."</span> -&gt; <span class="str">"I ate breakfast."</span>
+Example: <span class="str">"She runs fast."</span> -&gt; <span class="str">"She ran fast."</span>
+
+Now convert: <span class="str">"They build a robot."</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Two examples establish a clear pattern (present tense in, past tense out, arrow format) before the real request. This is called "few-shot" as opposed to "zero-shot" (no examples at all) — and it's one of the most reliable ways to lock in a consistent output shape.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Asking for a Specific Output Format</h3>
+        <p>If you need the response in a particular shape — a numbered list, exactly one sentence, a specific tone — ask for it explicitly and specifically. "Respond in exactly 3 bullet points, no more than 10 words each" leaves far less room for a surprising reply than "keep it short."</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Iterating: Prompt Engineering Is a Loop, Not a Guess</h3>
+        <p>Nobody writes the perfect prompt on the first try. The real skill is a loop: write a prompt, run it, look closely at what came back, identify exactly what went wrong (too long? wrong format? missed a detail?), and adjust one thing at a time. Treat a disappointing first response as data, not failure — it tells you precisely what to make more specific next.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>FakePromptLLM.chat(systemPrompt, userPrompt)</code> is a small, honest, rule-based stand-in for a real model — it can't truly understand language, but it reacts to the same prompt-engineering signals a real LLM responds to: vagueness, specificity, requested format, and persona instructions. Call it and watch the reply change as you change your wording.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CHAT DISPLAY</span><span>●</span></div>
+            <div id="chatDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (vague prompt)</button>
+        <button class="console-btn" id="btnSpecific">try: a specific prompt</button>
+        <button class="console-btn" id="btnPersona">try: a system-prompt persona</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Use the Command Console to run this exact experiment.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>FakePromptLLM.chat()</code> with a deliberately vague user prompt (under 5 words, no format request) and note how generic the reply is</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Rewrite it as a specific prompt that names a topic, a format ("3 bullet points" or "numbered list"), and a length limit — call it and compare</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Add a system prompt establishing a persona (try the word "pirate" or "robot") and confirm the reply's tone changes</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, write one sentence identifying exactly which change (specificity, format request, or persona) had the biggest effect on the reply</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p><code>FakePromptLLM</code> looks for specific trigger words — try "bullet points", "one sentence", "pirate", "robot" — read the Command Console description again for the full list of signals it reacts to.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write a few-shot prompt — two "Example:" lines establishing a pattern, followed by a real request — and confirm <code>FakePromptLLM</code> detects and reacts to the examples differently than a prompt with none.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>system message</code><span>Persistent instructions/persona, set once</span></div>
+        <div class="cheat-card"><code>user message</code><span>The specific request for this turn</span></div>
+        <div class="cheat-card">Specificity<span>Narrows the model's probability distribution</span></div>
+        <div class="cheat-card">Few-shot prompting<span>Show examples of the exact shape you want</span></div>
+        <div class="cheat-card">Zero-shot prompting<span>No examples — just an instruction</span></div>
+        <div class="cheat-card">Format request<span>Explicitly state the output shape you need</span></div>
+        <div class="cheat-card">Prompt iteration<span>Write, run, diagnose, refine — repeat</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing a vague prompt and being surprised the reply is generic — vagueness in the input directly produces vagueness in the output.</li>
+          <li>Describing a desired format in abstract words instead of just showing an example of it.</li>
+          <li>Repeating the same persona/tone instructions in every single user message instead of setting them once in the system message.</li>
+          <li>Giving up after one disappointing response instead of treating it as information about what to make more specific.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the main advantage of a few-shot prompt over describing the format in words?</p>
+        <button class="quiz-btn" data-correct="false">It uses fewer tokens</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the model pattern-matches a shown example far more reliably than an abstract description of that shape.">The model matches the shown pattern more reliably than an abstract description</button>
+        <button class="quiz-btn" data-correct="false">It works only with system messages</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- FakePromptLLM ----------------
+     A small, honest, rule-based mock — reacts to prompt-engineering SIGNALS
+     (vagueness, specificity, format requests, persona, few-shot examples)
+     the same way a real model would, without claiming to be one. Lives
+     outside the sandboxed new Function so it can render into the real DOM. */
+  window.FakePromptLLM = {
+    chat(systemPrompt, userPrompt) {
+      systemPrompt = systemPrompt || "";
+      userPrompt = userPrompt || "";
+      const systemLower = systemPrompt.toLowerCase();
+      const lower = (systemPrompt + " " + userPrompt).toLowerCase();
+
+      // Persona comes ONLY from the system prompt — a topic word like "robot"
+      // appearing inside the user's actual request (e.g. a few-shot example
+      // about building a robot) should never accidentally flip the persona.
+      let persona = "";
+      if (systemLower.includes("pirate")) persona = "pirate";
+      else if (systemLower.includes("robot")) persona = "robot";
+
+      const fewShot = (userPrompt.match(/example:/gi) || []).length >= 2;
+      const wantsBullets = lower.includes("bullet point") || lower.includes("bulleted");
+      const wantsNumbered = lower.includes("numbered list");
+      const wantsOneSentence = lower.includes("one sentence");
+
+      const isVague = userPrompt.trim().split(/\s+/).length <= 5 && !wantsBullets && !wantsNumbered && !wantsOneSentence;
+
+      let reply;
+      if (isVague) {
+        reply = "That's a big topic! Here's something general about it: there's a lot to say, and I'm not sure exactly what angle you want.";
+      } else if (fewShot) {
+        reply = "(matched the pattern from your examples)\n\"They build a robot.\" -> \"They built a robot.\"";
+      } else if (wantsBullets || wantsNumbered) {
+        const bullet = wantsNumbered ? "1." : "•";
+        reply = `${bullet} First specific point about "${userPrompt.replace(/["'].*/, "").trim().slice(0, 40)}"\n${wantsNumbered ? "2." : "•"} Second specific point\n${wantsNumbered ? "3." : "•"} Third specific point`;
+      } else if (wantsOneSentence) {
+        reply = "Here is exactly one clear sentence answering your specific request.";
+      } else {
+        reply = "Here's a detailed, specific answer, shaped directly by the details you included in your prompt.";
+      }
+
+      if (persona === "pirate") {
+        reply = "Arrr, matey! " + reply.replace(/\./g, ", arr.");
+      } else if (persona === "robot") {
+        reply = "BEEP BOOP. " + reply.toUpperCase() + " END TRANSMISSION.";
+      }
+
+      const el = document.getElementById("chatDisplay");
+      if (el) {
+        el.innerHTML = ""
+          + (systemPrompt ? '<div class="chat-msg system"><span class="chat-role">system</span>' + systemPrompt + '</div>' : "")
+          + '<div class="chat-msg user"><span class="chat-role">user</span>' + userPrompt + '</div>'
+          + '<div class="chat-msg assistant"><span class="chat-role">assistant</span>' + reply + '</div>';
+      }
+      return reply;
+    },
+  };
+  window.FakePromptLLM.chat("", "Tell me about dogs.");
+
+  const STARTER = `// A deliberately VAGUE prompt — try me, then hit RUN
+const reply = FakePromptLLM.chat("", "Tell me about dogs.");
+console.log(reply);`;
+
+  const EXAMPLE_SPECIFIC = `// A SPECIFIC prompt — names a topic, a format, and a limit
+const reply = FakePromptLLM.chat(
+  "",
+  "List 3 bullet points about low-shedding dog breeds good for apartments."
+);
+console.log(reply);`;
+
+  const EXAMPLE_PERSONA = `// A system-prompt PERSONA changes the tone of the same request
+const reply = FakePromptLLM.chat(
+  "You are a friendly pirate captain.",
+  "Give me one sentence about dog breeds."
+);
+console.log(reply);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "chatDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnSpecific", code: EXAMPLE_SPECIFIC },
+        { btnId: "btnPersona", code: EXAMPLE_PERSONA },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

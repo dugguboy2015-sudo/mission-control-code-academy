@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.7: AI in the UI — Streaming, Loading States, Guardrails | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .stream-cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent-pink); animation: blink 0.8s step-end infinite; vertical-align: text-bottom; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .guardrail-flag { color: var(--danger); font-weight: 600; }
+  .guardrail-ok { color: var(--success); font-weight: 600; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.7: AI IN THE UI</h1>
+    <div class="subtitle">Streaming, Loading States, Guardrails</div>
+    <p class="briefing-line">Mission 4.6 taught you to make a slow <code>fetch</code> honest with loading and error states. An LLM response is often slower still — sometimes many seconds for a long reply — and a real AI product doesn't make you stare at a blank spinner that whole time. This mission covers the UI patterns specific to AI features: <strong>streaming</strong> partial output as it's generated, managing a growing conversation history, and <strong>guardrails</strong> that catch bad input before it's sent and bad output before it's shown.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Recall Mission 7.1's prediction loop: a model produces text one token at a time. Real LLM APIs let you receive those tokens <em>as they're generated</em>, rather than waiting for the entire response to finish before sending anything back. Displaying them the instant they arrive — a growing block of text with a blinking cursor at the end — is called <strong>streaming</strong>, and it's the difference between a chat feeling instant versus feeling stuck.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Consuming a Streamed Response</h3>
+        <p>A real streaming API sends the response in small chunks over time instead of one single block. Your client code reads each chunk as it arrives and appends it to the visible text.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function streamChat(messages, onToken) {&#10;  const response = await fetch('/api/chat-stream', {&#10;    method: 'POST',&#10;    body: JSON.stringify({ messages }),&#10;  });&#10;&#10;  const reader = response.body.getReader();&#10;  const decoder = new TextDecoder();&#10;&#10;  while (true) {&#10;    const { done, value } = await reader.read();&#10;    if (done) break;&#10;    onToken(decoder.decode(value));&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">streamChat</span>(messages, onToken) {
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/chat-stream'</span>, {
+    method: <span class="str">'POST'</span>,
+    body: JSON.<span class="fn">stringify</span>({ messages }),
+  });
+
+  <span class="kw">const</span> reader = response.body.<span class="fn">getReader</span>();
+  <span class="kw">const</span> decoder = <span class="kw">new</span> <span class="fn">TextDecoder</span>();
+
+  <span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">const</span> { done, value } = <span class="kw">await</span> reader.<span class="fn">read</span>();
+    <span class="kw">if</span> (done) <span class="kw">break</span>;
+    <span class="fn">onToken</span>(decoder.<span class="fn">decode</span>(value));
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Instead of one <code>await response.json()</code>, streaming uses a <code>reader</code> that you pull chunks from repeatedly inside a Mission 6.3-style <code>while</code> loop, stopping only when <code>done</code> becomes true. Each chunk is handed to a callback (<code>onToken</code>) so the caller decides what to do with each piece — usually, appending it straight to the screen.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Managing Conversation History</h3>
+        <p>Each turn of a chat appends both the user's message and the assistant's reply to the same <code>messages</code> array from Mission 7.2, and the <em>entire</em> array is resent on the next turn — the model has no memory of its own between requests, exactly as Mission 7.1 established.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const conversation = [{ role: &quot;system&quot;, content: &quot;You are a helpful assistant.&quot; }];&#10;&#10;function addUserMessage(text) {&#10;  conversation.push({ role: &quot;user&quot;, content: text });&#10;}&#10;&#10;function addAssistantMessage(text) {&#10;  conversation.push({ role: &quot;assistant&quot;, content: text });&#10;}&#10;&#10;// Every call resends the WHOLE conversation so far — the model has no&#10;// memory between requests.">COPY</button></div>
+          <pre><code><span class="kw">const</span> conversation = [{ role: <span class="str">"system"</span>, content: <span class="str">"You are a helpful assistant."</span> }];
+
+<span class="kw">function</span> <span class="fn">addUserMessage</span>(text) {
+  conversation.<span class="fn">push</span>({ role: <span class="str">"user"</span>, content: text });
+}
+
+<span class="kw">function</span> <span class="fn">addAssistantMessage</span>(text) {
+  conversation.<span class="fn">push</span>({ role: <span class="str">"assistant"</span>, content: text });
+}
+
+<span class="comment">// Every call resends the WHOLE conversation so far — the model has no</span>
+<span class="comment">// memory between requests.</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This array only grows — it never gets shorter on its own. Mission 7.9 covers exactly what happens once it grows too large to fit in the model's context window, and what to do about it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Guardrails: Before You Send, and Before You Show</h3>
+        <p>A production AI feature checks in both directions. An <strong>input guardrail</strong> validates the user's message before it's ever sent — rejecting an empty message, one that's absurdly long, or one containing something your app explicitly disallows. An <strong>output guardrail</strong> checks the model's reply before displaying it — catching an empty response, one that's suspiciously short, or one that failed to follow an expected format.</p>
+        <div class="whatjusthappened">
+          <strong>WHY BOTH DIRECTIONS MATTER</strong>
+          Input guardrails protect your app (and your API bill) from obviously bad requests before they even cost you a token. Output guardrails protect your <em>user</em> from a broken or inappropriate reply reaching their screen. Skipping either one leaves a real gap — a users-only chat feature with no input guardrail is an open door for abuse; one with no output guardrail is one bad model response away from an embarrassing screenshot.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>FakeStreamingLLM.streamChat(text, onToken)</code> mocks real streaming — it calls <code>onToken(chunk)</code> repeatedly over time instead of returning one final string. <code>checkInputGuardrail()</code> and <code>checkOutputGuardrail()</code> are small, real, working validation functions you'll extend yourself.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>STREAM DISPLAY</span><span>●</span></div>
+            <div id="streamDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (stream a reply)</button>
+        <button class="console-btn" id="btnGuardrail">try: input/output guardrail checks</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a small guarded, streaming chat flow entirely in the Command Console.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>FakeStreamingLLM.streamChat()</code> with an <code>onToken</code> callback that appends each chunk to a growing string and logs the growing result</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run <code>checkInputGuardrail()</code> on an empty string and on a message over 500 characters — confirm both are flagged</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Run <code>checkOutputGuardrail()</code> on an empty reply and confirm it's flagged before ever reaching a "display" step</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Add one new banned word of your own to <code>BANNED_WORDS</code> and confirm a message containing it gets flagged by <code>checkInputGuardrail()</code></label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A guardrail function should return a clear, structured result — something like <code>{ allowed: false, reason: "message too long" }</code> — not just <code>true</code>/<code>false</code>, so the calling code can show a specific, helpful message instead of a generic rejection.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a "stop" button concept: sketch (in code, calling <code>streamChat</code> with your own loop) how you'd let a user interrupt a stream mid-generation. What would need to happen to the in-progress request, and what should the UI show once stopped?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Streaming<span>Displaying tokens as they're generated, not all at once</span></div>
+        <div class="cheat-card"><code>ReadableStream</code> reader<span>Pulls chunks from a streaming response in a loop</span></div>
+        <div class="cheat-card">Conversation history<span>The messages array — only grows, resent every turn</span></div>
+        <div class="cheat-card">Input guardrail<span>Validates the user's message before sending</span></div>
+        <div class="cheat-card">Output guardrail<span>Validates the model's reply before displaying</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Waiting for the entire response before showing anything, when the API actually supports streaming — a slower-feeling app for no real reason.</li>
+          <li>Forgetting to append the assistant's own reply back into the conversation history, breaking multi-turn context on the next message.</li>
+          <li>Only checking output for correctness, never checking input — leaves the app open to obviously bad or abusive requests.</li>
+          <li>A guardrail that just silently drops a bad request with no feedback, leaving the user confused about why nothing happened.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the main UX benefit of streaming a response instead of waiting for the whole thing?</p>
+        <button class="quiz-btn" data-correct="false">It reduces the total number of tokens used</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — streaming doesn't reduce total time, but it makes the wait feel dramatically shorter and more responsive.">The app feels responsive immediately, instead of frozen until the full reply arrives</button>
+        <button class="quiz-btn" data-correct="false">It makes the model more accurate</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- FakeStreamingLLM + guardrails ----------------
+     Lives outside the sandboxed new Function so it can render into the
+     real DOM and use real setTimeout-based delivery. */
+  window.FakeStreamingLLM = {
+    streamChat(userText, onToken) {
+      const words = ("Here is a streamed reply about \"" + userText + "\" arriving one word at a time, just like a real token stream.").split(" ");
+      const el = document.getElementById("streamDisplay");
+      if (el) el.innerHTML = '<span id="streamText"></span><span class="stream-cursor"></span>';
+      let i = 0;
+      return new Promise((resolve) => {
+        const interval = setInterval(() => {
+          if (i >= words.length) {
+            clearInterval(interval);
+            const cursor = document.querySelector(".stream-cursor");
+            if (cursor) cursor.remove();
+            resolve();
+            return;
+          }
+          const chunk = (i === 0 ? "" : " ") + words[i];
+          onToken(chunk);
+          const textEl = document.getElementById("streamText");
+          if (textEl) textEl.textContent += chunk;
+          i++;
+        }, 90);
+      });
+    },
+  };
+
+  window.BANNED_WORDS = ["spamword"];
+
+  window.checkInputGuardrail = function (text) {
+    if (!text || !text.trim()) return { allowed: false, reason: "message is empty" };
+    if (text.length > 500) return { allowed: false, reason: "message too long (over 500 characters)" };
+    const lower = text.toLowerCase();
+    const hit = window.BANNED_WORDS.find((w) => lower.includes(w));
+    if (hit) return { allowed: false, reason: `message contains a banned word: "${hit}"` };
+    return { allowed: true, reason: null };
+  };
+
+  window.checkOutputGuardrail = function (reply) {
+    if (!reply || !reply.trim()) return { allowed: false, reason: "reply is empty" };
+    if (reply.trim().length < 2) return { allowed: false, reason: "reply is suspiciously short" };
+    return { allowed: true, reason: null };
+  };
+
+  const STARTER = `// Try me — then hit RUN. Watch the STREAM DISPLAY panel above the console.
+let fullText = "";
+FakeStreamingLLM.streamChat("the weather today", (chunk) => {
+  fullText += chunk;
+}).then(() => {
+  console.log("Stream finished. Full text was:", fullText);
+});`;
+
+  const EXAMPLE_GUARDRAILS = `const emptyCheck = checkInputGuardrail("");
+console.log("Empty input:", JSON.stringify(emptyCheck));
+
+const longMessage = "a".repeat(600);
+const longCheck = checkInputGuardrail(longMessage);
+console.log("600-char input:", JSON.stringify(longCheck));
+
+const goodCheck = checkInputGuardrail("What's the weather like?");
+console.log("Normal input:", JSON.stringify(goodCheck));
+
+const emptyOutput = checkOutputGuardrail("");
+console.log("Empty output:", JSON.stringify(emptyOutput));`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "streamDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnGuardrail", code: EXAMPLE_GUARDRAILS },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

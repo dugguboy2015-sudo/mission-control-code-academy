@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.8: AI Economics & Model Selection — Token Math, Routing, Fallbacks | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .cost-breakdown { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-code); font-size: 12.5px; margin-bottom: 10px; }
+  .cost-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .cost-row.total { color: var(--accent-pink); font-weight: 700; border-bottom: none; padding-top: 8px; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m08">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.8: AI ECONOMICS & MODEL SELECTION</h1>
+    <div class="subtitle">Token Math, Routing, Fallbacks</div>
+    <p class="briefing-line">Mission 5.6 taught you to napkin-math a free tier's request limit before building. LLM APIs raise the stakes: nearly every provider charges per token, input and output priced separately, and the "best" model is often 10-50x more expensive per token than a smaller one. Choosing a model, and knowing roughly what a feature will cost per month before you ship it, is a real engineering skill — not an afterthought for when the bill arrives.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every LLM API call costs something measured in <strong>tokens</strong> (Mission 7.1) — almost always priced per million tokens, with input tokens (what you send) and output tokens (what comes back) billed at different rates, output usually costing more. A single request might cost a fraction of a cent — but multiply that by thousands of users making dozens of requests a day, and Mission 5.6's exact napkin-math habit becomes essential again, just with dollars instead of a free-tier request count.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Token-Based Pricing, Concretely</h3>
+        <p>Pricing is usually quoted as a rate per million tokens, separately for input and output. Doing the math for one request looks like this:</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const inputPricePerMillion = 0.15;   // dollars per 1,000,000 input tokens&#10;const outputPricePerMillion = 0.60;  // output is often pricier than input&#10;&#10;const inputTokens = 400;&#10;const outputTokens = 150;&#10;&#10;const cost = (inputTokens / 1_000_000) * inputPricePerMillion&#10;           + (outputTokens / 1_000_000) * outputPricePerMillion;&#10;&#10;console.log(cost); // cost of ONE request, in dollars">COPY</button></div>
+          <pre><code><span class="kw">const</span> inputPricePerMillion = <span class="num">0.15</span>;   <span class="comment">// dollars per 1,000,000 input tokens</span>
+<span class="kw">const</span> outputPricePerMillion = <span class="num">0.60</span>;  <span class="comment">// output is often pricier than input</span>
+
+<span class="kw">const</span> inputTokens = <span class="num">400</span>;
+<span class="kw">const</span> outputTokens = <span class="num">150</span>;
+
+<span class="kw">const</span> cost = (inputTokens / <span class="num">1_000_000</span>) * inputPricePerMillion
+           + (outputTokens / <span class="num">1_000_000</span>) * outputPricePerMillion;
+
+<span class="fn">console.log</span>(cost); <span class="comment">// cost of ONE request, in dollars</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice output is priced separately and higher — a chatty, verbose response costs meaningfully more than a terse one, even at the exact same input. This is a real, controllable lever: instructing a model to be concise (Mission 7.2) isn't just a style choice, it directly reduces cost.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Matching Model Size to Task Difficulty</h3>
+        <p>Not every request needs the most capable (and most expensive) model available. Classifying a support ticket's category, extracting a date from text, or summarizing a short paragraph are all tasks a smaller, cheaper, faster model handles perfectly well. Reserve the expensive model for genuinely hard reasoning tasks. This is called <strong>model routing</strong>: automatically picking a cheaper model for easy requests and only escalating when the task actually needs it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function chooseModel(taskComplexity) {&#10;  // taskComplexity: &quot;simple&quot; | &quot;moderate&quot; | &quot;complex&quot;&#10;  if (taskComplexity === &quot;simple&quot;) return &quot;small-fast-model&quot;;&#10;  if (taskComplexity === &quot;moderate&quot;) return &quot;mid-tier-model&quot;;&#10;  return &quot;large-reasoning-model&quot;;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">chooseModel</span>(taskComplexity) {
+  <span class="comment">// taskComplexity: "simple" | "moderate" | "complex"</span>
+  <span class="kw">if</span> (taskComplexity === <span class="str">"simple"</span>) <span class="kw">return</span> <span class="str">"small-fast-model"</span>;
+  <span class="kw">if</span> (taskComplexity === <span class="str">"moderate"</span>) <span class="kw">return</span> <span class="str">"mid-tier-model"</span>;
+  <span class="kw">return</span> <span class="str">"large-reasoning-model"</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A real production system often uses a cheap, fast model just to classify how hard a request is, THEN routes to the appropriate model based on that classification — spending real money on the expensive model only for the requests that actually justify it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Fallbacks — When the Provider Fails</h3>
+        <p>Every external API can go down, rate-limit you, or time out — Mission 4.6 covered this for a plain <code>fetch</code>, and it applies just as much here. A production AI feature needs a <strong>fallback</strong>: a backup plan for when the primary call fails, rather than the whole feature breaking.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function callWithFallback(primaryFn, fallbackFn) {&#10;  try {&#10;    return await primaryFn();&#10;  } catch (err) {&#10;    console.warn(&quot;Primary model failed, falling back:&quot;, err.message);&#10;    return await fallbackFn();&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">callWithFallback</span>(primaryFn, fallbackFn) {
+  <span class="kw">try</span> {
+    <span class="kw">return</span> <span class="kw">await</span> <span class="fn">primaryFn</span>();
+  } <span class="kw">catch</span> (err) {
+    console.<span class="fn">warn</span>(<span class="str">"Primary model failed, falling back:"</span>, err.message);
+    <span class="kw">return</span> <span class="kw">await</span> <span class="fn">fallbackFn</span>();
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          If your primary provider is down or rate-limited, this pattern automatically tries a second option — a different model, a different provider, or even a simpler canned response — instead of the user seeing a hard failure. This is the same <code>try/catch</code> structure from every earlier mission, applied to resilience instead of validation.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The <strong>AI Cost Estimator</strong> computes a real monthly bill projection from usage assumptions. <code>routeModel(complexity)</code> and <code>callWithFallback(primary, fallback)</code> are small, working implementations of the routing and fallback patterns above.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCENARIO.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>COST ESTIMATOR</span><span>●</span></div>
+            <div id="costDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (small chatbot estimate)</button>
+        <button class="console-btn" id="btnFallback">try: primary model fails, fallback kicks in</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>You're planning a study-helper chatbot for your class of 30 students.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Estimate honestly: how many questions might one student ask per day? Build a <code>scenario</code> object with 30 users at that rate, with realistic average input/output token counts</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run it through <code>estimateLLMCost()</code> using a cheap model's pricing, then again using an expensive model's pricing (look up two real current rates, or use reasonable made-up ones) — compare the monthly totals</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Use <code>routeModel()</code> to classify 3 different example questions by complexity and confirm each one routes to a sensibly different model</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Wrap a mock "primary model call" with <code>callWithFallback()</code> and confirm the fallback runs when the primary is made to fail</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Output tokens are usually the bigger cost driver for a chatty assistant — if your estimate looks too high, check whether you're overestimating average reply length before assuming the model choice itself is the problem.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Extend <code>routeModel()</code> so it also considers a cost budget: if the running monthly total (a number you track yourself) is already over a limit you set, force every request down to the cheapest model regardless of complexity. This is a real technique called a cost-based circuit breaker.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Price per million tokens<span>How most LLM APIs are billed</span></div>
+        <div class="cheat-card">Input vs output pricing<span>Output usually costs more per token</span></div>
+        <div class="cheat-card">Model routing<span>Cheap model for easy tasks, expensive model only when needed</span></div>
+        <div class="cheat-card">Fallback<span>A backup plan for when the primary call fails</span></div>
+        <div class="cheat-card">Cost napkin-math<span>requests/day × tokens × price, before you build</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Always reaching for the most powerful (and most expensive) model available, even for trivial tasks a cheap model handles fine.</li>
+          <li>Forgetting output tokens are usually priced higher than input — an unnecessarily verbose system prompt asking for long replies costs more than it needs to.</li>
+          <li>Building an AI feature with no fallback at all — a single provider outage takes the whole feature down.</li>
+          <li>Estimating cost using only a handful of test requests instead of realistic expected usage at real scale.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why might a chatbot's system prompt asking for shorter, more concise replies actually save real money?</p>
+        <button class="quiz-btn" data-correct="false">Shorter prompts always process faster on every provider</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — output tokens are usually priced higher than input, so a shorter reply directly reduces cost per request.">Output tokens are usually billed at a higher rate, so shorter replies cost less</button>
+        <button class="quiz-btn" data-correct="false">It has no effect on cost, only on speed</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- AI Cost Estimator + routing/fallback helpers ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.estimateLLMCost = function (scenario) {
+    scenario = scenario || {};
+    const el = document.getElementById("costDisplay");
+    const users = Number(scenario.users) || 0;
+    const requestsPerUserPerDay = Number(scenario.requestsPerUserPerDay) || 0;
+    const avgInputTokens = Number(scenario.avgInputTokens) || 0;
+    const avgOutputTokens = Number(scenario.avgOutputTokens) || 0;
+    const inputPricePerMillion = Number(scenario.inputPricePerMillion) || 0;
+    const outputPricePerMillion = Number(scenario.outputPricePerMillion) || 0;
+
+    const requestsPerMonth = users * requestsPerUserPerDay * 30;
+    const inputTokensPerMonth = requestsPerMonth * avgInputTokens;
+    const outputTokensPerMonth = requestsPerMonth * avgOutputTokens;
+    const inputCost = (inputTokensPerMonth / 1000000) * inputPricePerMillion;
+    const outputCost = (outputTokensPerMonth / 1000000) * outputPricePerMillion;
+    const totalCost = inputCost + outputCost;
+
+    if (el) {
+      el.innerHTML = '<div class="cost-breakdown">'
+        + '<div class="cost-row"><span>Requests / month</span><span>' + requestsPerMonth.toLocaleString() + '</span></div>'
+        + '<div class="cost-row"><span>Input tokens / month</span><span>' + inputTokensPerMonth.toLocaleString() + '</span></div>'
+        + '<div class="cost-row"><span>Output tokens / month</span><span>' + outputTokensPerMonth.toLocaleString() + '</span></div>'
+        + '<div class="cost-row"><span>Input cost</span><span>$' + inputCost.toFixed(2) + '</span></div>'
+        + '<div class="cost-row"><span>Output cost</span><span>$' + outputCost.toFixed(2) + '</span></div>'
+        + '<div class="cost-row total"><span>Estimated monthly total</span><span>$' + totalCost.toFixed(2) + '</span></div>'
+        + '</div>';
+    }
+    return { requestsPerMonth, inputCost, outputCost, totalCost };
+  };
+
+  window.routeModel = function (complexity) {
+    if (complexity === "simple") return "small-fast-model";
+    if (complexity === "moderate") return "mid-tier-model";
+    return "large-reasoning-model";
+  };
+
+  window.callWithFallback = async function (primaryFn, fallbackFn) {
+    // Note: this function is defined in the page's own real scope, not inside
+    // the sandboxed code the cadet writes — so a console.log/warn call here
+    // would print to the REAL browser DevTools console, not this mission's
+    // on-page console panel. It stays silent and lets the caller decide
+    // what to log, exactly like the STARTER/EXAMPLE code below does.
+    try {
+      return await primaryFn();
+    } catch (err) {
+      return await fallbackFn();
+    }
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const scenario = {
+  users: 30,
+  requestsPerUserPerDay: 8,
+  avgInputTokens: 300,
+  avgOutputTokens: 150,
+  inputPricePerMillion: 0.15,
+  outputPricePerMillion: 0.60,
+};
+
+const result = estimateLLMCost(scenario);
+console.log("Estimated monthly total: $" + result.totalCost.toFixed(2));`;
+
+  const EXAMPLE_FALLBACK = `async function unreliablePrimaryModel() {
+  throw new Error("503 Service Unavailable (simulated outage)");
+}
+
+async function backupModel() {
+  return "This is a response from the backup model.";
+}
+
+async function main() {
+  // Try the primary directly first, JUST to narrate what's happening —
+  // callWithFallback() below does this same check internally either way.
+  try {
+    await unreliablePrimaryModel();
+  } catch (err) {
+    console.log("Primary model failed (" + err.message + ") — falling back...");
+  }
+
+  const result = await callWithFallback(unreliablePrimaryModel, backupModel);
+  console.log("Final result:", result);
+}
+
+main();
+
+console.log("Routing test:");
+console.log("simple ->", routeModel("simple"));
+console.log("moderate ->", routeModel("moderate"));
+console.log("complex ->", routeModel("complex"));`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "costDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnFallback", code: EXAMPLE_FALLBACK },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

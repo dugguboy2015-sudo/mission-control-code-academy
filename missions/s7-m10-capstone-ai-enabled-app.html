@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.10: Capstone — AI-Enabled Web App — Deployed, Cost-Estimated, Guardrailed | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .capstone-strip { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+  .capstone-chip { font-family: var(--font-code); font-size: 10.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-muted); }
+  .capstone-chip.c1 { border-color: rgba(255,110,199,0.4); color: var(--accent-pink); }
+  .capstone-chip.c2 { border-color: rgba(78,225,255,0.4); color: var(--accent-cyan); }
+  .capstone-chip.c3 { border-color: rgba(255,157,77,0.4); color: var(--accent-orange); }
+  .capstone-chip.c4 { border-color: rgba(77,255,180,0.4); color: var(--success); }
+
+  .chat-msg { padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+  .chat-msg.user { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary); }
+  .chat-msg.assistant { background: rgba(78,225,255,0.08); border: 1px solid rgba(78,225,255,0.3); color: var(--text-primary); }
+  .chat-msg.rejected { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); color: var(--danger); }
+  .chat-role { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px; }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--font-code); font-size: 11.5px; color: var(--text-muted); border-top: 1px solid var(--border-glow); margin-top: 10px; padding-top: 8px; }
+  .stats-bar strong { color: var(--accent-pink); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m10">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7 CAPSTONE</div>
+    <h1>MISSION 7.10: CAPSTONE — AI-ENABLED WEB APP</h1>
+    <div class="subtitle">Deployed, Cost-Estimated, Guardrailed</div>
+    <p class="briefing-line">Every mission in this sector built one piece: safe proxy calls (7.3), structured output (7.4), semantic search and RAG (7.5-7.6), streaming and guardrails (7.7), cost math and fallbacks (7.8), context management (7.9). This capstone is where all of it becomes one real, deployable app — and where "it calls an LLM and it works" stops being good enough. <strong>Ladder Level L4</strong> is the bar: AI calls go through your own proxy, guardrails catch bad input and output, cost is estimated and tracked, and the app survives the model failing or being slow.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~130 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c1">7.3 · Safe Proxy Calls</span>
+      <span class="capstone-chip c2">7.4-7.6 · Structured Output, Embeddings, RAG</span>
+      <span class="capstone-chip c3">7.7 · Streaming & Guardrails</span>
+      <span class="capstone-chip c4">7.8-7.9 · Cost, Fallbacks, Context</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Ladder Level L3 (Mission 5.7) asked for real data, real auth, and provable free-tier headroom. L4 keeps every one of those requirements and adds the ones specific to AI: <strong>AI calls go through a proxy — never the provider directly from the client; guardrails on both input and output; cost estimated and tracked, not guessed at after the fact; and a graceful fallback when the model fails or is slow.</strong> None of these are new skills today — they're the exact four things Missions 7.3, 7.7, and 7.8 already taught you, now required together, in one real app, at the same time.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <rect x="10" y="40" width="140" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="80" y="70" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">UI (client)</text>
+          <rect x="180" y="40" width="140" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="250" y="63" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">Your proxy</text>
+          <text x="250" y="78" fill="#6b7699" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">guardrails + key</text>
+          <rect x="350" y="40" width="140" height="50" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5"/>
+          <text x="420" y="63" fill="#ffe66d" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">AI Gateway</text>
+          <text x="420" y="78" fill="#6b7699" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">cache, cost, fallback</text>
+          <rect x="520" y="40" width="150" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="595" y="63" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">LLM provider(s)</text>
+          <text x="595" y="78" fill="#6b7699" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">primary + fallback</text>
+          <line x1="150" y1="65" x2="180" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a6)"/>
+          <line x1="320" y1="65" x2="350" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a6)"/>
+          <line x1="490" y1="65" x2="520" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a6)"/>
+          <defs><marker id="a6" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+        </svg>
+        <div class="diagram-caption">The L4 stack: your proxy still holds the key and runs guardrails (7.3, 7.7); an AI Gateway sits in front of the actual provider call adding caching, cost tracking, and multi-provider fallback almost for free.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">One genuinely new piece today — everything else is synthesis of Missions 7.3-7.9.</p>
+
+      <div class="subsection">
+        <h3>AI Gateway — a Proxy in Front of Your Proxy's Provider Call</h3>
+        <p>Cloudflare (and other providers) offer an <strong>AI Gateway</strong>: a service that sits between your Worker and the actual LLM provider. Instead of your Worker calling <code>api.openai.com</code> directly, it calls your AI Gateway's URL, which forwards the request — and adds, with almost no extra code, things you'd otherwise have to build yourself: automatic <strong>caching</strong> of identical requests (so repeat questions don't cost tokens twice), built-in <strong>cost and usage logging</strong> per request, and configurable <strong>fallback across multiple providers</strong> if your primary one is down.</p>
+        <div class="whatjusthappened">
+          <strong>WHY THIS MATTERS AT L4</strong>
+          Mission 7.8 taught you to hand-write a <code>callWithFallback()</code> function. An AI Gateway gives you a production-grade version of that same idea — plus caching and cost visibility — configured once, instead of hand-rolled in every project. Your Worker's code barely changes: the URL it calls points at the Gateway instead of the provider directly.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The L4 Checklist, As Code You Already Know</h3>
+        <ul style="color:var(--text-secondary);line-height:1.9;">
+          <li><strong>Proxy, not direct calls</strong> — Mission 7.3's architecture: the client never holds a provider key.</li>
+          <li><strong>Guardrails, both directions</strong> — Mission 7.7's <code>checkInputGuardrail()</code> / <code>checkOutputGuardrail()</code>, now mandatory on every request.</li>
+          <li><strong>Cost estimated AND tracked</strong> — Mission 7.8's math, but running live as the app is actually used, not just estimated once up front.</li>
+          <li><strong>Graceful fallback</strong> — Mission 7.8's <code>callWithFallback()</code> pattern, so one provider hiccup doesn't take down the whole feature.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A working reference app, <code>FakeAIApp</code>, implementing all four L4 requirements together: input guardrails, a primary model with automatic fallback, live running cost tracking, and output guardrails. Hit RUN, then try the examples, then extend it for the Mission Challenge.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>APP DISPLAY</span><span>●</span></div>
+            <div id="appDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (normal chat)</button>
+        <button class="console-btn" id="btnBadInput">try: a message that trips the guardrail</button>
+        <button class="console-btn" id="btnFailover">try: primary model fails, fallback saves it</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Extend <code>FakeAIApp</code> in the Command Console, then design the real, deployable version. Every item below should be true of your finished design.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Send at least 3 different messages through <code>FakeAIApp.chat()</code> and confirm the running cost total in the stats bar increases only for ALLOWED messages, never for rejected ones</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Trigger the input guardrail (an empty message or a banned word) and confirm no cost was added for the rejected attempt</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Trigger a simulated primary-model failure and confirm the chat still completes successfully via the fallback, with the display showing which model actually responded</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Add ONE new banned word or a new output-guardrail rule of your own, and prove it works with a test message</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">In a written design note (comments are fine): name the real Cloudflare service you'd deploy your real proxy Worker to, whether you'd add an AI Gateway in front of the provider call, and roughly what your monthly cost estimate would be for 50 users at 10 messages/day each</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your cost total looks wrong after testing a rejected message, double-check that your guardrail check happens BEFORE any cost is added — cost should only ever be incurred for requests that actually reach the (simulated) model.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a simple caching layer to <code>FakeAIApp.chat()</code>: if the exact same message text is sent twice in a row, return the cached previous reply instead of "calling the model" again, and confirm no additional cost is added on the cached hit. This is a hand-built miniature of exactly what an AI Gateway's caching does automatically.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Ladder Level L4<span>Proxy + guardrails + cost tracking + fallback</span></div>
+        <div class="cheat-card">AI Gateway<span>Caching, cost logging, fallback — in front of the provider</span></div>
+        <div class="cheat-card">Input guardrail<span>Checked BEFORE any cost is incurred</span></div>
+        <div class="cheat-card">Output guardrail<span>Checked BEFORE the reply reaches the user</span></div>
+        <div class="cheat-card">Live cost tracking<span>Running total, not just an up-front estimate</span></div>
+        <div class="cheat-card">Fallback<span>The feature survives the primary model failing</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Adding cost to the running total even for a request the guardrail rejected — inflates your tracked cost above what was actually spent.</li>
+          <li>Building guardrails and fallback separately without testing them together — a rejected input should never even reach the fallback logic.</li>
+          <li>Treating cost estimation as a one-time calculation done before building, instead of also tracking real usage as the app runs.</li>
+          <li>Skipping the proxy architecture "because it's just a school project" — the habit matters more than any single project's actual risk.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in a correctly built L4 app, what happens to the running cost total when a message is rejected by the input guardrail?</p>
+        <button class="quiz-btn" data-correct="false">It still increases, since a check was performed</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — a rejected message never reaches the model, so no real cost was incurred and none should be tracked.">It stays the same — a rejected message never reaches the model</button>
+        <button class="quiz-btn" data-correct="false">It resets to zero</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- FakeAIApp: the full L4 reference implementation ----------------
+     Combines guardrails (7.7), cost tracking (7.8), and fallback (7.8) into one
+     cohesive object. Lives outside the sandboxed new Function so it can render
+     into the real DOM and keep running state (cost total) across multiple calls. */
+  window.FakeAIApp = (function () {
+    const BANNED_WORDS = ["spamword"];
+    const COST_PER_CALL = 0.0009; // a rough flat mock cost per successful call, in dollars
+    let totalCost = 0;
+    let callCount = 0;
+
+    function checkInputGuardrail(text) {
+      if (!text || !text.trim()) return { allowed: false, reason: "message is empty" };
+      if (text.length > 500) return { allowed: false, reason: "message too long" };
+      const lower = text.toLowerCase();
+      const hit = BANNED_WORDS.find((w) => lower.includes(w));
+      if (hit) return { allowed: false, reason: `contains banned word: "${hit}"` };
+      return { allowed: true, reason: null };
+    }
+
+    function checkOutputGuardrail(reply) {
+      if (!reply || !reply.trim()) return { allowed: false, reason: "reply is empty" };
+      return { allowed: true, reason: null };
+    }
+
+    function primaryModel(text, forceFail) {
+      if (forceFail) throw new Error("Primary model timeout (simulated)");
+      return `(primary model) Here's a thoughtful response to: "${text}"`;
+    }
+
+    function backupModel(text) {
+      return `(backup model) Here's a simpler response to: "${text}"`;
+    }
+
+    function render(entries) {
+      const el = document.getElementById("appDisplay");
+      if (!el) return;
+      el.innerHTML = entries.map((e) =>
+        '<div class="chat-msg ' + e.cls + '"><span class="chat-role">' + e.role + '</span>' + e.text + '</div>'
+      ).join("")
+        + '<div class="stats-bar"><span>Calls: <strong>' + callCount + '</strong></span><span>Running cost: <strong>$' + totalCost.toFixed(4) + '</strong></span></div>';
+    }
+
+    return {
+      chat(userText, opts) {
+        opts = opts || {};
+        const entries = [{ role: "user", cls: "user", text: userText }];
+
+        const inputCheck = checkInputGuardrail(userText);
+        if (!inputCheck.allowed) {
+          entries.push({ role: "rejected", cls: "rejected", text: "⚠ Rejected before sending: " + inputCheck.reason });
+          render(entries);
+          return { allowed: false, reason: inputCheck.reason, reply: null };
+        }
+
+        let reply, usedFallback = false;
+        try {
+          reply = primaryModel(userText, opts.forceFail);
+        } catch (err) {
+          usedFallback = true;
+          reply = backupModel(userText);
+        }
+
+        const outputCheck = checkOutputGuardrail(reply);
+        if (!outputCheck.allowed) {
+          reply = "I'm not able to give a good answer to that right now.";
+        }
+
+        callCount++;
+        totalCost += COST_PER_CALL;
+
+        entries.push({ role: usedFallback ? "assistant (fallback)" : "assistant", cls: "assistant", text: reply });
+        render(entries);
+        return { allowed: true, reply, usedFallback };
+      },
+      getStats() {
+        return { totalCost, callCount };
+      },
+    };
+  })();
+
+  const STARTER = `// Try me — then hit RUN
+const result = FakeAIApp.chat("What's the status of life support?");
+console.log("Reply:", result.reply);
+console.log("Stats:", JSON.stringify(FakeAIApp.getStats()));`;
+
+  const EXAMPLE_BAD_INPUT = `// This message should be REJECTED before any cost is incurred
+const before = FakeAIApp.getStats();
+const result = FakeAIApp.chat("");
+const after = FakeAIApp.getStats();
+
+console.log("Allowed:", result.allowed, "| Reason:", result.reason);
+console.log("Cost before:", before.totalCost, "| Cost after:", after.totalCost, "(should be unchanged)");`;
+
+  const EXAMPLE_FAILOVER = `// Force the primary model to fail — the fallback should complete the chat anyway
+const result = FakeAIApp.chat("Give me a full diagnostic report.", { forceFail: true });
+console.log("Used fallback:", result.usedFallback);
+console.log("Reply:", result.reply);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "appDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnBadInput", code: EXAMPLE_BAD_INPUT },
+        { btnId: "btnFailover", code: EXAMPLE_FAILOVER },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.4: Structured Output & Tool Calling — Making the Model Speak JSON | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+</head>
+<body class="accent-pink" data-mission-id="s7-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.4: STRUCTURED OUTPUT & TOOL CALLING</h1>
+    <div class="subtitle">Making the Model Speak JSON</div>
+    <p class="briefing-line">Most of what you've done in this sector produces prose — sentences meant for a human to read. But code needs data, not sentences: a specific date, a specific number, a decision about which function to run. This mission covers two ways to get an LLM to hand your code exactly the structured data it needs — asking for JSON directly, and the more powerful <strong>tool calling</strong> pattern, where the model doesn't just describe what to do, it tells your code exactly which function to call and with what arguments.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Imagine asking an LLM to read a receipt and tell you the total. "The total was twenty-five dollars and fifty cents" is a perfectly good sentence for a human — and a nightmare to reliably parse in code. Every different phrasing ("came to $25.50", "twenty-five fifty", "$25.5") needs its own fragile parsing rule. Ask instead for <code>{"total": 25.50}</code>, and your code just reads <code>data.total</code> — no parsing fragile sentence structure at all.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Prompting for JSON Directly</h3>
+        <p>The simplest approach: explicitly instruct the model to respond with ONLY valid JSON, and show it the exact shape you expect.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PROMPT TEXT</span><button class="copy-btn" data-copy="Extract the customer name and total amount from this text.&#10;Respond with ONLY valid JSON in this exact shape, nothing else:&#10;{ &quot;customer&quot;: string, &quot;amount&quot;: number }&#10;&#10;Text: &quot;Order placed for Priya, total came to $42.00&quot;">COPY</button></div>
+          <pre><code>Extract the customer name and total amount from this text.
+Respond with ONLY valid JSON in this exact shape, nothing else:
+{ <span class="str">"customer"</span>: string, <span class="str">"amount"</span>: number }
+
+Text: <span class="str">"Order placed for Priya, total came to $42.00"</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Showing the exact key names and types (Mission 7.2's few-shot principle, applied to a schema instead of an example) narrows the model toward one specific, parseable shape. Real APIs often also offer a dedicated "JSON mode" setting that further guarantees syntactically valid JSON — but even then, the <em>values</em> inside it aren't guaranteed correct, only the syntax is.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Always Validate What Comes Back</h3>
+        <p>"Asked for JSON" does not mean "guaranteed valid JSON." The model can still occasionally produce malformed output, or valid JSON with a missing field or a wrong type. Treat every structured response the way Mission 5.1 taught you to treat a database write: verify it before trusting it.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function parseExtraction(rawText) {&#10;  let data;&#10;  try {&#10;    data = JSON.parse(rawText);&#10;  } catch (err) {&#10;    throw new Error(&quot;Model did not return valid JSON: &quot; + err.message);&#10;  }&#10;&#10;  if (typeof data.customer !== &quot;string&quot; || typeof data.amount !== &quot;number&quot;) {&#10;    throw new Error(&quot;JSON was valid but missing expected fields/types.&quot;);&#10;  }&#10;&#10;  return data;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">parseExtraction</span>(rawText) {
+  <span class="kw">let</span> data;
+  <span class="kw">try</span> {
+    data = JSON.<span class="fn">parse</span>(rawText);
+  } <span class="kw">catch</span> (err) {
+    <span class="kw">throw new</span> Error(<span class="str">"Model did not return valid JSON: "</span> + err.message);
+  }
+
+  <span class="kw">if</span> (<span class="kw">typeof</span> data.customer !== <span class="str">"string"</span> || <span class="kw">typeof</span> data.amount !== <span class="str">"number"</span>) {
+    <span class="kw">throw new</span> Error(<span class="str">"JSON was valid but missing expected fields/types."</span>);
+  }
+
+  <span class="kw">return</span> data;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Two separate failure modes are checked here, deliberately: <code>JSON.parse</code> failing outright (syntactically broken), and parsing succeeding but the shape being wrong (a missing field, or <code>amount</code> coming back as the string <code>"42"</code> instead of the number <code>42</code>). Skipping either check means a bad LLM response silently corrupts whatever your code does next.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Tool Calling — the Model Picks a Function, Your Code Runs It</h3>
+        <p><strong>Tool calling</strong> (also called "function calling") is a step beyond JSON extraction. You describe one or more functions your code actually has — name, description, and what arguments it needs — and the model, instead of writing prose, responds with which function to call and what arguments to call it with. Your code then genuinely executes that function; the model never runs anything itself.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — DESCRIBING A TOOL</span><button class="copy-btn" data-copy="const tools = [&#10;  {&#10;    name: &quot;get_weather&quot;,&#10;    description: &quot;Get the current weather for a city&quot;,&#10;    parameters: { city: &quot;string&quot; },&#10;  },&#10;];&#10;&#10;// The model, given &quot;What's the weather in Paris?&quot;, responds with:&#10;// { name: &quot;get_weather&quot;, arguments: { city: &quot;Paris&quot; } }&#10;// — not prose, a structured instruction for YOUR code to carry out.">COPY</button></div>
+          <pre><code><span class="kw">const</span> tools = [
+  {
+    name: <span class="str">"get_weather"</span>,
+    description: <span class="str">"Get the current weather for a city"</span>,
+    parameters: { city: <span class="str">"string"</span> },
+  },
+];
+
+<span class="comment">// The model, given "What's the weather in Paris?", responds with:</span>
+<span class="comment">// { name: "get_weather", arguments: { city: "Paris" } }</span>
+<span class="comment">// — not prose, a structured instruction for YOUR code to carry out.</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The model never actually checks the weather — it can't; it has no internet access of its own. It decides <em>that</em> a weather lookup is needed and <em>what city</em>, and hands that decision back as structured data. Your code is responsible for actually calling a real weather API (or database, or calculator) with those arguments. This exact loop — model decides, your code executes — is the foundation of every AI agent in Sector 8.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>FakeStructuredLLM.extractJSON(text)</code> mocks a JSON-extraction call — sometimes it deliberately returns malformed JSON, exactly like a real model occasionally can. <code>FakeStructuredLLM.callWithTools(userText)</code> mocks tool calling — it returns a <code>{name, arguments}</code> instruction that YOUR code must actually carry out.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>RESULT DISPLAY</span><span>●</span></div>
+            <div id="resultDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (extract + validate)</button>
+        <button class="console-btn" id="btnMalformed">try: a malformed JSON response</button>
+        <button class="console-btn" id="btnTool">try: tool calling (weather lookup)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Complete both patterns from the Command Console for yourself.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>FakeStructuredLLM.extractJSON()</code> on a new sentence of your own, parse it with <code>JSON.parse()</code> wrapped in <code>try/catch</code></label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Add a type check confirming <code>amount</code> is really a <code>number</code> before using it, throwing a clear error if not</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Call <code>FakeStructuredLLM.callWithTools()</code> with a weather-related question and read back the <code>{name, arguments}</code> it returns</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Write your OWN <code>get_weather(city)</code> function and actually call it using the arguments the model returned — complete the loop end to end</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>The model's tool call only ever gives you a function <em>name</em> (a string) and <em>arguments</em> (an object) — it's your job to match that name to a real function you actually wrote, usually with something like an <code>if</code> chain or a lookup object keyed by function name.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a second tool, <code>convert_currency(amount, from, to)</code>, to your own tools list (just as a description object — <code>FakeStructuredLLM</code> won't recognize it, but describing it correctly, with the right parameter names and types, is the actual skill being practiced).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Structured output<span>Asking the model for JSON instead of prose</span></div>
+        <div class="cheat-card"><code>JSON.parse()</code> + try/catch<span>Never trust structured output unchecked</span></div>
+        <div class="cheat-card">Tool calling<span>Model picks a function + arguments; your code runs it</span></div>
+        <div class="cheat-card">Tool description<span>Name, description, and expected parameters — what you tell the model exists</span></div>
+        <div class="cheat-card">The model never executes<span>It only decides what to call — your code does the calling</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Trusting a "JSON" response without wrapping the parse in <code>try/catch</code> — one malformed response crashes the whole pipeline.</li>
+          <li>Checking that JSON parsed successfully but never checking the field types match what you expected.</li>
+          <li>Assuming a tool call means the model actually performed the action — it only decided an action was needed; your code must genuinely perform it.</li>
+          <li>Writing a vague tool description ("does stuff with weather") instead of a precise name, description, and parameter list.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — after the model returns a tool call like <code>{name: "get_weather", arguments: {city: "Paris"}}</code>, what actually fetches the real weather?</p>
+        <button class="quiz-btn" data-correct="false">The model itself, using its internet connection</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the model only decides what should happen. Your own code has to actually perform the lookup.">Your own code, by actually calling a real weather API with those arguments</button>
+        <button class="quiz-btn" data-correct="false">The tool description automatically runs itself</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- FakeStructuredLLM ----------------
+     Lives outside the sandboxed new Function so it can render into the
+     real DOM. Deliberately returns occasionally-malformed JSON text (a
+     STRING, not an object) to force real JSON.parse()/try-catch practice. */
+  window.FakeStructuredLLM = {
+    extractJSON(text, malformed) {
+      const amountMatch = text.match(/\$?(\d+(?:\.\d{1,2})?)/);
+      const nameMatch = text.match(/for ([A-Z][a-z]+)/);
+      const customer = nameMatch ? nameMatch[1] : "Unknown";
+      const amount = amountMatch ? amountMatch[1] : "0";
+      const raw = malformed
+        ? `{"customer": "${customer}", "amount": ${amount}` // missing closing brace on purpose
+        : `{"customer": "${customer}", "amount": ${amount}}`;
+      const el = document.getElementById("resultDisplay");
+      if (el) el.innerHTML = '<div class="sandbox-output" style="border:none;padding:0;">Raw model output:<br><code>' + raw.replace(/</g, "&lt;") + '</code></div>';
+      return raw;
+    },
+    callWithTools(userText) {
+      const el = document.getElementById("resultDisplay");
+      let toolCall = null;
+      const cityMatch = userText.match(/weather in ([A-Z][a-z]+)/i);
+      if (cityMatch) {
+        toolCall = { name: "get_weather", arguments: { city: cityMatch[1] } };
+      }
+      if (el) {
+        el.innerHTML = toolCall
+          ? '<div>Model decided to call:<br><code>' + JSON.stringify(toolCall) + '</code></div>'
+          : '<div class="out-status">No matching tool for that request.</div>';
+      }
+      return toolCall;
+    },
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const raw = FakeStructuredLLM.extractJSON("Order placed for Priya, total came to $42.00");
+
+try {
+  const data = JSON.parse(raw);
+  if (typeof data.customer !== "string" || typeof data.amount !== "number") {
+    throw new Error("JSON was valid but missing expected fields/types.");
+  }
+  console.log("Customer:", data.customer, "| Amount:", data.amount);
+} catch (err) {
+  console.error("Failed to use model output:", err.message);
+}`;
+
+  const EXAMPLE_MALFORMED = `// This time, ask for a DELIBERATELY malformed response —
+// exactly the kind of thing a real model occasionally produces.
+const raw = FakeStructuredLLM.extractJSON("Order placed for Priya, total came to $42.00", true);
+
+try {
+  const data = JSON.parse(raw);
+  console.log("Customer:", data.customer, "| Amount:", data.amount);
+} catch (err) {
+  console.error("Failed to use model output:", err.message);
+  console.log("This is exactly why every structured-output call needs a try/catch.");
+}`;
+
+  const EXAMPLE_TOOL = `// Ask a question that should trigger the get_weather tool
+const toolCall = FakeStructuredLLM.callWithTools("What's the weather in Paris?");
+
+if (toolCall && toolCall.name === "get_weather") {
+  // YOUR code, actually performing the real lookup — the model never does this itself.
+  function get_weather(city) {
+    return city + ": 18°C, partly cloudy (mock data)";
+  }
+  const result = get_weather(toolCall.arguments.city);
+  console.log("Tool call:", JSON.stringify(toolCall));
+  console.log("Result:", result);
+} else {
+  console.log("No tool call was triggered.");
+}`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "resultDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnMalformed", code: EXAMPLE_MALFORMED },
+        { btnId: "btnTool", code: EXAMPLE_TOOL },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
