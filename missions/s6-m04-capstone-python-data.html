@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.4: Capstone — Data-Crunching Mini-Project — A Real Python Analysis Tool | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Capstone dependency-chips strip (matches Sector 4's capstone convention) ---------- */
+  .capstone-strip { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .capstone-chip { font-family: var(--font-code); font-size: 11px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-muted); }
+  .capstone-chip.c-fund  { border-color: rgba(176,131,255,0.4); color: var(--accent-purple); }
+  .capstone-chip.c-data  { border-color: rgba(78,225,255,0.4);  color: var(--accent-cyan); }
+  .capstone-chip.c-files { border-color: rgba(77,255,180,0.4);  color: var(--success); }
+
+  .terminal-callout { background: #05070d; border: 1px solid var(--border-glow); border-left: 3px solid var(--accent-green); border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-family: var(--font-code); font-size: 13px; }
+  .terminal-callout .tc-label { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--accent-green); margin-bottom: 8px; display: block; }
+  .terminal-callout .tc-line { color: var(--text-secondary); margin-bottom: 3px; }
+  .terminal-callout .tc-prompt { color: var(--accent-green); }
+
+  #pyEditor { min-height: 380px; tab-size: 4; }
+  #pyOutput { min-height: 380px; max-height: 460px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6 CAPSTONE</div>
+    <h1>MISSION 6.4: CAPSTONE — DATA-CRUNCHING MINI-PROJECT</h1>
+    <div class="subtitle">A Real Python Analysis Tool</div>
+    <p class="briefing-line">No new syntax today. Every tool you need — variables, functions, conditionals, loops, lists of dictionaries, string parsing, file I/O — you already have. This capstone is about combining all of it into one real program that takes messy raw text and turns it into a clean, trustworthy report, the exact shape of work that sits underneath most real-world data science and automation scripts. It also hardens your code against the one thing every real dataset eventually throws at you: a row that doesn't look quite like the others.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~80 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip c-fund">Mission 6.1 · Python Fundamentals</span>
+      <span class="capstone-chip c-data">Mission 6.2 · Lists, Dicts & Data Structures</span>
+      <span class="capstone-chip c-files">Mission 6.3 · Files, Loops & Working with Data</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>You're building a <strong>Fleet Log Analyzer</strong>: a program that reads a mission log (a list of dated events with fuel usage), and produces a real report — totals, averages, the biggest single fuel expense, filtered views. Mission 6.3 already built the core parsing pipeline: raw text → <code>.splitlines()</code> → <code>.split(",")</code> → a list of dictionaries. This capstone asks you to do two things with that pipeline that separate a script from a real tool: break it into small, well-named functions instead of one long block, and make it survive a row of data that doesn't parse cleanly, instead of crashing the entire program over one bad line.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Function Decomposition — One Job Per Function</h3>
+        <p>It's tempting to write a data script as one long sequence of steps from top to bottom. The problem shows up the moment something needs to change: a single giant block is hard to test, hard to reuse, and hard to read months later. The fix is <strong>decomposition</strong> — splitting the work into small functions, each doing exactly one clearly-named thing.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="def parse_log(raw_text):&#10;    # ... turns raw text into a list of dicts&#10;    pass&#10;&#10;def total_fuel(log_entries):&#10;    return sum(e[&quot;fuel_used&quot;] for e in log_entries)&#10;&#10;def average_fuel(log_entries):&#10;    return total_fuel(log_entries) / len(log_entries)&#10;&#10;def most_fuel_event(log_entries):&#10;    return max(log_entries, key=lambda e: e[&quot;fuel_used&quot;])">COPY</button></div>
+          <pre><code><span class="kw">def</span> <span class="fn">parse_log</span>(raw_text):
+    <span class="comment"># ... turns raw text into a list of dicts</span>
+    <span class="kw">pass</span>
+
+<span class="kw">def</span> <span class="fn">total_fuel</span>(log_entries):
+    <span class="kw">return</span> <span class="fn">sum</span>(e[<span class="str">"fuel_used"</span>] <span class="kw">for</span> e <span class="kw">in</span> log_entries)
+
+<span class="kw">def</span> <span class="fn">average_fuel</span>(log_entries):
+    <span class="kw">return</span> <span class="fn">total_fuel</span>(log_entries) / <span class="fn">len</span>(log_entries)
+
+<span class="kw">def</span> <span class="fn">most_fuel_event</span>(log_entries):
+    <span class="kw">return</span> <span class="fn">max</span>(log_entries, key=<span class="kw">lambda</span> e: e[<span class="str">"fuel_used"</span>])</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each function does exactly one job and has a name that describes it — <code>average_fuel</code> doesn't parse anything, and <code>parse_log</code> doesn't compute any statistics. Notice <code>average_fuel</code> even reuses <code>total_fuel</code> instead of re-summing — building small functions that call each other is how real programs avoid repeating the same logic twice.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Handling Bad Data Gracefully: try/except</h3>
+        <p>Real logs eventually contain a malformed row — a missing field, a value that isn't actually a number. Sector 4's JavaScript <code>try/catch</code> has a direct Python equivalent: <code>try/except</code>. Wrapping the risky conversion step lets you skip one bad row instead of crashing the entire analysis.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="def parse_log(raw_text):&#10;    lines = raw_text.splitlines()&#10;    entries = []&#10;    skipped = 0&#10;&#10;    for line in lines[1:]:&#10;        values = line.split(&quot;,&quot;)&#10;        try:&#10;            entry = {&#10;                &quot;date&quot;: values[0],&#10;                &quot;event&quot;: values[1],&#10;                &quot;fuel_used&quot;: int(values[2]),&#10;            }&#10;            entries.append(entry)&#10;        except (ValueError, IndexError):&#10;            skipped += 1&#10;            print(f&quot;⚠ Skipped malformed row: {line}&quot;)&#10;&#10;    print(f&quot;Parsed {len(entries)} rows, skipped {skipped}.&quot;)&#10;    return entries">COPY</button></div>
+          <pre><code><span class="kw">def</span> <span class="fn">parse_log</span>(raw_text):
+    lines = raw_text.<span class="fn">splitlines</span>()
+    entries = []
+    skipped = <span class="num">0</span>
+
+    <span class="kw">for</span> line <span class="kw">in</span> lines[<span class="num">1</span>:]:
+        values = line.<span class="fn">split</span>(<span class="str">","</span>)
+        <span class="kw">try</span>:
+            entry = {
+                <span class="str">"date"</span>: values[<span class="num">0</span>],
+                <span class="str">"event"</span>: values[<span class="num">1</span>],
+                <span class="str">"fuel_used"</span>: <span class="fn">int</span>(values[<span class="num">2</span>]),
+            }
+            entries.append(entry)
+        <span class="kw">except</span> (ValueError, IndexError):
+            skipped += <span class="num">1</span>
+            <span class="fn">print</span>(<span class="str">f"⚠ Skipped malformed row: {line}"</span>)
+
+    <span class="fn">print</span>(<span class="str">f"Parsed {len(entries)} rows, skipped {skipped}."</span>)
+    <span class="kw">return</span> entries</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>int(values[2])</code> raises a <code>ValueError</code> if that field isn't really a number (say, an empty string). Trying to read <code>values[2]</code> at all raises an <code>IndexError</code> if the row didn't have enough comma-separated fields to begin with. Catching both by name — rather than a bare <code>except:</code> that swallows every possible error, including genuine bugs — is what makes this defensible: you're only forgiving the two specific failure shapes you actually expect from messy data.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Assembling the Report</h3>
+        <p>With parsing and statistics handled by separate functions, the "main" part of the program becomes short and readable — it just calls the pieces in order and formats the result.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="log = parse_log(RAW_LOG)&#10;&#10;print(&quot;=== MISSION REPORT ===&quot;)&#10;print(f&quot;Entries: {len(log)}&quot;)&#10;print(f&quot;Total fuel: {total_fuel(log)}&quot;)&#10;print(f&quot;Average fuel per event: {average_fuel(log):.1f}&quot;)&#10;&#10;biggest = most_fuel_event(log)&#10;print(f&quot;Biggest single expense: {biggest['event']} ({biggest['fuel_used']} fuel)&quot;)">COPY</button></div>
+          <pre><code>log = <span class="fn">parse_log</span>(RAW_LOG)
+
+<span class="fn">print</span>(<span class="str">"=== MISSION REPORT ==="</span>)
+<span class="fn">print</span>(<span class="str">f"Entries: {len(log)}"</span>)
+<span class="fn">print</span>(<span class="str">f"Total fuel: {total_fuel(log)}"</span>)
+<span class="fn">print</span>(<span class="str">f"Average fuel per event: {average_fuel(log):.1f}"</span>)
+
+biggest = <span class="fn">most_fuel_event</span>(log)
+<span class="fn">print</span>(<span class="str">f"Biggest single expense: {biggest['event']} ({biggest['fuel_used']} fuel)"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>{average_fuel(log):.1f}</code> is an f-string formatting trick — <code>:.1f</code> rounds a float to exactly one decimal place, so <code>21.666666...</code> prints as a clean <code>21.7</code> instead of a long, ugly decimal. This is the same pipeline as Mission 6.3, just organized into functions that each do one job — which is exactly why it reads this cleanly.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A complete, working Fleet Log Analyzer. Hit RUN to see the full report, then try the buttons below to see it handle a genuinely broken row, and to filter the log by event type.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>ANALYZER.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (full analyzer)</button>
+        <button class="console-btn" id="btnExample1">try: a malformed row in the log</button>
+        <button class="console-btn" id="btnExample2">try: filter by event type</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build your real analyzer in the Command Console above, then run the real version on your own computer against a real file — every task below should be true of that real, final script.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">A <code>parse_log(raw_text)</code> function that returns a list of dictionaries, skipping (not crashing on) any malformed row using <code>try/except</code></label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Separate <code>total_fuel()</code>, <code>average_fuel()</code>, and <code>most_fuel_event()</code> functions — each doing exactly one job</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">A formatted "MISSION REPORT" printout using f-strings, including the average rounded to one decimal place with <code>:.1f</code></label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">A filter that returns only entries of one specific <code>event</code> type, built with a list comprehension</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">On your own computer: create a real <code>mission_log.csv</code> with at least 8 rows (deliberately include one malformed row), write <code>analyzer.py</code> using real <code>with open(...)</code>, and confirm the malformed row gets skipped and reported instead of crashing the script</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Test your <code>try/except</code> block deliberately — add a row with a missing field or a non-numeric fuel value on purpose, and confirm your program prints a warning and keeps going, rather than assuming it works because your clean sample data never happened to break it.</p>
+      </details>
+
+      <div class="terminal-callout">
+        <span class="tc-label">RUN IT FOR REAL — IN YOUR TERMINAL</span>
+        <div class="tc-line"><span class="tc-prompt">$</span> cd path/to/your/folder</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> # create mission_log.csv with a header row, 8+ data rows, one broken</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 analyzer.py</div>
+      </div>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a <code>fuel_by_event_type(log)</code> function that returns a dictionary mapping each unique event type to its total fuel usage — using a dict comprehension or a manual loop — and print it as a small breakdown table at the end of your report.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Function decomposition<span>One clearly-named job per function</span></div>
+        <div class="cheat-card"><code>try / except</code><span>Python's try/catch — handle expected failures by name</span></div>
+        <div class="cheat-card"><code>ValueError</code><span>Raised when a conversion like <code>int()</code> fails</span></div>
+        <div class="cheat-card"><code>IndexError</code><span>Raised when a list index doesn't exist</span></div>
+        <div class="cheat-card"><code>max(list, key=...)</code><span>Find the item with the highest value of some field</span></div>
+        <div class="cheat-card"><code>f"{x:.1f}"</code><span>Format a number to one decimal place</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing one giant script instead of small functions — impossible to test or reuse one piece without the whole thing.</li>
+          <li>Using a bare <code>except:</code> that catches every possible error, hiding genuine bugs alongside the expected messy-data cases.</li>
+          <li>Testing only against clean, hand-written sample data and never actually trying a broken row to confirm the error handling works at all.</li>
+          <li>Computing an average by hand instead of reusing an existing <code>total_fuel()</code> function — duplicated logic that can quietly drift out of sync.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why catch <code>except (ValueError, IndexError):</code> specifically, instead of a bare <code>except:</code>?</p>
+        <button class="quiz-btn" data-correct="false">Bare <code>except:</code> is not valid Python syntax</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — naming specific exceptions means you only forgive the failures you actually expect, instead of silently hiding real bugs too.">It only forgives the specific failures you expect, not every possible bug</button>
+        <button class="quiz-btn" data-correct="false">It runs faster than a bare <code>except:</code></button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8
+2087-03-04,resupply,5
+2087-03-05,orbit_insertion,12
+2087-03-06,course_correction,6"""
+
+def parse_log(raw_text):
+    lines = raw_text.splitlines()
+    entries = []
+    skipped = 0
+
+    for line in lines[1:]:
+        values = line.split(",")
+        try:
+            entry = {
+                "date": values[0],
+                "event": values[1],
+                "fuel_used": int(values[2]),
+            }
+            entries.append(entry)
+        except (ValueError, IndexError):
+            skipped += 1
+            print(f"⚠ Skipped malformed row: {line}")
+
+    print(f"Parsed {len(entries)} rows, skipped {skipped}.")
+    return entries
+
+def total_fuel(log_entries):
+    return sum(e["fuel_used"] for e in log_entries)
+
+def average_fuel(log_entries):
+    return total_fuel(log_entries) / len(log_entries)
+
+def most_fuel_event(log_entries):
+    return max(log_entries, key=lambda e: e["fuel_used"])
+
+log = parse_log(RAW_LOG)
+
+print("=== MISSION REPORT ===")
+print(f"Entries: {len(log)}")
+print(f"Total fuel: {total_fuel(log)}")
+print(f"Average fuel per event: {average_fuel(log):.1f}")
+
+biggest = most_fuel_event(log)
+print(f"Biggest single expense: {biggest['event']} ({biggest['fuel_used']} fuel)")`;
+
+  const EXAMPLE_MALFORMED = `RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,
+2087-03-03,docking,8
+2087-03-04,resupply
+2087-03-05,orbit_insertion,12"""
+
+def parse_log(raw_text):
+    lines = raw_text.splitlines()
+    entries = []
+    skipped = 0
+
+    for line in lines[1:]:
+        values = line.split(",")
+        try:
+            entry = {
+                "date": values[0],
+                "event": values[1],
+                "fuel_used": int(values[2]),
+            }
+            entries.append(entry)
+        except (ValueError, IndexError):
+            skipped += 1
+            print(f"⚠ Skipped malformed row: {line}")
+
+    print(f"Parsed {len(entries)} rows, skipped {skipped}.")
+    return entries
+
+log = parse_log(RAW_LOG)
+print("Rows that survived parsing:")
+for entry in log:
+    print(entry)`;
+
+  const EXAMPLE_FILTER = `RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8
+2087-03-04,resupply,5
+2087-03-05,orbit_insertion,12
+2087-03-06,course_correction,6"""
+
+def parse_log(raw_text):
+    lines = raw_text.splitlines()
+    entries = []
+    for line in lines[1:]:
+        values = line.split(",")
+        entries.append({"date": values[0], "event": values[1], "fuel_used": int(values[2])})
+    return entries
+
+log = parse_log(RAW_LOG)
+
+# Filter to just one event type using a list comprehension
+orbit_events = [e for e in log if e["event"] == "orbit_insertion"]
+print(f"Found {len(orbit_events)} orbit_insertion events:")
+for e in orbit_events:
+    print(f"  {e['date']}: {e['fuel_used']} fuel")
+
+print(f"Total fuel just for orbit_insertion: {sum(e['fuel_used'] for e in orbit_events)}")`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_MALFORMED },
+        { btnId: "btnExample2", code: EXAMPLE_FILTER },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

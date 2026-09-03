@@ -103,9 +103,9 @@ window.MISSION_MANIFEST = {
       "accent": "purple",
       "missions": [
         { "id": "s6-m01", "num": "6.1", "title": "Python Fundamentals", "subtitle": "Second Language, Same Universe", "file": "missions/s6-m01-python-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 60, "source": "mission-05-python-fundamentals.html" },
-        { "id": "s6-m02", "num": "6.2", "title": "Lists, Dicts & Data Structures", "subtitle": "Python's Arrays and Objects", "file": "missions/s6-m02-python-data-structures.html", "status": "planned", "difficulty": "officer", "estMinutes": 45 },
-        { "id": "s6-m03", "num": "6.3", "title": "Files, Loops & Working with Data", "subtitle": "Reading Real Files in Python", "file": "missions/s6-m03-python-files-and-data.html", "status": "planned", "difficulty": "officer", "estMinutes": 50 },
-        { "id": "s6-m04", "num": "6.4", "title": "Capstone: Data-Crunching Mini-Project", "subtitle": "A Real Python Analysis Tool", "file": "missions/s6-m04-capstone-python-data.html", "status": "planned", "difficulty": "officer", "estMinutes": 80, "capstone": true }
+        { "id": "s6-m02", "num": "6.2", "title": "Lists, Dicts & Data Structures", "subtitle": "Python's Arrays and Objects", "file": "missions/s6-m02-python-data-structures.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s6-m03", "num": "6.3", "title": "Files, Loops & Working with Data", "subtitle": "Reading Real Files in Python", "file": "missions/s6-m03-python-files-and-data.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s6-m04", "num": "6.4", "title": "Capstone: Data-Crunching Mini-Project", "subtitle": "A Real Python Analysis Tool", "file": "missions/s6-m04-capstone-python-data.html", "status": "live", "difficulty": "officer", "estMinutes": 80, "capstone": true }
       ]
     },
     {
