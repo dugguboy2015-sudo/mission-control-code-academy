@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 5.1: Data Modeling — Designing the Ship's Records Before You Build Them | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Schema Blueprint console renderer (bespoke to this mission) ---------- */
+  .schema-canvas { display: flex; flex-wrap: wrap; gap: 16px; padding: 4px 0; }
+  .schema-table-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; min-width: 190px; overflow: hidden; }
+  .schema-table-head { font-family: var(--font-code); font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(255,255,255,0.03); padding: 8px 12px; border-bottom: 1px solid var(--border-glow); letter-spacing: 0.5px; }
+  .schema-col-row { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-family: var(--font-code); font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); flex-wrap: wrap; }
+  .schema-col-row:last-child { border-bottom: none; }
+  .schema-badge { display: inline-block; min-width: 20px; text-align: center; font-size: 9px; font-weight: 700; padding: 2px 4px; border-radius: 4px; letter-spacing: 0.5px; }
+  .schema-badge.pk { background: rgba(255,230,109,0.15); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+  .schema-badge.fk { background: rgba(78,225,255,0.12); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+  .schema-col-name { color: var(--text-primary); }
+  .schema-col-type { color: var(--text-muted); font-size: 10.5px; }
+  .schema-fk-target { color: var(--accent-cyan); font-size: 10.5px; margin-left: auto; }
+  #schemaDisplay.sandbox-display { display: block; height: auto; min-height: 160px; padding: 14px; }
+</style>
+</head>
+<body class="accent-green" data-mission-id="s5-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 5</div>
+    <h1>MISSION 5.1: DATA MODELING</h1>
+    <div class="subtitle">Tables, Rows, Columns, Keys & Relationships</div>
+    <p class="briefing-line">Before any database gets built, someone has to decide its shape — what tables exist, what belongs in each one, and how they connect. Get that shape wrong and every feature you build on top of it fights you forever: duplicated data drifts out of sync, queries need to be rewritten, and "simple" changes ripple everywhere. Get it right, and the rest of the app almost falls into place. This mission is entirely about designing before building — no SQL commands yet, just the thinking that has to happen first.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>You already know the basics from Mission 5.2's records vault: a <strong>table</strong> is a labeled manifest sheet, each <strong>row</strong> is one record, each <strong>column</strong> is one field every record has, and a <strong>primary key</strong> gives every row a unique identity. That's enough to describe one table. But real applications almost never have just one table — a crew roster, a mission log, and a supply inventory all exist at once, and the real design work is deciding <em>how those tables connect to each other</em>. That connection is called a <strong>relationship</strong>, and there are exactly three shapes it ever takes.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <rect x="20" y="20" width="180" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="110" y="50" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">crew</text>
+          <rect x="260" y="20" width="180" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="350" y="50" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">missions</text>
+          <line x1="200" y1="45" x2="260" y2="45" stroke="#6b7699" stroke-width="1.5"/>
+          <text x="210" y="38" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10">1</text>
+          <text x="248" y="38" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10">N</text>
+          <text x="130" y="90" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="11" text-anchor="middle">ONE-TO-MANY</text>
+          <text x="130" y="105" fill="#6b7699" font-family="Rubik, sans-serif" font-size="9.5" text-anchor="middle">one crew member leads many missions</text>
+
+          <rect x="20" y="130" width="180" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="110" y="160" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">authors</text>
+          <rect x="260" y="130" width="180" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="350" y="160" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">authors_bio</text>
+          <line x1="200" y1="155" x2="260" y2="155" stroke="#6b7699" stroke-width="1.5"/>
+          <text x="210" y="148" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10">1</text>
+          <text x="248" y="148" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10">1</text>
+          <text x="130" y="200" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="11" text-anchor="middle">ONE-TO-ONE (rare)</text>
+
+          <rect x="500" y="70" width="180" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="590" y="100" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">crew ↔ missions</text>
+          <text x="590" y="140" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="11" text-anchor="middle">MANY-TO-MANY</text>
+          <text x="590" y="155" fill="#6b7699" font-family="Rubik, sans-serif" font-size="9.5" text-anchor="middle">needs a junction table →</text>
+        </svg>
+        <div class="diagram-caption">Every relationship between two tables is one of these three shapes. One-to-many is by far the most common; one-to-one is rare enough that it's often just merged into a single table instead.</div>
+      </div>
+
+      <p>Designing a schema is really answering three questions, in order: what are the "things" in your app (those become tables), what facts does each thing have (those become columns), and how do the things reference each other (those become foreign keys — and sometimes an entire extra table, as you'll see below). Get the tables and relationships right first; the columns are usually the easy part.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Choosing a Good Primary Key</h3>
+        <p>It's tempting to use a real-world value as a primary key — an email address, a username, a ship registry number. Resist this. Real-world values change (people get new emails, rename their accounts), and if any other table has stored a foreign key pointing at the old value, that link silently breaks. The standard fix is a <strong>surrogate key</strong>: a meaningless, auto-incrementing number (or an auto-generated random ID) that exists purely to identify the row and never needs to change.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="-- Fragile: email can change, breaking anything that referenced it&#10;CREATE TABLE crew_bad (email TEXT PRIMARY KEY, name TEXT);&#10;&#10;-- Solid: id never changes, email is just a regular (UNIQUE) column&#10;CREATE TABLE crew_good (&#10;  id INTEGER PRIMARY KEY,&#10;  email TEXT UNIQUE NOT NULL,&#10;  name TEXT NOT NULL&#10;);">COPY</button></div>
+          <pre><code><span class="comment">-- Fragile: email can change, breaking anything that referenced it</span>
+<span class="kw">CREATE TABLE</span> crew_bad (email <span class="kw">TEXT PRIMARY KEY</span>, name <span class="kw">TEXT</span>);
+
+<span class="comment">-- Solid: id never changes, email is just a regular (UNIQUE) column</span>
+<span class="kw">CREATE TABLE</span> crew_good (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  email <span class="kw">TEXT UNIQUE NOT NULL</span>,
+  name <span class="kw">TEXT NOT NULL</span>
+);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>crew_good</code> still guarantees no two rows share an email — that's what <code>UNIQUE</code> does — but the email itself is never used as the thing other tables point to. Supabase and Firebase both follow this pattern automatically: every row gets an auto-generated <code>id</code> (or UUID) whether you ask for one or not.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>One-to-Many: The Foreign Key Goes on the "Many" Side</h3>
+        <p>This is the relationship you'll use constantly. One crew member can lead many missions, but each mission has exactly one leader. The rule for where the foreign key lives is simple: it always goes on the table representing the "many" side, because each row on that side needs to point back to exactly one row on the "one" side.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="CREATE TABLE crew (&#10;  id INTEGER PRIMARY KEY,&#10;  name TEXT NOT NULL&#10;);&#10;&#10;CREATE TABLE missions (&#10;  id INTEGER PRIMARY KEY,&#10;  title TEXT NOT NULL,&#10;  leader_id INTEGER REFERENCES crew(id)  -- the FK lives here, on the &quot;many&quot; side&#10;);">COPY</button></div>
+          <pre><code><span class="kw">CREATE TABLE</span> crew (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  name <span class="kw">TEXT NOT NULL</span>
+);
+
+<span class="kw">CREATE TABLE</span> missions (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  title <span class="kw">TEXT NOT NULL</span>,
+  leader_id <span class="kw">INTEGER REFERENCES</span> crew(id)  <span class="comment">-- the FK lives here, on the "many" side</span>
+);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Putting <code>leader_id</code> on <code>crew</code> instead would only allow one mission per crew member — the opposite of what "one crew member, many missions" means. When you're unsure which side gets the FK, ask: "can this side have more than one of the other thing?" Whichever side answers yes gets the foreign key.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Many-to-Many: You Need a Third Table</h3>
+        <p>Sometimes both sides can have many of the other: many crew members can work on many missions, and each mission can have many crew members. Neither table can hold a single foreign key for this — a column can't cleanly hold "several other IDs." The fix is a <strong>junction table</strong> (also called a join table): a third table whose entire job is to hold one row per pairing.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="CREATE TABLE crew_missions (&#10;  crew_id INTEGER REFERENCES crew(id),&#10;  mission_id INTEGER REFERENCES missions(id),&#10;  PRIMARY KEY (crew_id, mission_id)&#10;);&#10;&#10;-- Which crew worked on mission 3?&#10;SELECT crew.name&#10;FROM crew_missions&#10;JOIN crew ON crew_missions.crew_id = crew.id&#10;WHERE crew_missions.mission_id = 3;">COPY</button></div>
+          <pre><code><span class="kw">CREATE TABLE</span> crew_missions (
+  crew_id <span class="kw">INTEGER REFERENCES</span> crew(id),
+  mission_id <span class="kw">INTEGER REFERENCES</span> missions(id),
+  <span class="kw">PRIMARY KEY</span> (crew_id, mission_id)
+);
+
+<span class="comment">-- Which crew worked on mission 3?</span>
+<span class="kw">SELECT</span> crew.name
+<span class="kw">FROM</span> crew_missions
+<span class="kw">JOIN</span> crew <span class="kw">ON</span> crew_missions.crew_id = crew.id
+<span class="kw">WHERE</span> crew_missions.mission_id = 3;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>crew_missions</code> holds two foreign keys and nothing else — one row means "this crew member worked on this mission." The <code>PRIMARY KEY (crew_id, mission_id)</code> is a <strong>composite key</strong> — the two columns together must be unique, which stops the same pairing from being inserted twice, even though neither column is unique on its own.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Normalization: Every Fact Lives in Exactly One Place</h3>
+        <p><strong>Normalization</strong> is the practice of structuring tables so no fact is ever duplicated. It sounds academic, but the reasoning is entirely practical.</p>
+        <div class="diagram-box">
+          <table class="sample-table" style="font-size:11.5px;">
+            <tr><th class="pk-th">id</th><th>title</th><th>leader_name</th><th>leader_rank</th></tr>
+            <tr><td class="pk-cell">1</td><td>Survey Kepler Station</td><td>Nova</td><td>Captain</td></tr>
+            <tr><td class="pk-cell">2</td><td>Repair Outer Hull</td><td>Nova</td><td>Captain</td></tr>
+          </table>
+          <div class="diagram-caption">Bad: "Nova" and "Captain" are copied into every mission row she leads. Promote her, and you must remember to update every single row — miss one, and the data quietly disagrees with itself.</div>
+        </div>
+        <p>The fix is exactly what you already know: store <code>leader_id</code> instead, and look up the name and rank from <code>crew</code> whenever you need them. Nova's rank now lives in exactly one row, in one table — update it once, and every mission that references her is automatically correct.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Constraints: Guardrails Built Into the Table Itself</h3>
+        <p>A well-designed schema doesn't just describe the shape of your data — it actively refuses bad data at the door, before your application code even runs. These four constraints do most of that work:</p>
+        <div class="cheat-grid">
+          <div class="cheat-card"><code>NOT NULL</code><span>This column can never be left empty</span></div>
+          <div class="cheat-card"><code>UNIQUE</code><span>No two rows may share this value</span></div>
+          <div class="cheat-card"><code>DEFAULT</code><span>Auto-fill a value when none is given</span></div>
+          <div class="cheat-card"><code>CHECK</code><span>Reject rows that fail a custom condition</span></div>
+        </div>
+        <div class="code-block">
+          <div class="code-tab"><span>SQL</span><button class="copy-btn" data-copy="CREATE TABLE missions (&#10;  id INTEGER PRIMARY KEY,&#10;  title TEXT NOT NULL,&#10;  status TEXT DEFAULT 'planned',&#10;  crew_slots INTEGER CHECK (crew_slots > 0)&#10;);">COPY</button></div>
+          <pre><code><span class="kw">CREATE TABLE</span> missions (
+  id <span class="kw">INTEGER PRIMARY KEY</span>,
+  title <span class="kw">TEXT NOT NULL</span>,
+  status <span class="kw">TEXT DEFAULT</span> <span class="str">'planned'</span>,
+  crew_slots <span class="kw">INTEGER CHECK</span> (crew_slots &gt; 0)
+);</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Any <code>INSERT</code> that omits <code>title</code> is rejected outright — the database itself enforces it, so no application bug can ever slip a titleless mission in. <code>status</code> quietly becomes <code>'planned'</code> if you don't specify one, and <code>crew_slots</code> can never be zero or negative. Validating this deep, at the database level, is a safety net your front-end validation can't replace.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The <strong>Schema Blueprint</strong> below turns a plain JavaScript object into a live diagram. Describe your tables — their columns, which one is the primary key, and which columns are foreign keys — then call <code>renderSchema(tables)</code> to draw it. <span class="schema-badge pk" style="vertical-align:middle;">PK</span> marks a primary key, <span class="schema-badge fk" style="vertical-align:middle;">FK</span> marks a foreign key with an arrow to what it points at.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCHEMA.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SCHEMA BLUEPRINT</span><span>●</span></div>
+            <div id="schemaDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnOneToMany">try: one-to-many</button>
+        <button class="console-btn" id="btnManyToMany">try: many-to-many junction table</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Design the schema for a small starbase library — no SQL needed, just a <code>tables</code> object rendered through the Schema Blueprint above.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Define an <code>authors</code> table with a primary key <code>id</code> and a <code>name</code> column
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Define a <code>books</code> table with a primary key <code>id</code>, a <code>title</code> column, and an <code>author_id</code> foreign key pointing at <code>authors.id</code> (one author writes many books)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Define a <code>tags</code> table with a primary key <code>id</code> and a <code>label</code> column
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Define a <code>book_tags</code> junction table with <code>book_id</code> and <code>tag_id</code> foreign keys, since one book can have many tags and one tag can apply to many books
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Call <code>renderSchema(tables)</code> with all four tables together and confirm every PK and FK badge appears where you expect
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A junction table's primary key is usually its two foreign key columns together (a composite key) — it rarely needs its own separate <code>id</code> column, since the pairing itself is already unique.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add an <code>isbn</code> column to <code>books</code>. In a code comment, explain why it should be marked <code>UNIQUE NOT NULL</code> in a real database, and what could go wrong if two different books were allowed to share the same ISBN.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>Surrogate key</code><span>An auto-generated id used purely for identity</span></div>
+        <div class="cheat-card"><code>One-to-many</code><span>FK lives on the "many" table</span></div>
+        <div class="cheat-card"><code>Many-to-many</code><span>Needs a junction table with two FKs</span></div>
+        <div class="cheat-card"><code>Composite key</code><span>Two or more columns are unique only together</span></div>
+        <div class="cheat-card"><code>Normalization</code><span>Every fact stored in exactly one place</span></div>
+        <div class="cheat-card"><code>NOT NULL</code><span>Column can never be empty</span></div>
+        <div class="cheat-card"><code>UNIQUE</code><span>No two rows share this value</span></div>
+        <div class="cheat-card"><code>DEFAULT</code><span>Auto-fills when no value is given</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Using a real-world value (email, username) as a primary key instead of a surrogate id — it breaks every reference the moment that value changes.</li>
+          <li>Copying the same fact into multiple tables "to save a JOIN" — it always drifts out of sync eventually.</li>
+          <li>Trying to cram a many-to-many relationship into a single foreign key column instead of building a junction table.</li>
+          <li>Putting the foreign key on the "one" side of a one-to-many relationship instead of the "many" side.</li>
+          <li>Skipping constraints like <code>NOT NULL</code> and <code>UNIQUE</code> and hoping the application code always remembers to validate.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in a one-to-many relationship where one author writes many books, which table should hold the foreign key?</p>
+        <button class="quiz-btn" data-correct="false">authors</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — books is the &quot;many&quot; side, so it needs author_id to point back to exactly one author.">books</button>
+        <button class="quiz-btn" data-correct="false">Both tables need one</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Schema Blueprint renderer ----------------
+     Runs OUTSIDE the sandboxed new Function() the cadet's code executes in,
+     so it can touch the real DOM directly. The cadet's code just calls the
+     global renderSchema(tables) — it's reachable from inside the sandbox
+     because only `console` and `document` are shadowed there, not `window`. */
+  window.renderSchema = function (tables) {
+    const el = document.getElementById("schemaDisplay");
+    if (!el) return;
+    el.innerHTML = "";
+    if (!tables || typeof tables !== "object" || Object.keys(tables).length === 0) {
+      el.innerHTML = '<div class="out-status">No tables to draw yet — define a tables object and call renderSchema(tables).</div>';
+      return;
+    }
+    const canvas = document.createElement("div");
+    canvas.className = "schema-canvas";
+    Object.keys(tables).forEach((tname) => {
+      const t = tables[tname] || {};
+      const card = document.createElement("div");
+      card.className = "schema-table-card";
+
+      const head = document.createElement("div");
+      head.className = "schema-table-head";
+      head.textContent = tname;
+      card.appendChild(head);
+
+      const cols = t.columns || {};
+      Object.keys(cols).forEach((cname) => {
+        const row = document.createElement("div");
+        row.className = "schema-col-row";
+        const isPk = t.pk === cname || (Array.isArray(t.pk) && t.pk.includes(cname)) || (typeof t.pk === "string" && t.pk.split(",").map((s) => s.trim()).includes(cname));
+        const fkTarget = t.fk && t.fk[cname];
+        const badge = document.createElement("span");
+        badge.className = "schema-badge" + (isPk ? " pk" : fkTarget ? " fk" : "");
+        badge.textContent = isPk ? "PK" : fkTarget ? "FK" : "";
+        const nameEl = document.createElement("span");
+        nameEl.className = "schema-col-name";
+        nameEl.textContent = cname;
+        const typeEl = document.createElement("span");
+        typeEl.className = "schema-col-type";
+        typeEl.textContent = cols[cname];
+        row.appendChild(badge);
+        row.appendChild(nameEl);
+        row.appendChild(typeEl);
+        if (fkTarget) {
+          const target = document.createElement("span");
+          target.className = "schema-fk-target";
+          target.textContent = "→ " + fkTarget;
+          row.appendChild(target);
+        }
+        card.appendChild(row);
+      });
+      canvas.appendChild(card);
+    });
+    el.appendChild(canvas);
+  };
+
+  const STARTER = `const tables = {
+  crew: {
+    pk: "id",
+    columns: { id: "INTEGER", name: "TEXT", rank: "TEXT" }
+  }
+};
+
+renderSchema(tables);
+console.log("One table, no relationships yet. Add a second table with a foreign key.");`;
+
+  const EXAMPLE_ONE_TO_MANY = `const tables = {
+  crew: {
+    pk: "id",
+    columns: { id: "INTEGER", name: "TEXT", rank: "TEXT" }
+  },
+  missions: {
+    pk: "id",
+    columns: { id: "INTEGER", title: "TEXT", leader_id: "INTEGER" },
+    fk: { leader_id: "crew.id" }
+  }
+};
+
+renderSchema(tables);
+console.log("One-to-many: one crew member can lead many missions, but each mission has exactly one leader_id.");`;
+
+  const EXAMPLE_MANY_TO_MANY = `const tables = {
+  crew: {
+    pk: "id",
+    columns: { id: "INTEGER", name: "TEXT" }
+  },
+  missions: {
+    pk: "id",
+    columns: { id: "INTEGER", title: "TEXT" }
+  },
+  crew_missions: {
+    pk: "crew_id, mission_id",
+    columns: { crew_id: "INTEGER", mission_id: "INTEGER" },
+    fk: { crew_id: "crew.id", mission_id: "missions.id" }
+  }
+};
+
+renderSchema(tables);
+console.log("Many-to-many: crew_missions is a junction table — one row per (crew, mission) pairing.");`;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "schemaDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnOneToMany", code: EXAMPLE_ONE_TO_MANY },
+        { btnId: "btnManyToMany", code: EXAMPLE_MANY_TO_MANY },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

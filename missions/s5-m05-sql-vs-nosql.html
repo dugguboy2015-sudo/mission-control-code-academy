@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 5.5: Supabase vs Firebase — SQL vs NoSQL, When to Choose Which | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Decision-matrix console output (bespoke to this mission) ---------- */
+  .decide-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .decide-bar-row { display: flex; align-items: center; gap: 10px; font-family: var(--font-code); font-size: 12px; }
+  .decide-bar-label { width: 78px; flex-shrink: 0; color: var(--text-secondary); }
+  .decide-bar-track { flex: 1; height: 14px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 7px; overflow: hidden; }
+  .decide-bar-fill { height: 100%; }
+  .decide-bar-fill.supabase { background: var(--accent-green); }
+  .decide-bar-fill.firebase { background: var(--accent-orange); }
+  .decide-bar-score { width: 26px; text-align: right; color: var(--text-muted); }
+  .decide-verdict { padding: 10px 14px; border-radius: 8px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); font-size: 13px; }
+  .decide-reasons { margin: 8px 0 0 0; padding-left: 18px; font-size: 12px; color: var(--text-secondary); }
+  .compare-table th, .compare-table td { padding: 8px 12px; }
+</style>
+</head>
+<body class="accent-green" data-mission-id="s5-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 5</div>
+    <h1>MISSION 5.5: SUPABASE VS FIREBASE</h1>
+    <div class="subtitle">SQL vs NoSQL — When to Choose Which</div>
+    <p class="briefing-line">You've now built with both stacks: Supabase's relational Postgres tables in Mission 5.2, and Firebase's document-shaped Firestore in Mission 5.4. Neither one is "the right answer" — they're two different tools built on two different philosophies of storing data, and a real AI-architect-in-training needs to be able to look at a project and say which one fits, and explain why. That's the entire job of this mission — no new syntax, just judgment.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~35 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>The core difference is right there in the names of the categories: <strong>SQL</strong> databases (like Supabase's Postgres) store <strong>relational</strong> data — rigid tables of rows and columns, linked by foreign keys, queried with a shared, powerful query language. <strong>NoSQL</strong> databases (like Firebase's Firestore) store <strong>documents</strong> — flexible, JSON-like blobs grouped into collections, with no enforced shared structure and no built-in cross-collection JOINs.</p>
+
+      <div class="diagram-box">
+        <table class="sample-table compare-table" style="width:100%;max-width:640px;">
+          <tr><th>Question</th><th style="color:var(--accent-green);">Supabase (SQL)</th><th style="color:var(--accent-orange);">Firebase (NoSQL)</th></tr>
+          <tr><td>Data shape</td><td>Tables, rows, columns</td><td>Documents in collections</td></tr>
+          <tr><td>Enforced structure</td><td>Yes — a schema, up front</td><td>No — any document can differ</td></tr>
+          <tr><td>Relationships</td><td>Foreign keys + <code>JOIN</code></td><td>Manual references, no JOIN</td></tr>
+          <tr><td>Complex queries</td><td>Full SQL — filter, sort, aggregate, JOIN freely</td><td>Limited — often needs denormalized copies</td></tr>
+          <tr><td>Realtime updates</td><td>Opt-in, via Postgres change subscriptions</td><td>Built-in by default on every query</td></tr>
+        </table>
+        <div class="diagram-caption">Neither column is "better" — they trade structure and query power for flexibility and simplicity, in opposite directions.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Data Shape: Rigid Tables vs Flexible Documents</h3>
+        <p>Recall the <code>crew</code> table from Mission 5.1 — every row has exactly the same columns, and the database itself rejects a row that's missing a required one. A Firestore document has no such guarantee: one <code>crew</code> document might have a <code>callsign</code> field and the next one might not, and Firestore is perfectly happy with both. That flexibility is genuinely useful for data that varies a lot between records — but it also means <em>your application code</em> is the only thing enforcing consistency, since the database won't do it for you.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Relationships & Query Power</h3>
+        <p>This is where the two stacks diverge the most. In Mission 5.1 you built a many-to-many relationship with a <code>crew_missions</code> junction table and a single <code>JOIN</code> query pulled the connected data back in one shot. Firestore has no <code>JOIN</code> at all — connecting two collections means either running multiple separate queries in your own code, or <strong>denormalizing</strong>: deliberately duplicating a bit of data (like copying a crew member's name directly onto each mission document) purely to avoid a second lookup. That's the same duplication Mission 5.1 warned against for SQL — in Firestore, it's often the recommended approach.</p>
+        <div class="whatjusthappened">
+          <strong>THE TRADE-OFF, PLAINLY</strong>
+          SQL makes you design your relationships carefully up front, then lets you query across them however you like, whenever you like. NoSQL lets you start writing data almost immediately, but pushes the relationship-modeling work onto you, later, one query pattern at a time — you often have to know your queries in advance and shape your documents around them.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Realtime, By Default vs By Request</h3>
+        <p>Firestore's <code>onSnapshot()</code> listener (Mission 5.4) is realtime from the moment you write the query — any matching document that changes anywhere pushes an update to every listener instantly, with no extra setup. Supabase's realtime is opt-in: you subscribe to a <strong>channel</strong> that watches for Postgres row changes on a specific table. Both work well; Firestore's default-on realtime is a big part of why so many chat apps and live dashboards reach for it first.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Free-Tier Shape & Cost-Awareness</h3>
+        <p>Sector 7 formalizes cost-checking as its own habit, but the instinct starts here: the two free tiers fail differently under real use. Supabase's free project <strong>pauses automatically after a week of inactivity</strong> (fine for a learning project, risky for something you want always-on). Firebase's Spark plan never pauses, but caps you on a <strong>per-operation</strong> basis — each read, write, and delete counts individually, so an app that reads the same data on every keystroke can burn through the free quota surprisingly fast without ever "storing too much."</p>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Neither of these numbers matters until you actually look them up for your specific project on each provider's current pricing page — free-tier limits change over time. The habit that matters is remembering to check <em>before</em> committing to a stack, not memorizing today's numbers.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Practical Decision Guide</h3>
+        <ul style="color:var(--text-secondary);line-height:1.8;">
+          <li><strong>Reach for Supabase (SQL)</strong> when your data has clear, structured relationships you'll query in many different ways — a store, a booking system, anything with reports or dashboards over connected records.</li>
+          <li><strong>Reach for Firebase (NoSQL)</strong> when you need realtime updates by default with minimal setup, your data is naturally document-shaped (a chat message, a game state, a user profile), and you don't yet know every query you'll need.</li>
+          <li><strong>Either works fine</strong> for a huge range of small and medium projects — this Academy itself uses Supabase, but a nearly identical version of it could have been built on Firebase instead.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>The <strong>Stack Advisor</strong> below scores a project's requirements against both backends. Fill in a <code>requirements</code> object describing a project, call <code>decideStack(requirements)</code>, and read the reasoning behind the score — not just the winner.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>REQUIREMENTS.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>STACK ADVISOR</span><span>●</span></div>
+            <div id="decideDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnRealtimeGame">try: realtime multiplayer game</button>
+        <button class="console-btn" id="btnReportingApp">try: sales reporting dashboard</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>A friend wants to build a <strong>trivia game</strong>: players join a room from their phones, answers and scores update live on everyone's screen the instant anyone answers, and the data model is simple (a room, a list of players, a current question) — no complex reports needed.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Build a <code>requirements</code> object describing the trivia game honestly (realtime needs, query complexity, how document-shaped the data is)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Run it through <code>decideStack()</code> and read which backend scores higher
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">In a comment, write one sentence explaining WHY that backend won, in your own words, using its actual reasoning
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Now flip one requirement (imagine the game also needs a detailed leaderboard with historical stats and filters) and re-run — does the recommendation change?
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A single feature added late — like "also show a detailed historical leaderboard" — can shift a project from clearly NoSQL-shaped to needing real relational queries. Real projects often end up mixing both for exactly this reason.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Describe your own idea for an app (anything — a homework tracker, a pet-sitting scheduler, a game). Run it through <code>decideStack()</code> honestly, and decide for real which stack you'd reach for if you were building it this week.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>SQL / Relational</code><span>Rigid tables, foreign keys, JOIN</span></div>
+        <div class="cheat-card"><code>NoSQL / Document</code><span>Flexible documents, no enforced shape</span></div>
+        <div class="cheat-card"><code>Denormalization</code><span>Deliberate duplication to avoid a lookup</span></div>
+        <div class="cheat-card"><code>Realtime by default</code><span>Firestore's biggest structural advantage</span></div>
+        <div class="cheat-card"><code>Query flexibility</code><span>Postgres/SQL's biggest structural advantage</span></div>
+        <div class="cheat-card"><code>Free-tier shape</code><span>Pause-after-inactivity vs per-operation caps</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Picking a stack based on which one is "more popular" instead of what the project's data and query needs actually look like.</li>
+          <li>Choosing NoSQL for data that's obviously relational (orders, inventory, users-and-roles) and then fighting the lack of JOINs the entire project.</li>
+          <li>Choosing SQL for something that's mostly one realtime feed (a chat, a live game state) and hand-building the realtime plumbing Firestore gives you for free.</li>
+          <li>Never checking either provider's current free-tier limits until a real bill or a paused project is the surprise.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which is a NoSQL database's biggest structural weakness compared to SQL?</p>
+        <button class="quiz-btn" data-correct="false">It can't update data in realtime</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — no built-in JOIN means connecting collections is manual, often via denormalization.">No built-in way to JOIN across collections</button>
+        <button class="quiz-btn" data-correct="false">It cannot store text data</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- Stack Advisor renderer ----------------
+     Lives outside the sandboxed new Function so it can touch the real DOM
+     directly — the cadet's code just calls the global decideStack(reqs). */
+  window.decideStack = function (reqs) {
+    reqs = reqs || {};
+    const el = document.getElementById("decideDisplay");
+    if (!el) return;
+
+    let supabase = 0, firebase = 0;
+    const reasons = [];
+
+    function score(cond, points, target, reason) {
+      if (!cond) return;
+      if (target === "supabase") supabase += points; else firebase += points;
+      reasons.push(reason);
+    }
+
+    score(reqs.needsComplexQueries, 3, "supabase", "Needs complex/relational queries → SQL's JOINs and filtering win.");
+    score(reqs.needsComplexQueries === false, 1, "firebase", "Simple, non-relational reads → NoSQL's simplicity is enough.");
+    score(reqs.needsRealtime, 2, "firebase", "Needs realtime updates → Firestore's listeners are realtime by default.");
+    score(reqs.needsRealtime === false, 1, "supabase", "No realtime need → SQL's default request/response model is simpler.");
+    score(reqs.dataIsDocumentShaped, 2, "firebase", "Data varies per record → document flexibility fits better than a fixed schema.");
+    score(reqs.dataIsDocumentShaped === false, 2, "supabase", "Data has a consistent, structured shape → a schema enforces that correctly.");
+    score(reqs.needsHistoricalReporting, 3, "supabase", "Needs historical reports/aggregation → SQL's query power is built for this.");
+    score(reqs.teamKnowsSql, 1, "supabase", "Team already knows SQL → lower learning cost with Supabase.");
+
+    const total = supabase + firebase || 1;
+    const supPct = Math.round((supabase / total) * 100);
+    const fbPct = 100 - supPct;
+
+    let verdict;
+    if (supabase > firebase) verdict = "→ Supabase (SQL) is the better fit here.";
+    else if (firebase > supabase) verdict = "→ Firebase (NoSQL) is the better fit here.";
+    else verdict = "→ Too close to call from these requirements alone — either would work; go with what your team knows.";
+
+    el.innerHTML =
+      '<div class="decide-bars">'
+      + '<div class="decide-bar-row"><span class="decide-bar-label">Supabase</span><div class="decide-bar-track"><div class="decide-bar-fill supabase" style="width:' + supPct + '%"></div></div><span class="decide-bar-score">' + supabase + '</span></div>'
+      + '<div class="decide-bar-row"><span class="decide-bar-label">Firebase</span><div class="decide-bar-track"><div class="decide-bar-fill firebase" style="width:' + fbPct + '%"></div></div><span class="decide-bar-score">' + firebase + '</span></div>'
+      + '</div>'
+      + '<div class="decide-verdict">' + verdict + '</div>'
+      + (reasons.length ? '<ul class="decide-reasons">' + reasons.map((r) => "<li>" + r + "</li>").join("") + '</ul>' : '');
+  };
+
+  const STARTER = `const requirements = {
+  needsComplexQueries: false,
+  needsRealtime: true,
+  dataIsDocumentShaped: true,
+  needsHistoricalReporting: false,
+  teamKnowsSql: false
+};
+
+decideStack(requirements);`;
+
+  const EXAMPLE_REALTIME_GAME = `const requirements = {
+  needsComplexQueries: false,
+  needsRealtime: true,
+  dataIsDocumentShaped: true,
+  needsHistoricalReporting: false,
+  teamKnowsSql: false
+};
+
+decideStack(requirements);
+console.log("A realtime multiplayer game leans Firebase — simple, document-shaped, realtime-first.");`;
+
+  const EXAMPLE_REPORTING_APP = `const requirements = {
+  needsComplexQueries: true,
+  needsRealtime: false,
+  dataIsDocumentShaped: false,
+  needsHistoricalReporting: true,
+  teamKnowsSql: true
+};
+
+decideStack(requirements);
+console.log("A sales reporting dashboard leans Supabase — structured data, heavy querying, no realtime need.");`;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "decideDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnRealtimeGame", code: EXAMPLE_REALTIME_GAME },
+        { btnId: "btnReportingApp", code: EXAMPLE_REPORTING_APP },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
