@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.3: Tool-Using Agents — Giving the Model Hands | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .loop-step { padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12.5px; border-left: 3px solid var(--border-glow); background: var(--bg-panel-alt); }
+  .loop-step .step-label { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 3px; }
+  .loop-step.reason { border-left-color: var(--accent-pink); }
+  .loop-step.act { border-left-color: var(--accent-cyan); }
+  .loop-step.observe { border-left-color: var(--success); }
+  .loop-step.observe.error { border-left-color: var(--danger); color: var(--danger); }
+  .loop-step.final { border-left-color: var(--accent-yellow); background: rgba(255,230,109,0.08); }
+  .tool-badge { display: inline-block; font-family: var(--font-code); font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(78,225,255,0.12); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); margin-right: 6px; }
+  .tool-badge.write { background: rgba(255,107,107,0.12); border-color: var(--danger); color: var(--danger); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.3: TOOL-USING AGENTS</h1>
+    <div class="subtitle">Giving the Model Hands</div>
+    <p class="briefing-line">Mission 8.2's agent had exactly two tools, used in a fixed order. Real agents choose from several available tools, decide WHICH one fits a given situation, handle a tool that fails without crashing the whole loop, and treat some tools with more caution than others. This mission covers the practical engineering of a real multi-tool agent.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~60 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A tool is only as useful as the model's ability to correctly choose it. Give an agent five vaguely-described, overlapping tools, and it will frequently pick the wrong one, or the right one with the wrong arguments. Give it a small number of clearly-scoped, well-described tools, and tool selection becomes reliable. Good tool design is at least as important as the agent loop itself.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Good Tool Design</h3>
+        <p>Each tool should do exactly ONE thing, have a name that says what it does, a description precise enough to distinguish it from every other available tool, and return small, structured data — not a wall of prose the model then has to re-interpret.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// BAD: vague, does too many things, unclear when to use it&#10;{ name: &quot;do_stuff&quot;, description: &quot;handles various tasks&quot; }&#10;&#10;// GOOD: one job, clear name, clear description, clear parameters&#10;{&#10;  name: &quot;search_notes&quot;,&#10;  description: &quot;Search the user's saved notes by keyword. Returns matching notes only.&quot;,&#10;  parameters: { keyword: &quot;string&quot; },&#10;}">COPY</button></div>
+          <pre><code><span class="comment">// BAD: vague, does too many things, unclear when to use it</span>
+{ name: <span class="str">"do_stuff"</span>, description: <span class="str">"handles various tasks"</span> }
+
+<span class="comment">// GOOD: one job, clear name, clear description, clear parameters</span>
+{
+  name: <span class="str">"search_notes"</span>,
+  description: <span class="str">"Search the user's saved notes by keyword. Returns matching notes only."</span>,
+  parameters: { keyword: <span class="str">"string"</span> },
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Given several GOOD tools like this, the model can reliably match "find my notes about the trip" to <code>search_notes</code> based on the description alone. Given several tools like <code>do_stuff</code>, it genuinely can't — there's no signal in the description to distinguish which tool applies to which request.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Handling a Tool That Fails</h3>
+        <p>A tool call is still just a function call — it can throw, time out, or return an error, exactly like any other code you've written since Sector 4. A well-built agent catches that failure as an <strong>observation</strong> (the loop keeps running), not a crash — the next reasoning step can then decide to retry, try a different tool, or give up gracefully.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function act(step) {&#10;  try {&#10;    return { ok: true, result: await callTool(step.tool, step.args) };&#10;  } catch (err) {&#10;    // The FAILURE becomes the observation — the loop continues, informed by it.&#10;    return { ok: false, error: err.message };&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">act</span>(step) {
+  <span class="kw">try</span> {
+    <span class="kw">return</span> { ok: <span class="kw">true</span>, result: <span class="kw">await</span> <span class="fn">callTool</span>(step.tool, step.args) };
+  } <span class="kw">catch</span> (err) {
+    <span class="comment">// The FAILURE becomes the observation — the loop continues, informed by it.</span>
+    <span class="kw">return</span> { ok: <span class="kw">false</span>, error: err.message };
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice the <code>try/catch</code> is INSIDE the loop's act step, not around the whole loop — one failed tool call becomes one observation the agent can reason about ("that didn't work, let me try X instead"), rather than an exception that kills the entire agent run.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Read-Only vs Write Tools</h3>
+        <p>Not every tool carries the same risk. A <strong>read-only tool</strong> (checking the weather, searching notes) is safe to let an agent call speculatively — worst case, it wastes a little time. A <strong>write tool</strong> (sending an email, deleting a file, charging a card) has real, sometimes irreversible consequences if the agent calls it based on a misunderstanding. Production agent systems often require explicit confirmation, or an extra safety check, before a write tool actually executes — a topic Mission 9.6 (AI Security) covers in depth.</p>
+        <div class="whatjusthappened">
+          <strong>THE HABIT TO BUILD NOW</strong>
+          When you design a tool, ask which category it's in. If it's a write tool, treat calling it as a bigger deal than a read tool — log it, consider requiring confirmation, and never let an agent chain multiple write actions together with no human checkpoint at all, especially early in a project.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A multi-tool agent with THREE available tools: <span class="tool-badge">search_notes</span><span class="tool-badge">get_weather</span><span class="tool-badge write">send_reminder (write)</span>. <code>chooseTool(goal, availableTools)</code> picks the best-matching tool by comparing the goal against each tool's description. One tool is deliberately made to fail sometimes, so you can see the agent handle it gracefully.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>AGENT TRACE</span><span>●</span></div>
+            <div id="traceDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (search notes)</button>
+        <button class="console-btn" id="btnFailingTool">try: a tool that fails, observed gracefully</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Exercise tool selection and failure handling directly.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>chooseTool()</code> with 3 different goal phrasings and confirm each one correctly selects a different one of the 3 available tools</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run the agent with the deliberately-failing tool and confirm the agent's final answer still makes sense despite the failure — it should acknowledge it, not crash</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Write your own new tool description (name, description, parameters) for a tool that doesn't exist yet, following the GOOD example's format</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, classify each of the 3 available tools as read-only or write, and justify <code>send_reminder</code>'s classification specifically</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p><code>chooseTool()</code> compares keywords in the goal against each tool's description — if your test goal doesn't share any real words with a tool's description, it won't match it, exactly the same limitation Mission 7.5 covered for keyword-based retrieval.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a confirmation step: before <code>send_reminder</code> (the write tool) actually executes, have your code log a message like "⚠ About to send a reminder — would ask for confirmation here in a real app" before proceeding. This is a minimal version of the write-tool safety habit described above.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">One job per tool<span>Vague, multi-purpose tools confuse selection</span></div>
+        <div class="cheat-card">Clear description<span>What lets the model pick the right tool reliably</span></div>
+        <div class="cheat-card">Failure as observation<span>Catch tool errors inside the loop, not around it</span></div>
+        <div class="cheat-card">Read-only tool<span>Safe to call speculatively</span></div>
+        <div class="cheat-card">Write tool<span>Real consequences — deserves extra caution</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing vague, overlapping tool descriptions that make correct tool selection unreliable.</li>
+          <li>Letting one failed tool call crash the entire agent run instead of feeding the failure back as an observation.</li>
+          <li>Treating a write tool (sends an email, charges a card) with the same casual confidence as a read-only tool.</li>
+          <li>Giving an agent too many tools at once "just in case" — more overlapping options generally makes selection worse, not more capable.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — when a tool call fails inside an agent loop, what should happen?</p>
+        <button class="quiz-btn" data-correct="false">The entire agent loop should immediately crash</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the failure becomes information for the next reasoning step, not a crash.">The failure becomes an observation, and the loop continues with that new information</button>
+        <button class="quiz-btn" data-correct="false">The tool should be silently skipped with no record of it</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Multi-tool agent reference implementation ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.AVAILABLE_TOOLS = [
+    { name: "search_notes", description: "Search the user's saved notes by keyword.", isWrite: false },
+    { name: "get_weather", description: "Get the current weather for a city.", isWrite: false },
+    { name: "send_reminder", description: "Send the user a reminder notification at a given time.", isWrite: true },
+  ];
+
+  const NOTES_DB = ["Trip to Kepler Station planned for July.", "Grocery list: milk, eggs, bread."];
+
+  function toolImpl(name, args, forceFail) {
+    if (name === "search_notes") {
+      const hit = NOTES_DB.find((n) => n.toLowerCase().includes((args.keyword || "").toLowerCase()));
+      return hit || "No matching notes found.";
+    }
+    if (name === "get_weather") {
+      if (forceFail) throw new Error("Weather service timed out (simulated).");
+      return (args.city || "your area") + ": 21°C, clear skies (mock data).";
+    }
+    if (name === "send_reminder") {
+      return "Reminder scheduled for " + (args.time || "later") + ".";
+    }
+    throw new Error("Unknown tool: " + name);
+  }
+
+  window.chooseTool = function (goal, availableTools) {
+    const goalWords = goal.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+    let best = null, bestScore = 0;
+    availableTools.forEach((tool) => {
+      const descWords = new Set(tool.description.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/));
+      const score = goalWords.filter((w) => descWords.has(w)).length;
+      if (score > bestScore) { bestScore = score; best = tool; }
+    });
+    return best;
+  };
+
+  function renderTrace(steps) {
+    const el = document.getElementById("traceDisplay");
+    if (!el) return;
+    el.innerHTML = steps.map((s) => '<div class="loop-step ' + s.cls + '"><span class="step-label">' + s.label + '</span>' + s.text + '</div>').join("");
+  }
+
+  window.runToolAgent = function (goal, opts) {
+    opts = opts || {};
+    const steps = [];
+    const chosen = window.chooseTool(goal, window.AVAILABLE_TOOLS);
+    steps.push({ cls: "reason", label: "reason", text: "Goal: \"" + goal + "\" → chose tool: " + (chosen ? chosen.name : "none matched") });
+
+    if (!chosen) {
+      steps.push({ cls: "final", label: "final answer", text: "I don't have a tool that fits this request." });
+      renderTrace(steps);
+      return { answer: "I don't have a tool that fits this request." };
+    }
+
+    let observation, failed = false;
+    try {
+      observation = toolImpl(chosen.name, opts.args || {}, opts.forceFail);
+      steps.push({ cls: "act", label: "act", text: chosen.name + "(" + JSON.stringify(opts.args || {}) + ")" });
+      steps.push({ cls: "observe", label: "observe", text: observation });
+    } catch (err) {
+      failed = true;
+      observation = err.message;
+      steps.push({ cls: "act", label: "act", text: chosen.name + "(" + JSON.stringify(opts.args || {}) + ")" });
+      steps.push({ cls: "observe error", label: "observe (failed)", text: "⚠ " + err.message });
+    }
+
+    const answer = failed
+      ? "I tried to use " + chosen.name + ", but it failed (" + observation + "). Here's what I can tell you anyway: please try again shortly."
+      : "Using " + chosen.name + ", here's what I found: " + observation;
+
+    steps.push({ cls: "final", label: "final answer", text: answer });
+    renderTrace(steps);
+    return { answer, toolUsed: chosen.name, failed };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const result = runToolAgent("Can you search my notes about the trip?", { args: { keyword: "trip" } });
+console.log("Tool used:", result.toolUsed);
+console.log("Answer:", result.answer);`;
+
+  const EXAMPLE_FAILING = `// The weather tool is forced to fail this time — watch the agent handle it
+const result = runToolAgent("What's the weather in Paris?", { args: { city: "Paris" }, forceFail: true });
+console.log("Tool used:", result.toolUsed);
+console.log("Failed:", result.failed);
+console.log("Answer:", result.answer);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "traceDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnFailingTool", code: EXAMPLE_FAILING },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

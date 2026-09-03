@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.7: Observability & Tracing for AI — Logging Prompts, Outputs, Cost, Failures | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .log-entry { padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-family: var(--font-code); font-size: 11.5px; background: var(--bg-panel-alt); border-left: 3px solid var(--border-glow); }
+  .log-entry.ok { border-left-color: var(--success); }
+  .log-entry.err { border-left-color: var(--danger); }
+  .log-meta { color: var(--text-muted); }
+  .dash-stats { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--font-code); font-size: 12px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-glow); }
+  .dash-stats strong { color: var(--accent-pink); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.7: OBSERVABILITY & TRACING FOR AI</h1>
+    <div class="subtitle">Logging Prompts, Outputs, Cost, Failures</div>
+    <p class="briefing-line">Mission 8.6's evals tell you whether your AI works BEFORE you ship it, against scenarios you thought to test. <strong>Observability</strong> tells you what it's actually doing right now, for real users, including the scenarios you never thought to test. Without logging every call — the prompt, the response, how long it took, what it cost, whether it succeeded — a production AI feature is a black box you can't debug, improve, or even fully trust.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Evals and observability answer different questions with the same underlying discipline: evals ask "does it pass the cases I thought to write," observability asks "what is it actually doing, right now, for real people." Neither replaces the other — a feature can pass every eval and still misbehave in production on inputs nobody anticipated, which is exactly what logs reveal that a test suite can't.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>What to Log for Every AI Call</h3>
+        <p>Every request, without exception, should record: a timestamp, the prompt/messages sent, the response received, <strong>latency</strong> (how long it took), token counts and cost (Mission 7.8), which model handled it (useful with 7.8's routing/fallback), and whether it succeeded or failed.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function loggedCall(prompt, callFn) {&#10;  const start = Date.now();&#10;  try {&#10;    const response = await callFn(prompt);&#10;    logEntry({&#10;      timestamp: new Date().toISOString(),&#10;      prompt, response,&#10;      latencyMs: Date.now() - start,&#10;      success: true,&#10;    });&#10;    return response;&#10;  } catch (err) {&#10;    logEntry({&#10;      timestamp: new Date().toISOString(),&#10;      prompt, error: err.message,&#10;      latencyMs: Date.now() - start,&#10;      success: false,&#10;    });&#10;    throw err;&#10;  }&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">loggedCall</span>(prompt, callFn) {
+  <span class="kw">const</span> start = Date.<span class="fn">now</span>();
+  <span class="kw">try</span> {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">callFn</span>(prompt);
+    <span class="fn">logEntry</span>({
+      timestamp: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+      prompt, response,
+      latencyMs: Date.<span class="fn">now</span>() - start,
+      success: <span class="kw">true</span>,
+    });
+    <span class="kw">return</span> response;
+  } <span class="kw">catch</span> (err) {
+    <span class="fn">logEntry</span>({
+      timestamp: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+      prompt, error: err.message,
+      latencyMs: Date.<span class="fn">now</span>() - start,
+      success: <span class="kw">false</span>,
+    });
+    <span class="kw">throw</span> err;
+  }
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Every call gets logged exactly once, on EITHER path — success or failure — because the logging happens in both the <code>try</code> and <code>catch</code> blocks. A logger that only records successes gives a falsely rosy picture of how the feature is actually performing.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Tracing a Multi-Step Agent Run</h3>
+        <p>A single agent run (Mission 8.2) makes several LLM calls, not one. A useful trace groups ALL of them under one shared ID, so you can look at one complete agent run — every reason/act/observe step — together, in order, instead of as disconnected individual log lines.</p>
+        <div class="whatjusthappened">
+          <strong>WHY THIS MATTERS FOR DEBUGGING</strong>
+          If an agent gives a wrong final answer, the useful debugging question is "which specific step in its reasoning went wrong" — answerable only if you can see the whole chain of reason/act/observe steps for that one run together, not scattered across unrelated log entries.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Privacy & the Cost of Logging Everything</h3>
+        <p>Full prompts and responses can contain real user data — logging every byte forever is both a privacy risk and a real storage cost. Mature systems <strong>redact</strong> sensitive fields before storing them and <strong>sample</strong> (log every call's metadata, but only a fraction of full prompt/response bodies) rather than keeping everything indefinitely.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>AILogger</code> wraps a mock AI call, automatically recording every request — success or failure — into a real, queryable log. <code>AILogger.getStats()</code> and <code>AILogger.getFailures()</code> demonstrate what that log makes possible.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>LOG DASHBOARD</span><span>●</span></div>
+            <div id="logDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (a few logged calls)</button>
+        <button class="console-btn" id="btnQuery">try: query the log for failures and cost</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Generate a realistic mix of logged calls and query the dashboard for insight.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Make at least 5 calls through <code>AILogger.call()</code>, including at least one that fails</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Use <code>AILogger.getStats()</code> to print the total number of calls, success rate, and average latency</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Use <code>AILogger.getFailures()</code> to print only the failed calls and their error messages</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, describe what a "trace ID" grouping several of your calls together would let you see that individual log entries alone don't</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If <code>getStats()</code>'s average latency looks wrong, double check you're summing <code>latencyMs</code> across ALL calls (success and failure both took real time) before dividing by the total count.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a <code>traceId</code> parameter to <code>AILogger.call()</code> and make several calls sharing the same trace ID (simulating one multi-step agent run). Write a <code>getTrace(traceId)</code> function that returns just that run's log entries, in order.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Observability<span>What the AI is actually doing in production, right now</span></div>
+        <div class="cheat-card">Latency<span>How long a call actually took</span></div>
+        <div class="cheat-card">Trace<span>All the steps of one multi-step run, grouped together</span></div>
+        <div class="cheat-card">Log both paths<span>Success AND failure — never only the happy path</span></div>
+        <div class="cheat-card">Redaction & sampling<span>Balance visibility against privacy and storage cost</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Only logging successful calls, giving a falsely optimistic picture of real-world performance.</li>
+          <li>Logging individual calls with no way to group a multi-step agent run's steps back together.</li>
+          <li>Storing every full prompt and response forever with no redaction or sampling, both a privacy and cost risk.</li>
+          <li>Building observability only after something breaks in production, instead of from day one.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what can observability logs reveal that a pre-built eval suite (Mission 8.6) generally cannot?</p>
+        <button class="quiz-btn" data-correct="false">Whether the model's training data was accurate</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — evals test scenarios you thought to write in advance; production logs reveal what real users actually did, including cases you never anticipated.">What real users actually asked, including patterns and failures you never anticipated</button>
+        <button class="quiz-btn" data-correct="false">The exact cost of a single token</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- AILogger ----------------
+     Lives outside the sandboxed new Function so it can render into the
+     real DOM and keep a real in-memory log across multiple calls. */
+  window.AILogger = (function () {
+    const log = [];
+
+    function render() {
+      const el = document.getElementById("logDisplay");
+      if (!el) return;
+      const successCount = log.filter((e) => e.success).length;
+      el.innerHTML = '<div class="dash-stats">'
+        + '<span>Calls: <strong>' + log.length + '</strong></span>'
+        + '<span>Success rate: <strong>' + (log.length ? Math.round((successCount / log.length) * 100) : 0) + '%</strong></span>'
+        + '</div>'
+        + log.slice(-8).map((e) =>
+          '<div class="log-entry ' + (e.success ? "ok" : "err") + '">'
+          + (e.success ? "✓" : "✗") + ' ' + e.prompt.slice(0, 40)
+          + ' <span class="log-meta">(' + e.latencyMs + 'ms' + (e.success ? "" : " — " + e.error) + ')</span></div>'
+        ).join("");
+    }
+
+    return {
+      async call(prompt, mockFn) {
+        const start = Date.now();
+        try {
+          const response = await mockFn(prompt);
+          const entry = { timestamp: new Date().toISOString(), prompt, response, latencyMs: Date.now() - start, success: true };
+          log.push(entry);
+          render();
+          return response;
+        } catch (err) {
+          const entry = { timestamp: new Date().toISOString(), prompt, error: err.message, latencyMs: Date.now() - start, success: false };
+          log.push(entry);
+          render();
+          throw err;
+        }
+      },
+      getStats() {
+        const successCount = log.filter((e) => e.success).length;
+        const avgLatency = log.length ? Math.round(log.reduce((sum, e) => sum + e.latencyMs, 0) / log.length) : 0;
+        return { totalCalls: log.length, successRate: log.length ? Math.round((successCount / log.length) * 100) : 0, avgLatencyMs: avgLatency };
+      },
+      getFailures() {
+        return log.filter((e) => !e.success);
+      },
+      getAll() {
+        return log.slice();
+      },
+    };
+  })();
+
+  window.mockAICall = function (prompt) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (prompt.toLowerCase().includes("fail")) reject(new Error("Simulated model error"));
+        else resolve("Mock response to: " + prompt);
+      }, 20 + Math.random() * 60);
+    });
+  };
+
+  const STARTER = `// Try me — then hit RUN
+async function main() {
+  await AILogger.call("What's the weather today?", mockAICall);
+  await AILogger.call("Summarize this note.", mockAICall);
+  await AILogger.call("please fail this one", mockAICall).catch(() => {});
+  await AILogger.call("Convert this to JSON.", mockAICall);
+
+  console.log("Stats:", JSON.stringify(AILogger.getStats()));
+}
+
+main();`;
+
+  const EXAMPLE_QUERY = `async function main() {
+  await AILogger.call("Request one", mockAICall);
+  await AILogger.call("please fail this one", mockAICall).catch(() => {});
+  await AILogger.call("please fail this one too", mockAICall).catch(() => {});
+  await AILogger.call("Request two", mockAICall);
+
+  const stats = AILogger.getStats();
+  console.log("Total calls:", stats.totalCalls, "| Success rate:", stats.successRate + "%", "| Avg latency:", stats.avgLatencyMs + "ms");
+
+  const failures = AILogger.getFailures();
+  console.log("Failures (" + failures.length + "):");
+  failures.forEach(f => console.log("  -", f.prompt, "→", f.error));
+}
+
+main();`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "logDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnQuery", code: EXAMPLE_QUERY },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

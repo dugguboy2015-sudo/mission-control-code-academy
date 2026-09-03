@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.1: AI-Native vs AI-Enabled — Designing Around the Model | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .spectrum-track { height: 16px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); border-radius: 8px; position: relative; margin: 20px 0 8px; }
+  .spectrum-labels { display: flex; justify-content: space-between; font-family: var(--font-code); font-size: 11px; color: var(--text-muted); }
+  .classify-verdict { padding: 10px 14px; border-radius: 8px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); font-size: 13px; margin-bottom: 8px; }
+  .classify-reasons { margin: 4px 0 0 0; padding-left: 18px; font-size: 12px; color: var(--text-secondary); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8 · ADVANCED</div>
+    <h1>MISSION 8.1: AI-NATIVE VS AI-ENABLED</h1>
+    <div class="subtitle">Designing Around the Model</div>
+    <p class="briefing-line">Every AI feature in Sector 7 followed the same shape: a normal app, with an AI call bolted on as one feature among many — a chatbot widget, a "summarize this" button, a RAG search box. That's <strong>AI-enabled</strong>. Sector 8 asks a different question: what if the model's reasoning wasn't a feature, but the app's actual engine? That's <strong>AI-native</strong> — and it needs a genuinely different design mindset, which this mission builds before Sector 8 hands you agents, planning, and tools to build one.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture a todo app. The <strong>AI-enabled</strong> version is the todo app you already know, plus a button: "Ask AI to summarize my tasks." Everything else — adding a task, checking it off, the list itself — is regular, deterministic code exactly like Sector 2-6 taught you. The <strong>AI-native</strong> version looks different: you type "clear my afternoon and reschedule anything not urgent," and the model itself decides which tasks move, in what order, based on reasoning about your actual list — there's no traditional "reschedule" button at all, because the model's judgment IS the feature.</p>
+
+      <div class="diagram-box">
+        <div class="spectrum-track"></div>
+        <div class="spectrum-labels"><span>◂ Traditional app</span><span>AI-enabled (Sector 7)</span><span>AI-native (Sector 8) ▸</span></div>
+        <div class="diagram-caption">Most real apps sit somewhere along this spectrum, not at either extreme — the honest question for any feature is "how much of its core logic depends on the model's judgment, versus code you wrote that always behaves the same way?"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Designing Around Uncertainty</h3>
+        <p>Sectors 0-6 trained you on deterministic software: the same input always produces the same output. Mission 7.1 already broke that rule for a single LLM call. AI-native design takes the consequence seriously at the level of an entire app: instead of "success or error," every AI-driven decision has a whole spectrum of possible quality, and the app's design has to gracefully handle "mostly right," "confidently wrong," and "reasonable but not what I meant" — not just the two traditional outcomes.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>When AI-Native Makes Sense — and When It Doesn't</h3>
+        <p>AI-native design fits genuinely open-ended, judgment-heavy tasks: drafting, summarizing, planning, holding a conversation, deciding what's relevant. It fits badly for anything needing perfect, provable reliability: calculating a bill total, checking a password, controlling a real safety-critical system. A well-designed AI-native app still uses ordinary, deterministic code (Sectors 0-6) for the parts that must always be exactly right — the model's judgment is reserved for the parts that genuinely benefit from it.</p>
+        <div class="whatjusthappened">
+          <strong>THE ACTUAL SKILL</strong>
+          It's not "use AI for everything" — it's correctly identifying WHICH parts of a system benefit from a model's flexible judgment, and which parts need boring, predictable code instead. Getting this wrong in either direction produces a worse app: over-using AI makes simple things unreliable; under-using it makes flexible things rigid.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Reference Architecture, With a New Layer</h3>
+        <p>Recall this shape from earlier missions: <code>UI → your proxy (hides keys) → the model → data</code>. AI-native apps insert one more layer in the middle: <strong>orchestration</strong> — the logic that decides what to ask the model, what tools it can use, and what to do with its answer. Sector 8 is entirely about that orchestration layer.</p>
+        <div class="diagram-box">
+          <svg viewBox="0 0 700 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+            <rect x="10" y="20" width="120" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+            <text x="70" y="49" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">UI</text>
+            <rect x="150" y="20" width="130" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+            <text x="215" y="49" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Edge API (7.3)</text>
+            <rect x="300" y="20" width="160" height="50" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+            <text x="380" y="43" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Orchestration</text>
+            <text x="380" y="58" fill="#6b7699" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">agents · tools · planning</text>
+            <rect x="480" y="20" width="210" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+            <text x="585" y="49" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Model + Memory/Data</text>
+            <line x1="130" y1="45" x2="150" y2="45" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a7)"/>
+            <line x1="280" y1="45" x2="300" y2="45" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a7)"/>
+            <line x1="460" y1="45" x2="480" y2="45" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a7)"/>
+            <defs><marker id="a7" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+          </svg>
+          <div class="diagram-caption">Sector 7 mostly skipped straight from Edge API to Model. Sector 8's "Orchestration" box — agents deciding what to do, in a loop — is the whole new layer.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>classifyDesign(description)</code> reads a short app description and scores it toward AI-enabled or AI-native, based on real signals in the text (does it describe a bolted-on AI feature, or the model driving core decisions?). Try describing your own app ideas.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CLASSIFICATION</span><span>●</span></div>
+            <div id="classifyDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (a chatbot widget)</button>
+        <button class="console-btn" id="btnNative">try: a fully AI-driven app</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Design (on paper, in code comments — no need to build it) a small app idea of your own.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Run your own app idea's description through <code>classifyDesign()</code> and read its verdict and reasoning</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">In a comment, list which specific parts of your app idea should stay traditional, deterministic code (never handed to the model's judgment)</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">In a comment, list which specific parts genuinely benefit from the model's flexible judgment, and explain why</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Rewrite your app description to deliberately push it further toward AI-native, then re-run <code>classifyDesign()</code> and confirm the verdict shifts</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A good test: could a traditional button-and-form UI accomplish this exact task just as well? If yes, it's probably AI-enabled at best. If the task is inherently about interpreting open-ended intent, it's leaning AI-native.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a new keyword signal of your own to <code>classifyDesign()</code>'s scoring rules (something you think genuinely indicates AI-native design) and test that it changes the verdict for an example sentence containing it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">AI-enabled<span>Normal app, AI bolted on as one feature</span></div>
+        <div class="cheat-card">AI-native<span>The model's reasoning drives core app logic</span></div>
+        <div class="cheat-card">A spectrum, not a binary<span>Most real apps sit somewhere in between</span></div>
+        <div class="cheat-card">Orchestration<span>The new layer deciding what to ask the model and what tools it can use</span></div>
+        <div class="cheat-card">Deterministic code still matters<span>Reserved for parts needing perfect reliability</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Assuming "AI-native" means using AI for absolutely everything, including tasks that need perfect reliability.</li>
+          <li>Treating AI-enabled and AI-native as a strict either/or instead of a spectrum most real apps land somewhere along.</li>
+          <li>Designing the UI first, then trying to bolt AI-native behavior onto a UI built for traditional, deterministic interactions.</li>
+          <li>Forgetting that even a highly AI-native app still needs traditional code for the parts that must always behave the same way.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which of these is the strongest signal an app is genuinely AI-native rather than just AI-enabled?</p>
+        <button class="quiz-btn" data-correct="false">It has a chatbot widget somewhere in the UI</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — AI-native means the model's judgment IS a core mechanism the app depends on, not an add-on feature.">The model's own judgment drives a core mechanism of the app, not just one feature</button>
+        <button class="quiz-btn" data-correct="false">It was built using JavaScript instead of Python</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- classifyDesign ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.classifyDesign = function (description) {
+    description = description || "";
+    const lower = description.toLowerCase();
+    const el = document.getElementById("classifyDisplay");
+
+    let nativeScore = 0, enabledScore = 0;
+    const reasons = [];
+
+    function signal(cond, points, target, reason) {
+      if (!cond) return;
+      if (target === "native") nativeScore += points; else enabledScore += points;
+      reasons.push(reason);
+    }
+
+    signal(/\bbutton\b|\bwidget\b|\btab\b|\bfeature\b/.test(lower), 2, "enabled", "Describes AI as one button/widget/feature among others.");
+    signal(/\bsummarize\b|\bask ai\b|\bchat with\b/.test(lower), 1, "enabled", "\"Summarize/ask AI/chat with\" often means AI is an add-on capability.");
+    signal(/\bdecides\b|\bdecide\b|\bjudg(e|ment)\b|\bplans?\b|\breorganiz/.test(lower), 3, "native", "The model itself is described as deciding, judging, or planning — a core mechanism.");
+    signal(/\bno (traditional |normal )?(button|form|ui) for\b|\bentirely (in|through) natural language\b/.test(lower), 3, "native", "Describes replacing a traditional UI element entirely with the model's judgment.");
+    signal(/\bcalculat(e|ion)\b|\bexact\b|\bprecisely\b/.test(lower), 1, "enabled", "Mentions a need for exact/precise behavior — usually best kept as deterministic code.");
+
+    const total = nativeScore + enabledScore || 1;
+    const nativePct = Math.round((nativeScore / total) * 100);
+    let verdict;
+    if (nativeScore > enabledScore) verdict = "→ Leans AI-NATIVE — the model's judgment appears to drive a core mechanism.";
+    else if (enabledScore > nativeScore) verdict = "→ Leans AI-ENABLED — AI reads like one feature among traditional ones.";
+    else verdict = "→ Too close to call from this description alone.";
+
+    if (el) {
+      el.innerHTML = '<div class="classify-verdict">' + verdict + '<br><span style="color:var(--text-muted);font-size:11px;">' + nativePct + '% native-leaning signal</span></div>'
+        + (reasons.length ? '<ul class="classify-reasons">' + reasons.map((r) => "<li>" + r + "</li>").join("") + '</ul>' : '<div class="out-status">No strong signals detected either way.</div>');
+    }
+    return { nativeScore, enabledScore, verdict };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+classifyDesign("A todo app with a button to ask AI to summarize my tasks.");`;
+
+  const EXAMPLE_NATIVE = `classifyDesign("An app with no traditional buttons — you describe what you want in natural language, and the model decides which tasks to reorganize and plans your whole afternoon.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "classifyDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnNative", code: EXAMPLE_NATIVE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

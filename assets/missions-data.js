@@ -134,14 +134,14 @@ window.MISSION_MANIFEST = {
       "subtitle": "Advanced",
       "accent": "pink",
       "missions": [
-        { "id": "s8-m01", "num": "8.1", "title": "AI-Native vs AI-Enabled", "subtitle": "Designing Around the Model", "file": "missions/s8-m01-ai-native-vs-enabled.html", "status": "planned", "difficulty": "commander", "estMinutes": 40 },
-        { "id": "s8-m02", "num": "8.2", "title": "The Agent Loop", "subtitle": "Reason → Act → Observe", "file": "missions/s8-m02-agent-loop.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
-        { "id": "s8-m03", "num": "8.3", "title": "Tool-Using Agents", "subtitle": "Giving the Model Hands", "file": "missions/s8-m03-tool-using-agents.html", "status": "planned", "difficulty": "commander", "estMinutes": 60 },
-        { "id": "s8-m04", "num": "8.4", "title": "Multi-Step Planning & Memory", "subtitle": "Agents That Remember", "file": "missions/s8-m04-planning-and-memory.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
-        { "id": "s8-m05", "num": "8.5", "title": "Connecting Agents to Real Systems", "subtitle": "MCP, Introduced", "file": "missions/s8-m05-mcp-intro.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
-        { "id": "s8-m06", "num": "8.6", "title": "Evals", "subtitle": "How You Know the AI Actually Works", "file": "missions/s8-m06-evals.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
-        { "id": "s8-m07", "num": "8.7", "title": "Observability & Tracing for AI", "subtitle": "Logging Prompts, Outputs, Cost, Failures", "file": "missions/s8-m07-observability.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s8-m08", "num": "8.8", "title": "Capstone: Small Autonomous Agent", "subtitle": "With an Eval Suite", "file": "missions/s8-m08-capstone-agent.html", "status": "planned", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L5" }
+        { "id": "s8-m01", "num": "8.1", "title": "AI-Native vs AI-Enabled", "subtitle": "Designing Around the Model", "file": "missions/s8-m01-ai-native-vs-enabled.html", "status": "live", "difficulty": "commander", "estMinutes": 40 },
+        { "id": "s8-m02", "num": "8.2", "title": "The Agent Loop", "subtitle": "Reason → Act → Observe", "file": "missions/s8-m02-agent-loop.html", "status": "live", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s8-m03", "num": "8.3", "title": "Tool-Using Agents", "subtitle": "Giving the Model Hands", "file": "missions/s8-m03-tool-using-agents.html", "status": "live", "difficulty": "commander", "estMinutes": 60 },
+        { "id": "s8-m04", "num": "8.4", "title": "Multi-Step Planning & Memory", "subtitle": "Agents That Remember", "file": "missions/s8-m04-planning-and-memory.html", "status": "live", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m05", "num": "8.5", "title": "Connecting Agents to Real Systems", "subtitle": "MCP, Introduced", "file": "missions/s8-m05-mcp-intro.html", "status": "live", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m06", "num": "8.6", "title": "Evals", "subtitle": "How You Know the AI Actually Works", "file": "missions/s8-m06-evals.html", "status": "live", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s8-m07", "num": "8.7", "title": "Observability & Tracing for AI", "subtitle": "Logging Prompts, Outputs, Cost, Failures", "file": "missions/s8-m07-observability.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s8-m08", "num": "8.8", "title": "Capstone: Small Autonomous Agent", "subtitle": "With an Eval Suite", "file": "missions/s8-m08-capstone-agent.html", "status": "live", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L5" }
       ]
     },
     {

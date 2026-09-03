@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.5: Connecting Agents to Real Systems — MCP, Introduced | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .mcp-server-card { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .mcp-server-card h4 { margin: 0 0 6px; color: var(--accent-pink); font-family: var(--font-code); font-size: 12.5px; }
+  .mcp-tool-line { font-family: var(--font-code); font-size: 11.5px; color: var(--text-secondary); padding: 2px 0; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.5: CONNECTING AGENTS TO REAL SYSTEMS</h1>
+    <div class="subtitle">MCP, Introduced</div>
+    <p class="briefing-line">Every tool your agents have used so far was a JavaScript function you wrote directly into the same file. Real agents need to connect to genuinely external systems — a calendar, a file system, a company's database, someone else's API — and without a shared standard, every single one of those connections needs its own custom, one-off integration code. <strong>MCP (Model Context Protocol)</strong> is an open standard that fixes this: one consistent way for any system to expose its tools, and one consistent way for any agent to discover and use them.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Imagine you want your agent to use a calendar, a notes app, AND a weather service. Without a standard, that's three completely different APIs, three different auth schemes, three sets of custom glue code — and every new integration repeats the work. MCP defines a <strong>client-server</strong> relationship: an MCP <strong>server</strong> wraps one system (the calendar, the notes app, whatever) and exposes its capabilities in one standard shape; an MCP <strong>client</strong> (your agent) connects to any number of servers and discovers what each one can do, without hardcoding it in advance.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <rect x="270" y="60" width="160" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="350" y="90" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Your agent (client)</text>
+          <rect x="20" y="10" width="150" height="45" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="95" y="37" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Notes MCP server</text>
+          <rect x="20" y="115" width="150" height="45" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="95" y="142" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Calendar MCP server</text>
+          <rect x="530" y="60" width="150" height="45" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="1.5"/>
+          <text x="605" y="87" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">Weather MCP server</text>
+          <line x1="170" y1="32" x2="270" y2="75" stroke="#6b7699" stroke-width="1.5"/>
+          <line x1="170" y1="138" x2="270" y2="95" stroke="#6b7699" stroke-width="1.5"/>
+          <line x1="430" y1="85" x2="530" y2="82" stroke="#6b7699" stroke-width="1.5"/>
+        </svg>
+        <div class="diagram-caption">One agent, one standard protocol, connected to as many MCP servers as it needs — each server wraps a different real system.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>MCP's Core Idea: Discovery, Then Calling</h3>
+        <p>Instead of hardcoding "this server has a <code>search_notes</code> tool," an MCP client asks the server directly: "what can you do?" The server responds with a list of its available tools — name, description, and parameters, exactly Mission 7.4 and 8.3's tool shape. The client can then call any of those discovered tools by name, without ever needing to know about them in advance.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT (conceptual MCP client flow)</span><button class="copy-btn" data-copy="const tools = await mcpClient.listTools(); // discover, at runtime&#10;// tools looks like: [{ name: &quot;search_notes&quot;, description: ..., parameters: ... }, ...]&#10;&#10;const relevantTool = tools.find(t =&gt; t.name === &quot;search_notes&quot;);&#10;const result = await mcpClient.callTool(relevantTool.name, { keyword: &quot;trip&quot; });">COPY</button></div>
+          <pre><code><span class="kw">const</span> tools = <span class="kw">await</span> mcpClient.<span class="fn">listTools</span>(); <span class="comment">// discover, at runtime</span>
+<span class="comment">// tools looks like: [{ name: "search_notes", description: ..., parameters: ... }, ...]</span>
+
+<span class="kw">const</span> relevantTool = tools.<span class="fn">find</span>(t =&gt; t.name === <span class="str">"search_notes"</span>);
+<span class="kw">const</span> result = <span class="kw">await</span> mcpClient.<span class="fn">callTool</span>(relevantTool.name, { keyword: <span class="str">"trip"</span> });</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Nothing about <code>search_notes</code> specifically was hardcoded anywhere in the client's code — it was discovered at runtime from whatever server happened to offer it. Swap in a completely different MCP server tomorrow, and the exact same client code can discover and use its tools too, with zero changes.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Why This Matters, Concretely</h3>
+        <p>Mission 8.3 already taught you good tool design and Mission 7.4 taught you the tool-calling shape. MCP doesn't replace either — it standardizes HOW tools get exposed and discovered, so a tool built once (an MCP server) can be reused across many different agents and apps instead of being rewritten as bespoke integration code every single time. This is the same instinct as Sector 5's realization that a standard API is better than every client reinventing its own protocol to reach a database.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Two <code>FakeMCPServer</code> instances are preloaded — a notes server and a calculator server. Write a "client" that discovers each server's tools via <code>listTools()</code>, then calls whichever discovered tool actually fits your goal — without hardcoding which server has which tool.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>DISCOVERED TOOLS</span><span>●</span></div>
+            <div id="mcpDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (discover all tools)</button>
+        <button class="console-btn" id="btnCallDiscovered">try: find and call a tool by keyword, dynamically</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a small MCP-style client that never hardcodes which server has which tool.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>listTools()</code> on BOTH <code>notesServer</code> and <code>calculatorServer</code>, and print the combined list of every discovered tool</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Write a function that searches the COMBINED discovered tool list for a tool whose description matches a keyword you provide, without referencing either server by name directly</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Call the tool your function found using <code>callTool()</code>, on whichever server it actually came from</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, explain what would need to change in your client code if a THIRD MCP server were added tomorrow</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Your discovered tools list needs to remember which server each tool came from — store the server reference alongside each tool object when you combine the two servers' lists, so you know where to actually call it.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a third <code>FakeMCPServer</code> of your own (any small tool you like) and confirm your existing discovery-and-call client code finds and uses its tool correctly with ZERO changes to the client logic itself — only adding the new server to the list it checks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">MCP<span>Model Context Protocol — a standard for tool discovery + calling</span></div>
+        <div class="cheat-card">MCP server<span>Wraps a real system, exposes its tools uniformly</span></div>
+        <div class="cheat-card">MCP client<span>Your agent — discovers and calls tools from any server</span></div>
+        <div class="cheat-card">listTools()<span>Discover what a server offers, at runtime</span></div>
+        <div class="cheat-card">callTool()<span>Invoke a discovered tool by name</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Hardcoding which server has which tool instead of genuinely discovering it via <code>listTools()</code> — defeats the entire point of the standard.</li>
+          <li>Writing custom, one-off integration code per system instead of reaching for a shared protocol when one's available.</li>
+          <li>Forgetting to track which server a discovered tool came from, making it impossible to actually call it later.</li>
+          <li>Assuming MCP replaces good tool design (Mission 8.3) — it standardizes discovery and calling, not tool quality.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what problem does MCP's discovery step actually solve?</p>
+        <button class="quiz-btn" data-correct="false">It makes LLM responses more accurate</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — discovery means a client can use a server's tools without hardcoding them in advance, so tools can be reused across different agents and apps.">It lets a client learn what tools are available at runtime, instead of hardcoding them in advance</button>
+        <button class="quiz-btn" data-correct="false">It reduces the cost of each LLM API call</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- FakeMCPServer ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  function makeMCPServer(name, tools) {
+    return {
+      name,
+      async listTools() {
+        return tools.map((t) => ({ name: t.name, description: t.description, parameters: t.parameters }));
+      },
+      async callTool(toolName, args) {
+        const tool = tools.find((t) => t.name === toolName);
+        if (!tool) throw new Error("No such tool: " + toolName);
+        return tool.run(args);
+      },
+    };
+  }
+
+  window.notesServer = makeMCPServer("notes", [
+    {
+      name: "search_notes",
+      description: "Search the user's saved notes by keyword.",
+      parameters: { keyword: "string" },
+      run: (args) => {
+        const notes = ["Trip to Kepler Station planned for July.", "Grocery list: milk, eggs, bread."];
+        const hit = notes.find((n) => n.toLowerCase().includes((args.keyword || "").toLowerCase()));
+        return hit || "No matching notes found.";
+      },
+    },
+  ]);
+
+  window.calculatorServer = makeMCPServer("calculator", [
+    {
+      name: "add_numbers",
+      description: "Add two numbers together and return the sum.",
+      parameters: { a: "number", b: "number" },
+      run: (args) => args.a + args.b,
+    },
+  ]);
+
+  window.renderDiscoveredTools = function (serverToolLists) {
+    const el = document.getElementById("mcpDisplay");
+    if (!el) return;
+    el.innerHTML = serverToolLists.map((s) =>
+      '<div class="mcp-server-card"><h4>' + s.serverName + '</h4>'
+      + s.tools.map((t) => '<div class="mcp-tool-line">' + t.name + '(' + Object.keys(t.parameters).join(", ") + ') — ' + t.description + '</div>').join("")
+      + '</div>'
+    ).join("");
+  };
+
+  const STARTER = `// Try me — then hit RUN
+async function main() {
+  const notesTools = await notesServer.listTools();
+  const calcTools = await calculatorServer.listTools();
+
+  renderDiscoveredTools([
+    { serverName: "notes", tools: notesTools },
+    { serverName: "calculator", tools: calcTools },
+  ]);
+
+  console.log("notes server offers:", notesTools.map(t => t.name));
+  console.log("calculator server offers:", calcTools.map(t => t.name));
+}
+
+main();`;
+
+  const EXAMPLE_DYNAMIC_CALL = `// A client that finds the right tool WITHOUT hardcoding which server has it
+async function findAndCall(servers, keyword, args) {
+  for (const server of servers) {
+    const tools = await server.listTools();
+    const match = tools.find(t => t.description.toLowerCase().includes(keyword.toLowerCase()));
+    if (match) {
+      console.log("Found \\"" + match.name + "\\" on server \\"" + server.name + "\\"");
+      return await server.callTool(match.name, args);
+    }
+  }
+  throw new Error("No tool found matching: " + keyword);
+}
+
+async function main() {
+  const servers = [notesServer, calculatorServer];
+  const result = await findAndCall(servers, "add two numbers", { a: 4, b: 7 });
+  console.log("Result:", result);
+}
+
+main();`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "mcpDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnCallDiscovered", code: EXAMPLE_DYNAMIC_CALL },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

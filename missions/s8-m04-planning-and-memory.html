@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.4: Multi-Step Planning & Memory — Agents That Remember | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .plan-step { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-size: 12.5px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); }
+  .plan-step.done { opacity: 0.55; text-decoration: line-through; }
+  .plan-num { font-family: var(--font-code); font-size: 11px; color: var(--accent-pink); width: 18px; }
+  .memory-row { display: flex; justify-content: space-between; font-family: var(--font-code); font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .memory-row span:first-child { color: var(--text-muted); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.4: MULTI-STEP PLANNING & MEMORY</h1>
+    <div class="subtitle">Agents That Remember</div>
+    <p class="briefing-line">Mission 8.2's agent figured out its next step one reasoning cycle at a time. Complex goals often benefit from a different approach: <strong>plan first</strong> — break the whole goal into an ordered list of subtasks before acting — then execute that plan, step by step. Real agents also need <strong>memory</strong> that outlives a single run: facts and preferences that should be remembered the next time you talk to it, not re-explained from scratch every conversation.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>There are two very different kinds of "the agent remembers something," and conflating them causes real bugs. <strong>Short-term (working) memory</strong> is Mission 8.2's <code>history</code> array — everything that happened during THIS run, gone the moment the run ends. <strong>Long-term memory</strong> is meant to survive across entirely separate conversations — "the user prefers metric units," learned once, remembered forever after, exactly like Mission 4.4's <code>localStorage</code> persisting data across a page reload.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Planning: Break the Goal Into Steps First</h3>
+        <p>Instead of deciding one action at a time (Mission 8.2), a planning agent first produces an ordered list of subtasks for the whole goal, then works through that list — re-planning if a step reveals something that changes what's actually needed.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function planTask(goal) {&#10;  // A real planner is itself an LLM call; this is a scripted stand-in.&#10;  if (goal.includes(&quot;trip&quot;)) {&#10;    return [&#10;      &quot;Check the weather forecast for the destination&quot;,&#10;      &quot;Look up transport options and book by the deadline&quot;,&#10;      &quot;Add a packing reminder to the calendar&quot;,&#10;    ];&#10;  }&#10;  return [&quot;Break down the goal further&quot;];&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">planTask</span>(goal) {
+  <span class="comment">// A real planner is itself an LLM call; this is a scripted stand-in.</span>
+  <span class="kw">if</span> (goal.<span class="fn">includes</span>(<span class="str">"trip"</span>)) {
+    <span class="kw">return</span> [
+      <span class="str">"Check the weather forecast for the destination"</span>,
+      <span class="str">"Look up transport options and book by the deadline"</span>,
+      <span class="str">"Add a packing reminder to the calendar"</span>,
+    ];
+  }
+  <span class="kw">return</span> [<span class="str">"Break down the goal further"</span>];
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The plan itself is just data — an ordered array of subtasks. Executing it means running Mission 8.2's agent loop (or a single tool call) once per subtask, in order, tracking which ones are done. If a step's result reveals the plan needs to change (the destination turns out to already be booked), a real planning agent re-plans instead of blindly continuing the original list.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Long-Term Memory, For Real</h3>
+        <p>Long-term memory needs actual persistence — Mission 4.4's <code>localStorage</code> or Mission 5.2's real database, not just a JavaScript variable that disappears when the page closes. The pattern is simple: <code>remember(key, value)</code> writes a fact; <code>recall(key)</code> reads it back later, even after a full page reload.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const AgentMemory = {&#10;  remember(key, value) {&#10;    localStorage.setItem(&quot;agent_memory_&quot; + key, JSON.stringify(value));&#10;  },&#10;  recall(key) {&#10;    const raw = localStorage.getItem(&quot;agent_memory_&quot; + key);&#10;    return raw ? JSON.parse(raw) : null;&#10;  },&#10;};">COPY</button></div>
+          <pre><code><span class="kw">const</span> AgentMemory = {
+  remember(key, value) {
+    localStorage.<span class="fn">setItem</span>(<span class="str">"agent_memory_"</span> + key, JSON.<span class="fn">stringify</span>(value));
+  },
+  recall(key) {
+    <span class="kw">const</span> raw = localStorage.<span class="fn">getItem</span>(<span class="str">"agent_memory_"</span> + key);
+    <span class="kw">return</span> raw ? JSON.<span class="fn">parse</span>(raw) : <span class="kw">null</span>;
+  },
+};</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This is genuinely real — data written with <code>remember()</code> is still there after you close and reopen the browser tab, exactly like Mission 4.4 taught. A real production agent usually stores long-term memory in a real database (Mission 5.2) instead of <code>localStorage</code>, so it's shared across devices and users — but the read/write pattern is identical.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Memory vs the Context Window</h3>
+        <p>Mission 7.9 already warned against stuffing everything into the context window. Long-term memory makes this concrete: you don't dump a user's ENTIRE memory history into every prompt. Instead, you <strong>retrieve</strong> only the memories relevant to the current request — exactly Mission 7.5/7.6's semantic search and RAG pattern, applied to an agent's own memory store instead of a document collection.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>planTask(goal)</code> produces a real ordered plan; <code>executePlan(plan)</code> runs through it step by step. <code>AgentMemory.remember()</code> / <code>.recall()</code> are backed by real <code>localStorage</code> — try reloading this page after remembering something, and check that it's still there.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>PLAN & MEMORY</span><span>●</span></div>
+            <div id="planDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (plan a trip)</button>
+        <button class="console-btn" id="btnMemory">try: remember a preference, then recall it</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build and execute your own plan, and prove memory survives a reload.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Add a new goal pattern to <code>planTask()</code> that returns a plan of at least 3 subtasks</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run <code>executePlan()</code> on your new plan and confirm all steps complete in order</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Use <code>AgentMemory.remember()</code> to store a fact, then reload this actual browser page (not just re-run the sandbox) and confirm <code>AgentMemory.recall()</code> still returns it</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, explain the difference between what's lost when a run ends (short-term memory) versus what <code>AgentMemory</code> preserves</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>To genuinely test persistence, you have to reload the real page — re-clicking RUN in the sandbox reruns your script, but the <code>localStorage</code> data itself lives in the browser, completely independent of the sandbox's run/reset cycle.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write a <code>forgetAll()</code> function that clears every key starting with <code>"agent_memory_"</code> from <code>localStorage</code>, and confirm <code>recall()</code> returns <code>null</code> for a previously-remembered key afterward.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Planning<span>Break a goal into an ordered list of subtasks upfront</span></div>
+        <div class="cheat-card">Short-term memory<span>The current run's history — gone when it ends</span></div>
+        <div class="cheat-card">Long-term memory<span>Persisted across separate sessions (localStorage/database)</span></div>
+        <div class="cheat-card">remember() / recall()<span>Write and read a persisted fact</span></div>
+        <div class="cheat-card">Retrieve, don't dump<span>Only relevant memories enter the context, not all of them</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Confusing short-term run history with long-term persisted memory — they solve different problems and need different storage.</li>
+          <li>Storing long-term memory in a plain JavaScript variable that disappears the moment the page closes.</li>
+          <li>Dumping a user's entire memory history into every prompt instead of retrieving only what's relevant (Mission 7.9's lesson, applied here).</li>
+          <li>Never re-planning when a step's result reveals the original plan no longer makes sense.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the key difference between short-term and long-term agent memory?</p>
+        <button class="quiz-btn" data-correct="false">Short-term memory is more accurate</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — short-term memory is Mission 8.2's run-local history; long-term memory is persisted and survives across entirely separate sessions.">Long-term memory survives across separate sessions; short-term memory disappears when the run ends</button>
+        <button class="quiz-btn" data-correct="false">There is no real difference — they're the same thing</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Planning + real localStorage-backed memory ----------------
+     Lives outside the sandboxed new Function so it can render into the real
+     DOM and use real, persistent localStorage. */
+  window.planTask = function (goal) {
+    if (goal.includes("trip")) {
+      return [
+        "Check the weather forecast for the destination",
+        "Look up transport options and book by the deadline",
+        "Add a packing reminder to the calendar",
+      ];
+    }
+    return ["Break down the goal further"];
+  };
+
+  window.executePlan = function (plan) {
+    const el = document.getElementById("planDisplay");
+    const completed = [];
+    plan.forEach((step, i) => {
+      completed.push(step);
+      if (el) {
+        el.innerHTML = plan.map((s, j) =>
+          '<div class="plan-step' + (j < completed.length ? " done" : "") + '"><span class="plan-num">' + (j + 1) + '.</span>' + s + '</div>'
+        ).join("");
+      }
+    });
+    return { completedSteps: completed.length, totalSteps: plan.length };
+  };
+
+  window.AgentMemory = {
+    remember(key, value) {
+      try { localStorage.setItem("agent_memory_" + key, JSON.stringify(value)); } catch (e) {}
+      this._render();
+    },
+    recall(key) {
+      try {
+        const raw = localStorage.getItem("agent_memory_" + key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    },
+    forgetAll() {
+      Object.keys(localStorage).filter((k) => k.startsWith("agent_memory_")).forEach((k) => localStorage.removeItem(k));
+      this._render();
+    },
+    _render() {
+      const el = document.getElementById("planDisplay");
+      if (!el) return;
+      const rows = Object.keys(localStorage)
+        .filter((k) => k.startsWith("agent_memory_"))
+        .map((k) => '<div class="memory-row"><span>' + k.replace("agent_memory_", "") + '</span><span>' + localStorage.getItem(k) + '</span></div>');
+      el.innerHTML = '<div style="font-family:var(--font-code);font-size:11px;color:var(--text-muted);margin-bottom:6px;">PERSISTED MEMORY (survives a reload):</div>' + (rows.length ? rows.join("") : '<div class="out-status">Nothing remembered yet.</div>');
+    },
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const goal = "Plan my upcoming trip to Kepler Station";
+const plan = planTask(goal);
+console.log("Plan:", JSON.stringify(plan, null, 2));
+
+const result = executePlan(plan);
+console.log("Completed", result.completedSteps, "of", result.totalSteps, "steps.");`;
+
+  const EXAMPLE_MEMORY = `// This is REAL localStorage — reload this actual page after running this
+// to confirm the memory survives (re-clicking RUN alone won't prove that).
+AgentMemory.remember("preferred_units", "metric");
+AgentMemory.remember("home_city", "Kepler Station");
+
+console.log("preferred_units:", AgentMemory.recall("preferred_units"));
+console.log("home_city:", AgentMemory.recall("home_city"));
+console.log("unset_key:", AgentMemory.recall("unset_key"));`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    window.AgentMemory._render();
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "planDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnMemory", code: EXAMPLE_MEMORY },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

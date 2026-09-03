@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.2: The Agent Loop — Reason → Act → Observe | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .loop-step { padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12.5px; border-left: 3px solid var(--border-glow); background: var(--bg-panel-alt); }
+  .loop-step .step-label { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 3px; }
+  .loop-step.reason { border-left-color: var(--accent-pink); }
+  .loop-step.act { border-left-color: var(--accent-cyan); }
+  .loop-step.observe { border-left-color: var(--success); }
+  .loop-step.final { border-left-color: var(--accent-yellow); background: rgba(255,230,109,0.08); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.2: THE AGENT LOOP</h1>
+    <div class="subtitle">Reason → Act → Observe</div>
+    <p class="briefing-line">Mission 7.4's tool calling was single-shot: one question, one tool call, done. An <strong>agent</strong> repeats that cycle — deciding what to do, doing it, and looking at the result — as many times as the task actually needs, using each result to inform the next decision. This loop, called <strong>ReAct</strong> (Reason + Act), is the single mechanism underneath every AI agent you'll ever build or use.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Ask "what's 15% of $42, and is that within my $10 tip budget?" A single tool call can't answer this — it genuinely needs two steps, and the second step depends on the first step's actual result. An agent handles this by looping: <strong>Reason</strong> ("I need to calculate the tip first"), <strong>Act</strong> (call a calculator tool), <strong>Observe</strong> (the result comes back: $6.30), then reason again ("now I need to compare that to my budget") — repeating until it has enough information to give a final answer.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;height:auto;">
+          <circle cx="250" cy="110" r="90" fill="none" stroke="#2e3d63" stroke-width="1.5" stroke-dasharray="3,4"/>
+          <rect x="200" y="15" width="100" height="40" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="250" y="40" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">REASON</text>
+          <rect x="340" y="150" width="100" height="40" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="390" y="175" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">ACT</text>
+          <rect x="60" y="150" width="100" height="40" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="110" y="175" fill="#4dffb4" font-family="Fira Code, monospace" font-size="11" text-anchor="middle">OBSERVE</text>
+          <path d="M290,40 C340,55 375,95 385,150" fill="none" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a8)"/>
+          <path d="M340,175 C280,190 220,190 160,175" fill="none" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a8)"/>
+          <path d="M110,150 C120,95 155,55 210,40" fill="none" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a8)"/>
+          <defs><marker id="a8" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+        </svg>
+        <div class="diagram-caption">This loop repeats until the model decides it has enough information to give a final answer instead of taking another action.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Anatomy of One Loop Iteration</h3>
+        <p>Each pass through the loop is exactly Mission 7.4's tool-calling pattern, run once: the model reasons about what's needed next, decides on an action (a tool call, from 7.4), your code executes that tool for real, and the tool's real result — the <strong>observation</strong> — gets added back into the conversation as new information for the next reasoning step.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function runAgentLoop(goal, maxIterations) {&#10;  const history = [];&#10;&#10;  for (let i = 0; i &lt; maxIterations; i++) {&#10;    const step = decideNextStep(goal, history); // REASON&#10;&#10;    if (step.type === &quot;final&quot;) {&#10;      return { answer: step.answer, iterations: i + 1 };&#10;    }&#10;&#10;    const observation = await callTool(step.tool, step.args); // ACT&#10;    history.push({ ...step, observation });                   // OBSERVE&#10;  }&#10;&#10;  return { answer: null, iterations: maxIterations, stopped: &quot;max iterations reached&quot; };&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">runAgentLoop</span>(goal, maxIterations) {
+  <span class="kw">const</span> history = [];
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; maxIterations; i++) {
+    <span class="kw">const</span> step = <span class="fn">decideNextStep</span>(goal, history); <span class="comment">// REASON</span>
+
+    <span class="kw">if</span> (step.type === <span class="str">"final"</span>) {
+      <span class="kw">return</span> { answer: step.answer, iterations: i + <span class="num">1</span> };
+    }
+
+    <span class="kw">const</span> observation = <span class="kw">await</span> <span class="fn">callTool</span>(step.tool, step.args); <span class="comment">// ACT</span>
+    history.<span class="fn">push</span>({ ...step, observation });                   <span class="comment">// OBSERVE</span>
+  }
+
+  <span class="kw">return</span> { answer: <span class="kw">null</span>, iterations: maxIterations, stopped: <span class="str">"max iterations reached"</span> };
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>history</code> is the growing record of everything the agent has done and observed so far — it gets passed into <code>decideNextStep()</code> every iteration, so each new decision is informed by every previous result. The loop only ends two ways: the model outputs a <code>"final"</code> answer, or the safety limit <code>maxIterations</code> is hit.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Stopping Conditions Are Not Optional</h3>
+        <p>An agent that can act repeatedly and autonomously can also get stuck — repeating the same failing action, or never quite deciding it has enough information. <code>maxIterations</code> is a hard safety net: no matter what, the loop stops after a fixed number of steps. Without one, a buggy or confused agent can loop indefinitely, and — since every iteration is a real LLM call — burn real money (Mission 7.8) doing it.</p>
+        <div class="whatjusthappened">
+          <strong>THIS IS NOT A HYPOTHETICAL RISK</strong>
+          A real-world agent with no iteration cap and a tool that returns a slightly-wrong result can loop for hundreds of calls trying to "fix" a problem that isn't actually fixable that way — a genuine, common failure mode. Mission 8.6 and 8.7 (evals and observability) exist specifically to catch this kind of thing before and after it happens.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real, working <code>runAgentLoop(goal, maxIterations)</code> for the tip-budget scenario above. <code>decideNextStep()</code> is a scripted stand-in for a real model's reasoning (a real agent's reasoning step is itself an LLM call) — but the loop structure, tool execution, and stopping conditions are genuinely real.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>AGENT TRACE</span><span>●</span></div>
+            <div id="traceDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (tip budget agent)</button>
+        <button class="console-btn" id="btnMaxIter">try: maxIterations too low to finish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Run the agent under different conditions and study the loop's behavior directly.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Run <code>runAgentLoop()</code> with a generous <code>maxIterations</code> (5+) and confirm it reaches a final answer in exactly 2 iterations</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run it again with <code>maxIterations: 1</code> and confirm it stops with <code>stopped: "max iterations reached"</code> instead of a real answer</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Print the full <code>history</code> array after a successful run and identify which entry holds the tip calculation's observation</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, explain what would happen to a REAL LLM-based agent (not this scripted stand-in) if <code>maxIterations</code> were left unset entirely</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>The scripted <code>decideNextStep()</code> in this console always takes exactly the same two steps for the same goal — a real agent's reasoning step is a genuine LLM call, which is why real agents need eval suites (Mission 8.6) to confirm they reliably reach a correct final answer, not just a plausible-looking one.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a THIRD step to <code>decideNextStep()</code> for a new goal of your own choosing (something needing at least 2 tool calls before a final answer), and confirm your extended agent reaches the right answer within a reasonable <code>maxIterations</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">ReAct<span>Reason → Act → Observe, repeated</span></div>
+        <div class="cheat-card">Reason<span>Decide what to do next, given history so far</span></div>
+        <div class="cheat-card">Act<span>Actually execute the chosen tool call</span></div>
+        <div class="cheat-card">Observe<span>Feed the tool's real result back into history</span></div>
+        <div class="cheat-card">maxIterations<span>The hard safety cap against infinite loops</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Building an agent loop with no iteration cap at all — a real risk of runaway cost and confused, repeated actions.</li>
+          <li>Forgetting to actually append the observation back into history — the agent then "forgets" what it just learned on the very next reasoning step.</li>
+          <li>Assuming the reasoning step is free — every iteration of a real agent loop is a genuine LLM call, with genuine cost (Mission 7.8).</li>
+          <li>Confusing a single tool call (Mission 7.4) with a full agent loop — a loop is defined by REPEATING reason-act-observe, not by using a tool once.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what is <code>maxIterations</code> actually protecting against?</p>
+        <button class="quiz-btn" data-correct="false">The tool functions running too slowly</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — without a hard cap, a confused or stuck agent can loop indefinitely, racking up real cost with every iteration.">An agent looping indefinitely, potentially forever, at real ongoing cost</button>
+        <button class="quiz-btn" data-correct="false">The user typing too many messages</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Agent loop reference implementation ----------------
+     Lives outside the sandboxed new Function so it can render into the
+     real DOM. decideNextStep() is a SCRIPTED stand-in for a real model's
+     reasoning step (a real agent's reasoning is itself an LLM call) — but
+     runAgentLoop(), the tools, and the stopping conditions are all real. */
+  window.TOOLS = {
+    calculate(args) {
+      // eslint-disable-next-line no-new-func
+      return Function('"use strict"; return (' + args.expr + ");")();
+    },
+    compare(args) {
+      if (args.op === "<=") return args.a <= args.b;
+      if (args.op === ">=") return args.a >= args.b;
+      if (args.op === "<") return args.a < args.b;
+      if (args.op === ">") return args.a > args.b;
+      return args.a === args.b;
+    },
+  };
+
+  window.decideNextStep = function (goal, history) {
+    if (history.length === 0) {
+      return { thought: "I need to calculate 15% of $42 first.", type: "action", tool: "calculate", args: { expr: "42 * 0.15" } };
+    }
+    if (history.length === 1) {
+      const tipAmount = history[0].observation;
+      return { thought: "Now I need to check if $" + tipAmount + " fits the $10 budget.", type: "action", tool: "compare", args: { a: tipAmount, op: "<=", b: 10 } };
+    }
+    const withinBudget = history[1].observation;
+    return {
+      thought: "I have enough information to answer.",
+      type: "final",
+      answer: "The 15% tip is $" + history[0].observation + ", which " + (withinBudget ? "IS" : "is NOT") + " within your $10 budget.",
+    };
+  };
+
+  function renderTrace(history, finalStep) {
+    const el = document.getElementById("traceDisplay");
+    if (!el) return;
+    let html = "";
+    history.forEach((h, i) => {
+      html += '<div class="loop-step reason"><span class="step-label">reason (step ' + (i + 1) + ')</span>' + h.thought + '</div>';
+      html += '<div class="loop-step act"><span class="step-label">act</span>' + h.tool + '(' + JSON.stringify(h.args) + ')</div>';
+      html += '<div class="loop-step observe"><span class="step-label">observe</span>' + JSON.stringify(h.observation) + '</div>';
+    });
+    if (finalStep) {
+      html += '<div class="loop-step final"><span class="step-label">final answer</span>' + finalStep + '</div>';
+    }
+    el.innerHTML = html || '<div class="out-status">No steps yet.</div>';
+  }
+
+  window.runAgentLoop = function (goal, maxIterations) {
+    const history = [];
+    for (let i = 0; i < maxIterations; i++) {
+      const step = window.decideNextStep(goal, history);
+      if (step.type === "final") {
+        renderTrace(history, step.answer);
+        return { answer: step.answer, iterations: i + 1, history };
+      }
+      const observation = window.TOOLS[step.tool](step.args);
+      history.push({ ...step, observation });
+    }
+    renderTrace(history, null);
+    return { answer: null, iterations: maxIterations, stopped: "max iterations reached", history };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const result = runAgentLoop("Is a 15% tip on $42 within my $10 budget?", 5);
+console.log("Answer:", result.answer);
+console.log("Iterations used:", result.iterations);`;
+
+  const EXAMPLE_MAX_ITER = `// Only allow 1 iteration — not enough for this 2-step task
+const result = runAgentLoop("Is a 15% tip on $42 within my $10 budget?", 1);
+console.log("Answer:", result.answer);
+console.log("Stopped because:", result.stopped);
+console.log("This is exactly why maxIterations needs to be set thoughtfully, not arbitrarily low.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "traceDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnMaxIter", code: EXAMPLE_MAX_ITER },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
