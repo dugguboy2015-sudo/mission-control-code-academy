@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 5.3: Auth — Locking and Unlocking the Dashboard | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Fake-auth console panel (bespoke to this mission) ---------- */
+  .auth-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .auth-panel input { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); color: var(--text-primary); border-radius: 6px; padding: 7px 10px; font-family: var(--font-code); font-size: 12.5px; }
+  .session-pill { display: inline-block; font-family: var(--font-code); font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-glow); color: var(--text-muted); }
+  .session-pill.signed-in { color: var(--success); border-color: var(--success); }
+</style>
+</head>
+<body class="accent-green" data-mission-id="s5-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 5</div>
+    <h1>MISSION 5.3: AUTH</h1>
+    <div class="subtitle">Sign Up, Sign In & Protected UI — Locking and Unlocking the Dashboard</div>
+    <p class="briefing-line">Row Level Security in Mission 5.2 answered "what can this user touch in the database" — but it all assumed you already know <em>who</em> is asking. That's what authentication solves: proving a visitor is who they claim to be, then remembering that fact for the rest of their visit so every request afterward can be checked against it. This is one of the few areas of programming where "roll your own" is genuinely a bad idea — and understanding why is as important as knowing the API.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~60 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Two words get used almost interchangeably by beginners but mean very different things. <strong>Authentication</strong> ("authn") is proving identity — "this is really Nova, because she typed the correct password." <strong>Authorization</strong> ("authz") is deciding what someone who's already proven their identity is allowed to do — "Nova is a Captain, so she can see the crew roster, but not the admin billing page." Row Level Security is authorization. Everything in this mission — sign-up, sign-in, sessions — is authentication, the step that has to happen first.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;">
+          <rect x="20" y="20" width="200" height="60" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="120" y="45" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">1. Sign in</text>
+          <text x="120" y="64" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">prove WHO you are</text>
+
+          <rect x="260" y="20" width="200" height="60" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="360" y="45" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">2. Session issued</text>
+          <text x="360" y="64" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">a token proves it again later</text>
+
+          <rect x="500" y="20" width="180" height="60" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="590" y="45" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">3. RLS checks</text>
+          <text x="590" y="64" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">WHAT you can touch</text>
+
+          <line x1="220" y1="50" x2="260" y2="50" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a1)"/>
+          <line x1="460" y1="50" x2="500" y2="50" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a1)"/>
+          <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+
+          <text x="350" y="130" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="12" text-anchor="middle">Authentication (steps 1–2) happens once, at login.</text>
+          <text x="350" y="150" fill="#a8b3d1" font-family="Rubik, sans-serif" font-size="12" text-anchor="middle">Authorization (step 3) happens on every single request after.</text>
+        </svg>
+        <div class="diagram-caption">Signing in happens once. Checking permission happens constantly, on every request, using the session that sign-in produced.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Why You Never Hand-Roll Password Storage</h3>
+        <p>A password must never be stored as plain text — if the database ever leaks, every account leaks with it, and since most people reuse passwords, the damage spreads to other sites too. The fix is <strong>hashing</strong>: running the password through a one-way function that scrambles it into something unrecoverable. To check a login later, you hash the typed password again and compare hashes — the real password is never stored anywhere, not even by the service itself.</p>
+        <div class="whatjusthappened">
+          <strong>YOU'VE ALREADY SEEN THIS</strong>
+          This project's own child-PIN system does exactly this — <code>set_child_pin()</code> in the schema calls <code>crypt(p_pin, gen_salt('bf'))</code>, a real password-hashing function, instead of storing the PIN as plain text. A proper auth provider does the same thing for full account passwords, correctly, with battle-tested algorithms — which is the whole reason to use one instead of writing this yourself.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Sessions & Tokens — Staying Signed In</h3>
+        <p>Sending your password on every single request would be slow and risky. Instead, after a successful sign-in, the server hands back a <strong>session token</strong> — a long, signed, hard-to-forge string. The browser stores it and attaches it to every future request instead of the password. The server can verify the token is genuine (and hasn't expired) without ever touching a password again.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const { data, error } = await supabase.auth.signInWithPassword({&#10;  email: 'nova@starbase.dev',&#10;  password: 'correct-horse-battery-staple'&#10;});&#10;&#10;// data.session.access_token is that token — supabase-js stores&#10;// and resends it automatically from here on.">COPY</button></div>
+          <pre><code><span class="kw">const</span> { data, error } = <span class="kw">await</span> supabase.auth.<span class="fn">signInWithPassword</span>({
+  email: <span class="str">'nova@starbase.dev'</span>,
+  password: <span class="str">'correct-horse-battery-staple'</span>
+});
+
+<span class="comment">// data.session.access_token is that token — supabase-js stores</span>
+<span class="comment">// and resends it automatically from here on.</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          On success, Supabase returns a <code>session</code> object containing an <code>access_token</code>. Every RLS policy checking <code>auth.uid()</code> — which you used constantly in Mission 5.2 — is really reading the identity baked into this token. No token, no <code>auth.uid()</code>, and every RLS policy correctly treats you as a stranger.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Core Supabase Auth API</h3>
+        <p>Four functions cover almost everything a real app needs.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// Create an account\nawait supabase.auth.signUp({ email, password });\n\n// Sign in an existing account\nawait supabase.auth.signInWithPassword({ email, password });\n\n// Check the current session at any time (e.g. on page load)\nconst { data: { session } } = await supabase.auth.getSession();\n\n// Sign out — clears the session everywhere\nawait supabase.auth.signOut();">COPY</button></div>
+          <pre><code><span class="comment">// Create an account</span>
+<span class="kw">await</span> supabase.auth.<span class="fn">signUp</span>({ email, password });
+
+<span class="comment">// Sign in an existing account</span>
+<span class="kw">await</span> supabase.auth.<span class="fn">signInWithPassword</span>({ email, password });
+
+<span class="comment">// Check the current session at any time (e.g. on page load)</span>
+<span class="kw">const</span> { data: { session } } = <span class="kw">await</span> supabase.auth.<span class="fn">getSession</span>();
+
+<span class="comment">// Sign out — clears the session everywhere</span>
+<span class="kw">await</span> supabase.auth.<span class="fn">signOut</span>();</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>signUp</code> and <code>signInWithPassword</code> both return a session on success. <code>getSession()</code> is what a page calls the instant it loads, to find out "is anyone already signed in from before?" — critical, because a session survives page refreshes and even closing the tab. Notice none of these four functions ever mention hashing, tokens, or cookies directly — that machinery is exactly what you're paying Supabase to handle correctly on your behalf.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Protected UI Pattern</h3>
+        <p>Knowing whether someone is signed in is only useful if the page actually behaves differently for them. The standard pattern — the exact one this Academy's own dashboard and mission pages use — is: hide everything by default, check the session the instant the page loads, then reveal the page only after that check succeeds.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>HTML + JS</span><button class="copy-btn" data-copy="<!-- in <head>, BEFORE any content renders -->\n<style>html{visibility:hidden}</style>\n\n<script>\n(async function () {\n  const { data: { session } } = await supabase.auth.getSession();\n  if (session) {\n    document.documentElement.style.visibility = 'visible';\n  } else {\n    window.location.replace('/login.html');\n  }\n})();\n</script>">COPY</button></div>
+          <pre><code><span class="comment">&lt;!-- in &lt;head&gt;, BEFORE any content renders --&gt;</span>
+&lt;style&gt;html{visibility:hidden}&lt;/style&gt;
+
+&lt;script&gt;
+(<span class="kw">async function</span> () {
+  <span class="kw">const</span> { data: { session } } = <span class="kw">await</span> supabase.auth.<span class="fn">getSession</span>();
+  <span class="kw">if</span> (session) {
+    document.documentElement.style.visibility = <span class="str">'visible'</span>;
+  } <span class="kw">else</span> {
+    window.location.<span class="fn">replace</span>(<span class="str">'/login.html'</span>);
+  }
+})();
+&lt;/script&gt;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The CSS rule hides the entire page the instant it starts loading — before any real content, and before an unauthenticated visitor could ever glimpse it. The script is the ONLY thing allowed to set <code>visibility</code> back to <code>"visible"</code>, and only after confirming a session exists. Get that one line wrong — setting it to an empty string instead of the word <code>"visible"</code>, say — and the page stays invisible forever no matter what the rest of your code does. That exact bug happened during this Academy's own build and took real debugging effort to catch.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A safe, in-memory stand-in for Supabase Auth called <code>FakeAuth</code> is preloaded below, with the exact same shape as the real thing: <code>FakeAuth.signUp()</code>, <code>FakeAuth.signInWithPassword()</code>, <code>FakeAuth.getSession()</code>, and <code>FakeAuth.signOut()</code> — all real <code>async</code> functions returning promises, just like the real API. Nothing here touches a real server or a real password.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>COCKPIT DISPLAY</span><span>●</span></div>
+            <div id="authDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnSignIn">try: sign in with wrong password</button>
+        <button class="console-btn" id="btnSession">try: check session on &quot;page load&quot;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Using <code>FakeAuth</code> in the Command Console above, build a complete sign-up → sign-in → protected-content flow.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Call <code>FakeAuth.signUp()</code> with an email and password, and log whether it succeeded
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Call <code>FakeAuth.signInWithPassword()</code> with the <em>wrong</em> password and confirm you get an error back, not a session
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Call <code>FakeAuth.signInWithPassword()</code> again with the correct password and confirm a session comes back
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Use <code>renderCockpit(session)</code> to show the restricted cockpit view only when a session exists
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Call <code>FakeAuth.signOut()</code>, then call <code>renderCockpit(null)</code> and confirm the cockpit view goes back to locked
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p><code>FakeAuth</code>'s functions are all <code>async</code> — every call needs an <code>await</code> in front of it, exactly like the real Supabase client. Forgetting <code>await</code> is the single most common mistake with any auth API, real or fake.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Try signing in with an email that was never signed up at all. Read the error message <code>FakeAuth</code> gives back — is it specific ("no account with that email") or vague ("invalid credentials")? Real auth providers deliberately keep this message vague. In a code comment, explain why revealing "that email doesn't exist" is itself a security leak.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>Authentication</code><span>Proving WHO someone is</span></div>
+        <div class="cheat-card"><code>Authorization</code><span>Deciding WHAT they can do (RLS)</span></div>
+        <div class="cheat-card"><code>Hashing</code><span>One-way scrambling — never store plain passwords</span></div>
+        <div class="cheat-card"><code>signUp()</code><span>Create a new account</span></div>
+        <div class="cheat-card"><code>signInWithPassword()</code><span>Start a session for an existing account</span></div>
+        <div class="cheat-card"><code>getSession()</code><span>Check if someone's already signed in</span></div>
+        <div class="cheat-card"><code>signOut()</code><span>End the session everywhere</span></div>
+        <div class="cheat-card"><code>Session token</code><span>Proves identity on every request after sign-in</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing your own password hashing instead of using a proven auth provider — a well-known source of serious real-world breaches.</li>
+          <li>Hiding protected content with JavaScript that runs <em>after</em> the page has already displayed it — the user sees a flash of real content first.</li>
+          <li>Checking the session once at page load and never again, so a signed-out user in another tab can still act as if logged in.</li>
+          <li>Returning a specific "no account found" vs "wrong password" error, which tells an attacker which emails are registered.</li>
+          <li>Forgetting <code>await</code> on an auth call and treating the returned Promise as if it were already the result.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — Row Level Security policies that check <code>auth.uid()</code> are an example of:</p>
+        <button class="quiz-btn" data-correct="false">Authentication</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — RLS decides what an already-identified user is allowed to touch. That's authorization.">Authorization</button>
+        <button class="quiz-btn" data-correct="false">Hashing</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  /* ---------------- FakeAuth: a safe stand-in with Supabase's exact shape ----------------
+     Lives in real global scope (not inside the sandboxed new Function the cadet's
+     code runs in) so it behaves like a real imported library the cadet's code calls. */
+  window.FakeAuth = (function () {
+    const users = {};   // email -> password (fine for a fake — never do this for real)
+    let currentSession = null;
+
+    function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+    function fakeToken() { return "fake." + Math.random().toString(36).slice(2) + "." + Date.now(); }
+
+    return {
+      async signUp({ email, password }) {
+        await delay(150);
+        if (users[email]) {
+          return { data: { session: null }, error: { message: "An account with that email already exists." } };
+        }
+        users[email] = password;
+        currentSession = { access_token: fakeToken(), user: { email } };
+        return { data: { session: currentSession }, error: null };
+      },
+      async signInWithPassword({ email, password }) {
+        await delay(150);
+        if (!users[email] || users[email] !== password) {
+          // Deliberately vague, like a real provider — see the Bonus Objective.
+          return { data: { session: null }, error: { message: "Invalid login credentials." } };
+        }
+        currentSession = { access_token: fakeToken(), user: { email } };
+        return { data: { session: currentSession }, error: null };
+      },
+      async getSession() {
+        await delay(50);
+        return { data: { session: currentSession } };
+      },
+      async signOut() {
+        await delay(50);
+        currentSession = null;
+        return { error: null };
+      },
+    };
+  })();
+
+  window.renderCockpit = function (session) {
+    const el = document.getElementById("authDisplay");
+    if (!el) return;
+    if (session) {
+      el.innerHTML = '<div class="session-pill signed-in">● SIGNED IN as ' + session.user.email + '</div>'
+        + '<p style="margin-top:12px;color:var(--text-primary);">🔓 COCKPIT UNLOCKED — restricted controls visible.</p>';
+    } else {
+      el.innerHTML = '<div class="session-pill">○ SIGNED OUT</div>'
+        + '<p style="margin-top:12px;color:var(--text-muted);">🔒 Cockpit locked — sign in to view restricted controls.</p>';
+    }
+  };
+  window.renderCockpit(null);
+
+  const STARTER = `async function main() {
+  const signUpResult = await FakeAuth.signUp({ email: "nova@starbase.dev", password: "orbit123" });
+  console.log("signUp:", JSON.stringify(signUpResult.error || signUpResult.data.session.user));
+
+  renderCockpit(signUpResult.data.session);
+}
+
+main();`;
+
+  const EXAMPLE_WRONG_PASSWORD = `async function main() {
+  await FakeAuth.signUp({ email: "nova@starbase.dev", password: "orbit123" });
+  await FakeAuth.signOut();
+
+  const result = await FakeAuth.signInWithPassword({ email: "nova@starbase.dev", password: "wrong-guess" });
+  if (result.error) {
+    console.error(result.error.message);
+  }
+  renderCockpit(result.data.session);
+}
+
+main();`;
+
+  const EXAMPLE_CHECK_SESSION = `async function main() {
+  // Simulates what a page does the instant it loads: "is anyone already signed in?"
+  const { data } = await FakeAuth.getSession();
+  console.log("Session on load:", data.session ? data.session.user.email : "none");
+  renderCockpit(data.session);
+}
+
+main();`;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "authDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnSignIn", code: EXAMPLE_WRONG_PASSWORD },
+        { btnId: "btnSession", code: EXAMPLE_CHECK_SESSION },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
