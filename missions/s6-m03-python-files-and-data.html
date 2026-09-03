@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.3: Files, Loops & Working with Data — Reading Real Files in Python | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Terminal callout (matches Mission 6.1's convention) ---------- */
+  .terminal-callout {
+    background: #05070d;
+    border: 1px solid var(--border-glow);
+    border-left: 3px solid var(--accent-green);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-family: var(--font-code);
+    font-size: 13px;
+  }
+  .terminal-callout .tc-label { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--accent-green); margin-bottom: 8px; display: block; }
+  .terminal-callout .tc-line { color: var(--text-secondary); margin-bottom: 3px; }
+  .terminal-callout .tc-prompt { color: var(--accent-green); }
+
+  /* ---------- Command Console: taller REPL pair ---------- */
+  #pyEditor { min-height: 340px; tab-size: 4; }
+  #pyOutput { min-height: 340px; max-height: 420px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.3: FILES, LOOPS & WORKING WITH DATA</h1>
+    <div class="subtitle">Reading Real Files in Python</div>
+    <p class="briefing-line">Every dataset you'll ever analyze starts life somewhere outside your script — usually a plain text file sitting on disk. This mission covers the real syntax for reading and writing files in Python, the <code>while</code> loop (your <code>for</code> loop's condition-based cousin), and the single most common task in all of data work: turning messy raw text into the clean list-of-dictionaries shape you built by hand in Mission 6.2.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A quick, important note before you start: the Command Console's browser-based Python interpreter can't touch your real hard drive — there's no actual filesystem inside a browser tab for it to read from. So this mission's console works with a string variable that stands in for a file's contents, exactly what <code>open("file.txt").read()</code> would hand you on a real computer. Everything you practice on that string is identical to what you'd do with a real file — the Field Manual below shows you the real <code>open()</code> syntax to run for yourself in a terminal, and the Mission Challenge asks you to actually do it.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Opening a File For Real: with open(...)</h3>
+        <p>Python's standard pattern for reading a file is the <code>with</code> statement — it opens the file, hands it to you, and guarantees it gets closed automatically afterward, even if an error happens partway through.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="with open(&quot;mission_log.txt&quot;, &quot;r&quot;) as f:&#10;    contents = f.read()&#10;&#10;print(contents)&#10;&#10;# f is automatically closed here, even if something above crashed">COPY</button></div>
+          <pre><code><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"mission_log.txt"</span>, <span class="str">"r"</span>) <span class="kw">as</span> f:
+    contents = f.<span class="fn">read</span>()
+
+<span class="fn">print</span>(contents)
+
+<span class="comment"># f is automatically closed here, even if something above crashed</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>"r"</code> means "read mode." <code>as f</code> gives the open file a name to work with inside the indented block. The instant that block ends — for any reason — Python closes the file for you. Forgetting to close a file manually is a classic bug in other languages; <code>with</code> makes that mistake structurally impossible.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>while Loops — Repeat Until a Condition Changes</h3>
+        <p>A <code>for</code> loop repeats once per item in something. A <code>while</code> loop repeats as long as a condition stays <code>True</code> — useful when you don't know in advance how many times you'll need to loop.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="fuel = 100&#10;jumps = 0&#10;&#10;while fuel &gt; 20:&#10;    fuel -= 15&#10;    jumps += 1&#10;    print(f&quot;Jump {jumps}: fuel now at {fuel}&quot;)&#10;&#10;print(f&quot;Stopped after {jumps} jumps — fuel too low to continue safely.&quot;)">COPY</button></div>
+          <pre><code>fuel = <span class="num">100</span>
+jumps = <span class="num">0</span>
+
+<span class="kw">while</span> fuel &gt; <span class="num">20</span>:
+    fuel -= <span class="num">15</span>
+    jumps += <span class="num">1</span>
+    <span class="fn">print</span>(<span class="str">f"Jump {jumps}: fuel now at {fuel}"</span>)
+
+<span class="fn">print</span>(<span class="str">f"Stopped after {jumps} jumps — fuel too low to continue safely."</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each pass checks <code>fuel &gt; 20</code> BEFORE running the block — the moment it's false, the loop stops, without needing to know ahead of time exactly how many jumps that would take. This is the classic danger zone for beginners too: if nothing inside the loop ever changes the condition, you've written an <strong>infinite loop</strong> that never stops.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Splitting Lines and Fields</h3>
+        <p>Raw text data is almost always line-based, with fields separated by a character like a comma (a <strong>CSV</strong> — comma-separated values). Two string methods do almost all the work: <code>.splitlines()</code> breaks text into a list of lines, and <code>.split(",")</code> breaks one line into a list of fields.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="raw_text = &quot;&quot;&quot;date,event,fuel_used&#10;2087-03-01,launch,40&#10;2087-03-02,orbit_insertion,15&#10;2087-03-03,docking,8&quot;&quot;&quot;&#10;&#10;lines = raw_text.splitlines()&#10;print(lines[0])   # 'date,event,fuel_used' — the header row&#10;&#10;first_data_row = lines[1].split(&quot;,&quot;)&#10;print(first_data_row)  # ['2087-03-01', 'launch', '40']">COPY</button></div>
+          <pre><code>raw_text = <span class="str">"""date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8"""</span>
+
+lines = raw_text.<span class="fn">splitlines</span>()
+<span class="fn">print</span>(lines[<span class="num">0</span>])   <span class="comment"># 'date,event,fuel_used' — the header row</span>
+
+first_data_row = lines[<span class="num">1</span>].<span class="fn">split</span>(<span class="str">","</span>)
+<span class="fn">print</span>(first_data_row)  <span class="comment"># ['2087-03-01', 'launch', '40']</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>"""triple quotes"""</code> let a string span multiple lines directly in your code — handy for sample data. <code>.splitlines()</code> turns that block into one list entry per line. <code>.split(",")</code> then turns one line into a list of its individual comma-separated values, still all strings — <code>"40"</code>, not the number <code>40</code>, which matters for the next step.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>From Raw Text to a List of Dictionaries</h3>
+        <p>Combine everything so far — <code>.splitlines()</code>, <code>.split(",")</code>, a loop, and <code>int()</code> to convert text to a real number — and raw CSV text becomes the exact list-of-dictionaries shape from Mission 6.2.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="raw_text = &quot;&quot;&quot;date,event,fuel_used&#10;2087-03-01,launch,40&#10;2087-03-02,orbit_insertion,15&#10;2087-03-03,docking,8&quot;&quot;&quot;&#10;&#10;lines = raw_text.splitlines()&#10;header = lines[0].split(&quot;,&quot;)&#10;&#10;log_entries = []&#10;for line in lines[1:]:&#10;    values = line.split(&quot;,&quot;)&#10;    entry = {&#10;        &quot;date&quot;: values[0],&#10;        &quot;event&quot;: values[1],&#10;        &quot;fuel_used&quot;: int(values[2]),&#10;    }&#10;    log_entries.append(entry)&#10;&#10;print(log_entries)&#10;print(f&quot;Total fuel: {sum(e['fuel_used'] for e in log_entries)}&quot;)">COPY</button></div>
+          <pre><code>raw_text = <span class="str">"""date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8"""</span>
+
+lines = raw_text.<span class="fn">splitlines</span>()
+header = lines[<span class="num">0</span>].<span class="fn">split</span>(<span class="str">","</span>)
+
+log_entries = []
+<span class="kw">for</span> line <span class="kw">in</span> lines[<span class="num">1</span>:]:
+    values = line.<span class="fn">split</span>(<span class="str">","</span>)
+    entry = {
+        <span class="str">"date"</span>: values[<span class="num">0</span>],
+        <span class="str">"event"</span>: values[<span class="num">1</span>],
+        <span class="str">"fuel_used"</span>: <span class="fn">int</span>(values[<span class="num">2</span>]),
+    }
+    log_entries.append(entry)
+
+<span class="fn">print</span>(log_entries)
+<span class="fn">print</span>(<span class="str">f"Total fuel: {sum(e['fuel_used'] for e in log_entries)}"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>lines[1:]</code> skips the header row using the slicing you learned in Mission 6.2. <code>int(values[2])</code> converts the text <code>"40"</code> into the real number <code>40</code> — without it, <code>sum()</code> further down would try to add strings together and crash. This exact pipeline — read, split, convert, build a list of dicts — is the backbone of real-world data processing in Python.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Writing a File For Real</h3>
+        <p>Writing follows the same <code>with open(...)</code> pattern, just with mode <code>"w"</code> instead of <code>"r"</code>.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="summary_lines = [&quot;Total fuel used: 63&quot;, &quot;Events logged: 3&quot;]&#10;&#10;with open(&quot;summary.txt&quot;, &quot;w&quot;) as f:&#10;    for line in summary_lines:&#10;        f.write(line + &quot;\\n&quot;)">COPY</button></div>
+          <pre><code>summary_lines = [<span class="str">"Total fuel used: 63"</span>, <span class="str">"Events logged: 3"</span>]
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"summary.txt"</span>, <span class="str">"w"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> line <span class="kw">in</span> summary_lines:
+        f.<span class="fn">write</span>(line + <span class="str">"\n"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>"w"</code> mode creates the file if it doesn't exist, and — this is important — completely erases and replaces it if it does. <code>f.write()</code> does not add a newline for you automatically, unlike <code>print()</code>, which is why <code>"\n"</code> is added manually after each line.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real Python interpreter, preloaded with <code>RAW_LOG</code> — a string standing in for a file's contents, exactly what <code>open("mission_log.csv").read()</code> would return. Practice the parsing pipeline from the Field Manual on it.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: parse into list of dicts</button>
+        <button class="console-btn" id="btnExample2">try: while loop until sentinel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Use the Command Console above to parse <code>RAW_LOG</code> into structured data, then do the same thing for real, on your own computer, with a real file.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Parse <code>RAW_LOG</code> into a list of dictionaries called <code>log_entries</code>, converting <code>fuel_used</code> to a real integer
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Print the total fuel used across all entries with <code>sum()</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use a <code>while</code> loop to print entries one at a time until you've printed 2 of them, then stop
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">On your own computer: save some sample CSV lines into a real file called <code>mission_log.csv</code>, then write a separate <code>.py</code> script that opens it with <code>with open(...)</code>, reads it, and prints the total fuel used
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A <code>while</code> loop that stops after a fixed count needs a counter variable you increment yourself — <code>while count &lt; 2:</code> paired with <code>count += 1</code> somewhere inside the loop body, or it never stops.</p>
+      </details>
+
+      <div class="terminal-callout">
+        <span class="tc-label">RUN IT FOR REAL — IN YOUR TERMINAL</span>
+        <div class="tc-line"><span class="tc-prompt">$</span> cd path/to/your/folder</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> # create mission_log.csv in a text editor first, then:</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 parse_log.py</div>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:-4px;">Create <code>mission_log.csv</code> with a header row and a few data rows (copy the sample from the Field Manual above), write <code>parse_log.py</code> using real <code>open()</code> calls, and run it — this is the exact moment where "browser practice" becomes "a real, working program on your computer."</p>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">In your real script, write a summary (total fuel, number of entries) out to a second file, <code>summary.txt</code>, using <code>"w"</code> mode — then open that file in a text editor to confirm it's really there.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>with open(f, "r") as f:</code><span>Open a file for reading, auto-closed after</span></div>
+        <div class="cheat-card"><code>with open(f, "w") as f:</code><span>Open a file for writing (erases existing contents)</span></div>
+        <div class="cheat-card"><code>f.read()</code><span>Get the whole file as one string</span></div>
+        <div class="cheat-card"><code>f.write(s)</code><span>Write a string — no automatic newline</span></div>
+        <div class="cheat-card"><code>.splitlines()</code><span>Break text into a list of lines</span></div>
+        <div class="cheat-card"><code>.split(",")</code><span>Break one line into fields</span></div>
+        <div class="cheat-card"><code>while condition:</code><span>Repeat until the condition is False</span></div>
+        <div class="cheat-card"><code>int(text)</code><span>Convert text to a real number</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing a <code>while</code> loop where nothing inside ever changes the condition — an infinite loop that freezes the program.</li>
+          <li>Forgetting that everything from <code>.split(",")</code> is still text (a string), and trying to do math on it before converting with <code>int()</code> or <code>float()</code>.</li>
+          <li>Opening a file with <code>"w"</code> mode when you meant to only read it — this silently erases the file's previous contents.</li>
+          <li>Forgetting to skip the header row (<code>lines[1:]</code>) and accidentally trying to process the column names as if they were data.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the danger of a <code>while</code> loop whose condition never becomes False?</p>
+        <button class="quiz-btn" data-correct="false">Python automatically stops it after 100 loops</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — an infinite loop just keeps running forever, freezing the program until it's forcibly stopped.">It runs forever — an infinite loop</button>
+        <button class="quiz-btn" data-correct="false">It throws a syntax error before running</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `# RAW_LOG stands in for open("mission_log.csv").read() — try me, then hit RUN
+RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8
+2087-03-04,resupply,5"""
+
+lines = RAW_LOG.splitlines()
+print(f"Header: {lines[0]}")
+print(f"Data rows: {len(lines) - 1}")`;
+
+  const EXAMPLE_PARSE = `RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8
+2087-03-04,resupply,5"""
+
+lines = RAW_LOG.splitlines()
+
+log_entries = []
+for line in lines[1:]:
+    values = line.split(",")
+    entry = {
+        "date": values[0],
+        "event": values[1],
+        "fuel_used": int(values[2]),
+    }
+    log_entries.append(entry)
+
+for entry in log_entries:
+    print(entry)
+
+print(f"Total fuel: {sum(e['fuel_used'] for e in log_entries)}")`;
+
+  const EXAMPLE_WHILE_SENTINEL = `RAW_LOG = """date,event,fuel_used
+2087-03-01,launch,40
+2087-03-02,orbit_insertion,15
+2087-03-03,docking,8
+2087-03-04,resupply,5"""
+
+lines = RAW_LOG.splitlines()[1:]  # skip header
+
+# Process lines one at a time until we've handled 2 of them, then stop —
+# a while loop is the right tool here since we're stopping on a COUNT,
+# not because we ran out of items (a for loop would process all of them).
+count = 0
+index = 0
+while count < 2:
+    values = lines[index].split(",")
+    print(f"Processing: {values[1]} ({values[2]} fuel)")
+    count += 1
+    index += 1
+
+print(f"Stopped after processing {count} entries.")`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_PARSE },
+        { btnId: "btnExample2", code: EXAMPLE_WHILE_SENTINEL },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

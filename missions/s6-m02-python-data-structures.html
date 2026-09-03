@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.2: Lists, Dicts & Data Structures — Python's Arrays and Objects | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Command Console: taller REPL pair, matches this sector's convention ---------- */
+  #pyEditor { min-height: 320px; tab-size: 4; }
+  #pyOutput { min-height: 320px; max-height: 400px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.2: LISTS, DICTS & DATA STRUCTURES</h1>
+    <div class="subtitle">Python's Arrays and Objects, In Depth</div>
+    <p class="briefing-line">Mission 6.1 introduced Python's lists and dictionaries as quick equivalents of JavaScript arrays and objects. Real programs almost never stop at one flat list, though — they nest lists inside dictionaries, dictionaries inside lists, and lean on a handful of extremely common operations (slicing, sorting, filtering) constantly. This mission is that toolbox, and it's the exact shape of data you'll pull out of almost every real-world dataset or API response.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Think back to Mission 5.1's crew table — rows of records, each with the same set of fields. In Python, the natural way to represent that exact shape is a <strong>list of dictionaries</strong>: one dictionary per record, all held in one list. This single pattern — <code>[{...}, {...}, {...}]</code> — is how data from files, APIs, and databases almost always arrives once it's loaded into a Python program, and it's the shape every technique in this mission is built to work with.</p>
+
+      <div class="diagram-box">
+        <table class="sample-table" style="font-size:11.5px;">
+          <tr><th>name</th><th>role</th><th>fuel_used</th></tr>
+          <tr><td>Nova</td><td>Captain</td><td>42</td></tr>
+          <tr><td>Kip</td><td>Engineer</td><td>18</td></tr>
+          <tr><td>Zed</td><td>Navigator</td><td>27</td></tr>
+        </table>
+        <div class="diagram-caption">This table and <code>[{"name": "Nova", "role": "Captain", "fuel_used": 42}, {"name": "Kip", ...}, ...]</code> represent exactly the same information — one as a grid, one as Python data.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Slicing — Grabbing a Range of a List</h3>
+        <p><code>list[start:end]</code> pulls out a range of items, not including the item at <code>end</code>. Leave either side blank to mean "from the beginning" or "to the end." Negative numbers count backward from the end of the list.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&quot;Nova&quot;, &quot;Kip&quot;, &quot;Zed&quot;, &quot;Rell&quot;, &quot;Juno&quot;]&#10;&#10;print(crew[1:3])   # ['Kip', 'Zed']&#10;print(crew[:2])    # ['Nova', 'Kip']&#10;print(crew[3:])    # ['Rell', 'Juno']&#10;print(crew[-1])    # 'Juno' — last item&#10;print(crew[::-1])  # the whole list, reversed">COPY</button></div>
+          <pre><code>crew = [<span class="str">"Nova"</span>, <span class="str">"Kip"</span>, <span class="str">"Zed"</span>, <span class="str">"Rell"</span>, <span class="str">"Juno"</span>]
+
+<span class="fn">print</span>(crew[<span class="num">1</span>:<span class="num">3</span>])   <span class="comment"># ['Kip', 'Zed']</span>
+<span class="fn">print</span>(crew[:<span class="num">2</span>])    <span class="comment"># ['Nova', 'Kip']</span>
+<span class="fn">print</span>(crew[<span class="num">3</span>:])    <span class="comment"># ['Rell', 'Juno']</span>
+<span class="fn">print</span>(crew[-<span class="num">1</span>])    <span class="comment"># 'Juno' — last item</span>
+<span class="fn">print</span>(crew[::-<span class="num">1</span>])  <span class="comment"># the whole list, reversed</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>crew[1:3]</code> grabs index 1 up to (but not including) index 3 — two items. <code>crew[-1]</code> is a shortcut for "the last item" that avoids needing to know the list's length. <code>crew[::-1]</code> uses a third slicing number (the step) of <code>-1</code>, which walks backward through the whole list — a common Python idiom for reversing.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Sorting, Filtering & List Comprehensions</h3>
+        <p><code>sorted()</code> returns a new sorted list without changing the original; <code>list.sort()</code> sorts in place. A <strong>list comprehension</strong> — <code>[expression for item in list if condition]</code> — builds a new list in one line, and it's one of the most distinctly "Pythonic" tools in the language.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="fuel_levels = [42, 18, 27, 65, 9]&#10;&#10;print(sorted(fuel_levels))               # [9, 18, 27, 42, 65]&#10;print(sorted(fuel_levels, reverse=True))  # [65, 42, 27, 18, 9]&#10;&#10;low_fuel = [f for f in fuel_levels if f &lt; 30]&#10;print(low_fuel)  # [18, 27, 9]&#10;&#10;doubled = [f * 2 for f in fuel_levels]&#10;print(doubled)   # [84, 36, 54, 130, 18]">COPY</button></div>
+          <pre><code>fuel_levels = [<span class="num">42</span>, <span class="num">18</span>, <span class="num">27</span>, <span class="num">65</span>, <span class="num">9</span>]
+
+<span class="fn">print</span>(<span class="fn">sorted</span>(fuel_levels))               <span class="comment"># [9, 18, 27, 42, 65]</span>
+<span class="fn">print</span>(<span class="fn">sorted</span>(fuel_levels, reverse=<span class="kw">True</span>))  <span class="comment"># [65, 42, 27, 18, 9]</span>
+
+low_fuel = [f <span class="kw">for</span> f <span class="kw">in</span> fuel_levels <span class="kw">if</span> f &lt; <span class="num">30</span>]
+<span class="fn">print</span>(low_fuel)  <span class="comment"># [18, 27, 9]</span>
+
+doubled = [f * <span class="num">2</span> <span class="kw">for</span> f <span class="kw">in</span> fuel_levels]
+<span class="fn">print</span>(doubled)   <span class="comment"># [84, 36, 54, 130, 18]</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>low_fuel = [f for f in fuel_levels if f &lt; 30]</code> reads almost like English: "give me <code>f</code>, for every <code>f</code> in <code>fuel_levels</code>, but only if <code>f</code> is less than 30." It's exactly equivalent to a <code>for</code> loop that appends to an empty list — just written in one expression instead of four lines.
+        </div>
+        <details>
+          <summary>▸ DEEP DIVE: The equivalent for loop</summary>
+          <p>The <code>low_fuel</code> comprehension above does exactly this, longhand: <code>low_fuel = []</code>, then <code>for f in fuel_levels: if f &lt; 30: low_fuel.append(f)</code>. Comprehensions aren't magic — they're a shorthand for a pattern you'll write constantly.</p>
+        </details>
+      </div>
+
+      <div class="subsection">
+        <h3>Nested Structures — Lists of Dictionaries</h3>
+        <p>This is the pattern from the Briefing above, in real code. Looping over a list of dictionaries and pulling out one field from each is one of the single most common things you'll do with real data.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="crew = [&#10;    {&quot;name&quot;: &quot;Nova&quot;, &quot;role&quot;: &quot;Captain&quot;, &quot;fuel_used&quot;: 42},&#10;    {&quot;name&quot;: &quot;Kip&quot;, &quot;role&quot;: &quot;Engineer&quot;, &quot;fuel_used&quot;: 18},&#10;    {&quot;name&quot;: &quot;Zed&quot;, &quot;role&quot;: &quot;Navigator&quot;, &quot;fuel_used&quot;: 27},&#10;]&#10;&#10;for member in crew:&#10;    print(f&quot;{member['name']} ({member['role']}) used {member['fuel_used']} fuel&quot;)&#10;&#10;total_fuel = sum(member[&quot;fuel_used&quot;] for member in crew)&#10;print(f&quot;Total fuel used: {total_fuel}&quot;)">COPY</button></div>
+          <pre><code>crew = [
+    {<span class="str">"name"</span>: <span class="str">"Nova"</span>, <span class="str">"role"</span>: <span class="str">"Captain"</span>, <span class="str">"fuel_used"</span>: <span class="num">42</span>},
+    {<span class="str">"name"</span>: <span class="str">"Kip"</span>, <span class="str">"role"</span>: <span class="str">"Engineer"</span>, <span class="str">"fuel_used"</span>: <span class="num">18</span>},
+    {<span class="str">"name"</span>: <span class="str">"Zed"</span>, <span class="str">"role"</span>: <span class="str">"Navigator"</span>, <span class="str">"fuel_used"</span>: <span class="num">27</span>},
+]
+
+<span class="kw">for</span> member <span class="kw">in</span> crew:
+    <span class="fn">print</span>(<span class="str">f"{member['name']} ({member['role']}) used {member['fuel_used']} fuel"</span>)
+
+total_fuel = <span class="fn">sum</span>(member[<span class="str">"fuel_used"</span>] <span class="kw">for</span> member <span class="kw">in</span> crew)
+<span class="fn">print</span>(<span class="str">f"Total fuel used: {total_fuel}"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each pass through the loop, <code>member</code> holds one whole dictionary, and <code>member["name"]</code> reaches inside it for one field — exactly like <code>crew[0].name</code> would in JavaScript, just with bracket syntax. <code>sum(member["fuel_used"] for member in crew)</code> is a <strong>generator expression</strong> — a comprehension without the square brackets, built specifically to be handed straight to a function like <code>sum()</code>.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Dictionary Methods: .keys(), .values(), .items(), .get()</h3>
+        <p>Three methods cover almost every way you'll want to loop over a dictionary, plus one safety method for reading a key that might not exist.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="ship = {&quot;name&quot;: &quot;Voyager-9&quot;, &quot;fuel&quot;: 84, &quot;shields&quot;: True}&#10;&#10;print(list(ship.keys()))    # ['name', 'fuel', 'shields']&#10;print(list(ship.values()))  # ['Voyager-9', 84, True]&#10;&#10;for key, value in ship.items():&#10;    print(f&quot;{key}: {value}&quot;)&#10;&#10;print(ship.get(&quot;callsign&quot;, &quot;UNKNOWN&quot;))  # no crash — returns the default">COPY</button></div>
+          <pre><code>ship = {<span class="str">"name"</span>: <span class="str">"Voyager-9"</span>, <span class="str">"fuel"</span>: <span class="num">84</span>, <span class="str">"shields"</span>: <span class="kw">True</span>}
+
+<span class="fn">print</span>(<span class="fn">list</span>(ship.keys()))    <span class="comment"># ['name', 'fuel', 'shields']</span>
+<span class="fn">print</span>(<span class="fn">list</span>(ship.values()))  <span class="comment"># ['Voyager-9', 84, True]</span>
+
+<span class="kw">for</span> key, value <span class="kw">in</span> ship.items():
+    <span class="fn">print</span>(<span class="str">f"{key}: {value}"</span>)
+
+<span class="fn">print</span>(ship.get(<span class="str">"callsign"</span>, <span class="str">"UNKNOWN"</span>))  <span class="comment"># no crash — returns the default</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>ship["callsign"]</code> would crash with a <code>KeyError</code> since that key doesn't exist — <code>ship.get("callsign", "UNKNOWN")</code> instead returns a safe fallback. Reaching for <code>.get()</code> whenever a key's presence isn't guaranteed is a habit that prevents a huge share of real-world Python crashes.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Tuples & Sets — Two Specialized Cousins</h3>
+        <p>A <strong>tuple</strong> — <code>(1, 2, 3)</code> — looks like a list but is <em>immutable</em>: once created, it can never be changed. It's used for fixed groupings, like coordinates. A <strong>set</strong> — <code>{1, 2, 3}</code> — is an unordered collection that automatically removes duplicates, perfect for "does this already exist?" checks.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="coordinates = (12.5, -4.2)  # a tuple — won't change&#10;# coordinates[0] = 99  # this line would crash — tuples are immutable&#10;&#10;visited_systems = {&quot;Kepler&quot;, &quot;Theta&quot;, &quot;Kepler&quot;, &quot;Rigel&quot;}&#10;print(visited_systems)  # {'Kepler', 'Theta', 'Rigel'} — duplicate removed automatically">COPY</button></div>
+          <pre><code>coordinates = (<span class="num">12.5</span>, -<span class="num">4.2</span>)  <span class="comment"># a tuple — won't change</span>
+<span class="comment"># coordinates[0] = 99  # this line would crash — tuples are immutable</span>
+
+visited_systems = {<span class="str">"Kepler"</span>, <span class="str">"Theta"</span>, <span class="str">"Kepler"</span>, <span class="str">"Rigel"</span>}
+<span class="fn">print</span>(visited_systems)  <span class="comment"># {'Kepler', 'Theta', 'Rigel'} — duplicate removed automatically</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Notice <code>visited_systems</code> only kept one <code>"Kepler"</code> even though it was added twice — that deduplication is automatic and is the entire point of a set. You won't reach for tuples and sets nearly as often as lists and dicts, but recognizing them (round brackets vs curly-with-no-colons) matters when you see them in other people's code.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real Python interpreter, preloaded with a small crew roster as a list of dictionaries. Practice slicing, sorting, filtering, and looping on real (if fictional) data.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: filter and sort by fuel</button>
+        <button class="console-btn" id="btnExample2">try: list comprehension roster</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a cargo manifest tool using the Command Console above.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Create a list called <code>cargo</code> of at least 5 dictionaries, each with <code>name</code>, <code>weight_kg</code>, and <code>fragile</code> (a boolean)
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Use a list comprehension to build <code>fragile_items</code> — only the items where <code>fragile</code> is <code>True</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>sorted()</code> with a loop or comprehension to print <code>cargo</code> ordered from heaviest to lightest
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Compute and print the total weight of all cargo using <code>sum()</code>
+        </label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Use <code>.get()</code> to safely print an <code>"origin"</code> field that only some items have, defaulting to <code>"UNKNOWN"</code> for the rest
+        </label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p><code>sorted(cargo, key=lambda item: item["weight_kg"], reverse=True)</code> sorts a list of dictionaries by one specific field — the <code>key</code> argument tells <code>sorted()</code> which value inside each dictionary to compare.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Build a Python <code>set</code> of every unique <code>origin</code> value across your cargo list, using a set comprehension: <code>{item.get("origin", "UNKNOWN") for item in cargo}</code>. Print how many distinct origins there are.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>list[a:b]</code><span>Slice from index a up to (not including) b</span></div>
+        <div class="cheat-card"><code>list[::-1]</code><span>Reverse a list</span></div>
+        <div class="cheat-card"><code>sorted(list)</code><span>Returns a new sorted list</span></div>
+        <div class="cheat-card"><code>[x for x in list if c]</code><span>List comprehension — filter/transform in one line</span></div>
+        <div class="cheat-card"><code>dict.items()</code><span>Loop over key/value pairs together</span></div>
+        <div class="cheat-card"><code>dict.get(k, default)</code><span>Safe read — no crash if key is missing</span></div>
+        <div class="cheat-card"><code>(a, b)</code><span>Tuple — an immutable, fixed grouping</span></div>
+        <div class="cheat-card"><code>{a, b}</code><span>Set — unique, unordered values</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Using <code>dict["key"]</code> on a key that might not exist, crashing with <code>KeyError</code> instead of using <code>.get()</code>.</li>
+          <li>Forgetting that <code>list.sort()</code> changes the list in place and returns <code>None</code> — printing its result directly prints <code>None</code>, not the sorted list.</li>
+          <li>Confusing a list of dictionaries (<code>[{...}, {...}]</code>) with a dictionary of lists (<code>{"names": [...], "roles": [...]}</code>) — they solve different problems.</li>
+          <li>Trying to modify a tuple after creating it — tuples are immutable by design; use a list instead if you need to change it.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does <code>[f for f in fuel_levels if f &lt; 30]</code> produce?</p>
+        <button class="quiz-btn" data-correct="false">A single number: the count of items under 30</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — a list comprehension builds a new list containing only the items that pass the condition.">A new list containing only the values under 30</button>
+        <button class="quiz-btn" data-correct="false">The original list, sorted</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STARTER = `# Try me — then hit RUN
+crew = [
+    {"name": "Nova", "role": "Captain", "fuel_used": 42},
+    {"name": "Kip", "role": "Engineer", "fuel_used": 18},
+    {"name": "Zed", "role": "Navigator", "fuel_used": 27},
+    {"name": "Rell", "role": "Medic", "fuel_used": 9},
+]
+
+for member in crew:
+    print(f"{member['name']} ({member['role']}) used {member['fuel_used']} fuel")
+
+total_fuel = sum(member["fuel_used"] for member in crew)
+print(f"Total fuel used: {total_fuel}")`;
+
+  const EXAMPLE_FILTER_SORT = `crew = [
+    {"name": "Nova", "role": "Captain", "fuel_used": 42},
+    {"name": "Kip", "role": "Engineer", "fuel_used": 18},
+    {"name": "Zed", "role": "Navigator", "fuel_used": 27},
+    {"name": "Rell", "role": "Medic", "fuel_used": 9},
+]
+
+# Only crew who used more than 20 fuel, heaviest user first
+heavy_users = [m for m in crew if m["fuel_used"] > 20]
+heavy_users_sorted = sorted(heavy_users, key=lambda m: m["fuel_used"], reverse=True)
+
+for member in heavy_users_sorted:
+    print(f"{member['name']}: {member['fuel_used']} fuel")`;
+
+  const EXAMPLE_COMPREHENSION = `crew = [
+    {"name": "Nova", "role": "Captain", "fuel_used": 42},
+    {"name": "Kip", "role": "Engineer", "fuel_used": 18},
+    {"name": "Zed", "role": "Navigator", "fuel_used": 27},
+]
+
+# Build a plain list of names using a comprehension
+names_only = [member["name"] for member in crew]
+print(names_only)  # ['Nova', 'Kip', 'Zed']
+
+# Build a dict comprehension: name -> fuel_used
+fuel_by_name = {member["name"]: member["fuel_used"] for member in crew}
+print(fuel_by_name)`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_FILTER_SORT },
+        { btnId: "btnExample2", code: EXAMPLE_COMPREHENSION },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
