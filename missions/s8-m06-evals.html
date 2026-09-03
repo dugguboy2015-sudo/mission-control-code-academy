@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 8.6: Evals — How You Know the AI Actually Works | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .eval-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); }
+  .eval-row.pass { border-left: 3px solid var(--success); }
+  .eval-row.fail { border-left: 3px solid var(--danger); }
+  .eval-icon { width: 18px; }
+  .eval-summary { font-family: var(--font-code); font-size: 13px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s8-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 8</div>
+    <h1>MISSION 8.6: EVALS</h1>
+    <div class="subtitle">How You Know the AI Actually Works</div>
+    <p class="briefing-line">Sector 8 has spent five missions giving models more autonomy — loops, tools, planning, real system connections. More autonomy makes one question more urgent, not less: how do you actually know it works? A traditional unit test (Sector 9) checks <code>assert(output === "exact string")</code> — which fails constantly against an LLM, since Mission 7.1 established the same input can produce different, differently-worded, equally-correct output. <strong>Evals</strong> are the AI world's answer.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>An eval is a curated set of test cases — not checking for one exact expected string, but checking a <strong>property</strong> of the output: does it mention the right fact, is it under a length limit, is it valid JSON with the right fields, does it avoid a specific mistake. Run the whole set every time you change a prompt, a model, or an agent's logic, and you can tell, with real evidence, whether a change actually made things better or quietly broke something that used to work.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Why Exact-Match Tests Fail Against AI</h3>
+        <p>Ask a model to summarize a paragraph twice, and you'll likely get two differently-worded, both-correct summaries. A test asserting the exact output string would fail the second run for no real reason. The fix isn't to give up on testing — it's to test a checkable PROPERTY of the output instead of its exact wording.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Types of Eval Checks</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const evalCases = [&#10;  {&#10;    name: &quot;mentions the capital&quot;,&#10;    input: &quot;What is the capital of France?&quot;,&#10;    check: (output) =&gt; output.toLowerCase().includes(&quot;paris&quot;),&#10;  },&#10;  {&#10;    name: &quot;stays under length limit&quot;,&#10;    input: &quot;Summarize this in one short sentence: ...&quot;,&#10;    check: (output) =&gt; output.split(&quot; &quot;).length &lt;= 20,&#10;  },&#10;  {&#10;    name: &quot;valid JSON with required field&quot;,&#10;    input: &quot;Extract the total as JSON: 'Total: $42'&quot;,&#10;    check: (output) =&gt; {&#10;      try { return typeof JSON.parse(output).total === &quot;number&quot;; }&#10;      catch { return false; }&#10;    },&#10;  },&#10;];">COPY</button></div>
+          <pre><code><span class="kw">const</span> evalCases = [
+  {
+    name: <span class="str">"mentions the capital"</span>,
+    input: <span class="str">"What is the capital of France?"</span>,
+    check: (output) =&gt; output.<span class="fn">toLowerCase</span>().<span class="fn">includes</span>(<span class="str">"paris"</span>),
+  },
+  {
+    name: <span class="str">"stays under length limit"</span>,
+    input: <span class="str">"Summarize this in one short sentence: ..."</span>,
+    check: (output) =&gt; output.<span class="fn">split</span>(<span class="str">" "</span>).length &lt;= <span class="num">20</span>,
+  },
+  {
+    name: <span class="str">"valid JSON with required field"</span>,
+    input: <span class="str">"Extract the total as JSON: 'Total: $42'"</span>,
+    check: (output) =&gt; {
+      <span class="kw">try</span> { <span class="kw">return</span> <span class="kw">typeof</span> JSON.<span class="fn">parse</span>(output).total === <span class="str">"number"</span>; }
+      <span class="kw">catch</span> { <span class="kw">return</span> <span class="kw">false</span>; }
+    },
+  },
+];</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          None of these checks care about the model's exact wording — they check a fact ("Paris" appears somewhere), a measurable property (word count), or a structural guarantee (valid JSON, correct field type). All three are Mission 7.4's structured-output validation, reused here specifically as a testing tool.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>LLM-as-Judge — When a Rule Can't Capture "Good"</h3>
+        <p>Some qualities genuinely resist a simple rule — "is this response polite," "does this summary capture the main point." <strong>LLM-as-judge</strong> uses a SECOND model call whose only job is grading the first one's output against explicit criteria, returning a pass/fail or a score. It's a real, widely-used technique — and it inherits Mission 7.1's non-determinism, so it's typically used alongside rule-based checks, not as a total replacement for them.</p>
+        <div class="whatjusthappened">
+          <strong>WHY THIS IS STILL USEFUL DESPITE THE CAVEAT</strong>
+          A judge model, given clear grading criteria and asked for a structured verdict (Mission 7.4 again), is far more consistent than "read every response by hand." It's not perfect, but it scales in a way manual review never can — which is the whole point of an eval suite.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Running the Suite & Tracking Regressions</h3>
+        <p>The real payoff comes from running the WHOLE test set every time something changes — a new prompt, a different model, an updated agent. A <strong>regression</strong> is a case that used to pass and now fails; catching it immediately, from a pass-rate number, is dramatically better than discovering it from a confused user report weeks later.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>runEvalSuite(cases, mockModel)</code> runs every case's input through a small mock model and checks the property-based <code>check</code> function against the real output, tallying pass/fail with real reasons.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>EVAL RESULTS</span><span>●</span></div>
+            <div id="evalDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (run the eval suite)</button>
+        <button class="console-btn" id="btnRegression">try: simulate a regression after a prompt change</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build your own small eval suite for the mock model provided.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Add 2 new test cases to <code>EVAL_CASES</code>, each with a property-based <code>check</code> function (not an exact string match)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Run <code>runEvalSuite()</code> and confirm your new cases both pass against the mock model</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Deliberately write ONE case that SHOULD fail (checking for something the mock model doesn't actually do), run the suite, and confirm it reports the failure with a useful reason</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, describe one quality you'd want an LLM-as-judge to grade that a simple rule-based check couldn't capture</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A good eval failure message tells you WHAT was expected and WHAT actually happened — <code>check()</code> returning just <code>true</code>/<code>false</code> is enough to fail the case, but including the actual output in your failure report is what makes debugging it possible later.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Track pass-rate history: run the suite, store the pass count and timestamp in an array, change the mock model's behavior slightly (edit <code>MOCK_MODEL</code>), re-run, and compare the two pass rates to detect whether your change was a regression or an improvement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Eval<span>A test checking a PROPERTY of AI output, not an exact string</span></div>
+        <div class="cheat-card">Test set<span>A curated collection of representative input/check pairs</span></div>
+        <div class="cheat-card">LLM-as-judge<span>A second model call grading the first one's output</span></div>
+        <div class="cheat-card">Regression<span>A case that used to pass and now fails</span></div>
+        <div class="cheat-card">Pass rate<span>The real, trackable signal of "is it still working"</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Writing exact-string-match tests against AI output, which fail constantly even when the output is perfectly good.</li>
+          <li>Never re-running the eval suite after changing a prompt or model — missing a real regression until a user reports it.</li>
+          <li>Relying entirely on LLM-as-judge for everything, when a simple rule-based check would be faster and more consistent.</li>
+          <li>Testing only "happy path" inputs and never including a case designed to reveal a known weak spot.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why do exact-string-match tests generally fail against LLM output?</p>
+        <button class="quiz-btn" data-correct="false">LLMs never produce valid text output</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the same input can produce different, equally correct wording, so exact-string checks fail even on genuinely good output.">The same input can produce different, equally-correct wording each time</button>
+        <button class="quiz-btn" data-correct="false">Exact-match tests are too slow to run</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Eval suite runner ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.MOCK_MODEL = function (input, useOldPrompt) {
+    const lower = input.toLowerCase();
+    if (lower.includes("capital of france")) return "The capital of France is Paris.";
+    if (lower.includes("summarize")) return "Short summary here.";
+    if (lower.includes("extract the total")) {
+      return useOldPrompt ? "The total is forty-two dollars." : '{"total": 42}';
+    }
+    return "I'm not sure how to respond to that.";
+  };
+
+  window.EVAL_CASES = [
+    { name: "mentions the capital", input: "What is the capital of France?", check: (output) => output.toLowerCase().includes("paris") },
+    { name: "stays under length limit", input: "Summarize this in one short sentence.", check: (output) => output.split(" ").length <= 10 },
+    {
+      name: "valid JSON with numeric total",
+      input: "Extract the total as JSON: 'Total: $42'",
+      check: (output) => { try { return typeof JSON.parse(output).total === "number"; } catch (e) { return false; } },
+    },
+  ];
+
+  window.runEvalSuite = function (cases, useOldPrompt) {
+    const el = document.getElementById("evalDisplay");
+    let passed = 0;
+    const rows = cases.map((c) => {
+      const output = window.MOCK_MODEL(c.input, useOldPrompt);
+      const ok = c.check(output);
+      if (ok) passed++;
+      return { name: c.name, ok, output };
+    });
+
+    if (el) {
+      el.innerHTML = rows.map((r) =>
+        '<div class="eval-row ' + (r.ok ? "pass" : "fail") + '"><span class="eval-icon">' + (r.ok ? "✓" : "✗") + '</span>' + r.name + '</div>'
+      ).join("")
+        + '<div class="eval-summary">' + passed + ' / ' + cases.length + ' passed</div>';
+    }
+    return { passed, total: cases.length, rows };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const result = runEvalSuite(EVAL_CASES, false);
+console.log(result.passed + " / " + result.total + " passed");
+result.rows.forEach(r => console.log((r.ok ? "PASS" : "FAIL") + ": " + r.name + " (output: " + JSON.stringify(r.output) + ")"));`;
+
+  const EXAMPLE_REGRESSION = `// useOldPrompt = true simulates reverting to an older prompt that returns
+// prose instead of JSON for the extraction case — watch that ONE case regress.
+console.log("--- BEFORE (current prompt) ---");
+const before = runEvalSuite(EVAL_CASES, false);
+console.log(before.passed + " / " + before.total + " passed");
+
+console.log("--- AFTER (reverted to old prompt) ---");
+const after = runEvalSuite(EVAL_CASES, true);
+console.log(after.passed + " / " + after.total + " passed");
+
+if (after.passed < before.passed) {
+  console.log("⚠ REGRESSION DETECTED — a case that used to pass now fails.");
+}`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "evalDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnRegression", code: EXAMPLE_REGRESSION },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
