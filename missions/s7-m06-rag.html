@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.6: RAG — Chat With Your Own Notes | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .rag-context { background: rgba(255,110,199,0.06); border: 1px solid rgba(255,110,199,0.25); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; color: var(--text-secondary); }
+  .rag-context strong { color: var(--accent-pink); }
+  .rag-answer { background: rgba(78,225,255,0.08); border: 1px solid rgba(78,225,255,0.3); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 13.5px; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.6: RAG</h1>
+    <div class="subtitle">Retrieval-Augmented Generation — Chat With Your Own Notes</div>
+    <p class="briefing-line">An LLM's knowledge is frozen at training time — it has never seen your personal notes, your company's internal documents, or anything written after training ended. <strong>RAG (Retrieval-Augmented Generation)</strong> solves this without retraining anything: retrieve the most relevant pieces of YOUR data using Mission 7.5's semantic search, stuff them into the prompt as context, and let the model answer using only what you handed it. This mission combines Missions 7.3 and 7.5 into the single most common real-world LLM application pattern.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~70 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Ask a general-purpose LLM "when is my doctor's appointment?" and it will either refuse (it genuinely has no way to know) or — worse — hallucinate a plausible-sounding but made-up answer, exactly as Mission 7.1 warned. RAG never asks the model to know your private facts from memory. Instead, it finds the actual relevant text from your own notes first, and hands it to the model as part of the question.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <rect x="20" y="20" width="180" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="110" y="50" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Your question</text>
+
+          <rect x="20" y="90" width="180" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="110" y="112" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Retrieve (7.5)</text>
+          <text x="110" y="128" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">semantic search over YOUR notes</text>
+
+          <rect x="260" y="55" width="180" height="50" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="350" y="77" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Augment</text>
+          <text x="350" y="93" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">build a prompt with retrieved text</text>
+
+          <rect x="500" y="55" width="180" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="2"/>
+          <text x="590" y="77" fill="#4dffb4" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">Generate (7.3)</text>
+          <text x="590" y="93" fill="#6b7699" font-family="Fira Code, monospace" font-size="9" text-anchor="middle">the model answers from context</text>
+
+          <line x1="110" y1="70" x2="110" y2="90" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a5)"/>
+          <line x1="200" y1="105" x2="260" y2="80" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a5)"/>
+          <line x1="440" y1="80" x2="500" y2="80" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a5)"/>
+          <defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+          <text x="350" y="180" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">R-A-G: Retrieve, Augment, Generate — that's the whole acronym.</text>
+        </svg>
+        <div class="diagram-caption">This is genuinely the entire idea — the letters R, A, G literally name the three steps in order.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Chunking — Why You Split Documents Up First</h3>
+        <p>Before anything gets embedded, real documents are split into smaller <strong>chunks</strong> — a paragraph or a few sentences each, not one giant embedding for an entire document. A single embedding is one point in space; cramming an entire long document into one vector blurs many different topics into a vague average, making retrieval far less precise. Several focused chunks, each embedded separately, let retrieval find the one specific paragraph that actually answers a question.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Building the Augmented Prompt</h3>
+        <p>Once you've retrieved the most relevant chunk(s), you build a prompt that hands them to the model explicitly as context — and just as importantly, instructs it to stick to that context.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PROMPT TEXT</span><button class="copy-btn" data-copy="Answer the question using ONLY the context below.&#10;If the answer isn't in the context, say you don't know — do not guess.&#10;&#10;Context:&#10;&quot;Doctor's appointment rescheduled to next Tuesday at 3pm.&quot;&#10;&#10;Question: When is my doctor's appointment?">COPY</button></div>
+          <pre><code>Answer the question using ONLY the context below.
+If the answer isn't in the context, say you don't know — do not guess.
+
+Context:
+<span class="str">"Doctor's appointment rescheduled to next Tuesday at 3pm."</span>
+
+Question: When is my doctor's appointment?</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The model never "knew" your appointment time — Mission 7.5's retrieval step found the one relevant note out of possibly thousands, and this prompt hands it over directly. The explicit instruction "use ONLY the context" and "say you don't know" is doing real work: without it, the model may blend in outside knowledge or guess when the context is incomplete.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Why "Say You Don't Know" Is the Most Important Line</h3>
+        <p>This single instruction is what keeps RAG grounded instead of just another hallucination risk. If retrieval genuinely found nothing relevant, a model without this instruction will often still produce a fluent, confident, completely made-up answer — exactly Mission 7.1's hallucination risk, now dressed up as if it were "sourced" from your data. Explicitly permitting "I don't know" as a valid answer is what actually prevents that.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>The Full Pipeline, in Code</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="async function ragAnswer(question, chunks) {&#10;  // 1. RETRIEVE — Mission 7.5's semantic search&#10;  const relevant = semanticSearch(question, chunks, embed, 2);&#10;&#10;  // 2. AUGMENT — build a grounded prompt&#10;  const context = relevant.map(r =&gt; r.text).join(&quot;\n&quot;);&#10;  const prompt = `Answer using ONLY this context. If it's not here, say you don't know.\n\nContext:\n${context}\n\nQuestion: ${question}`;&#10;&#10;  // 3. GENERATE — Mission 7.3's safe proxy call&#10;  return await callYourProxy(prompt);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">async function</span> <span class="fn">ragAnswer</span>(question, chunks) {
+  <span class="comment">// 1. RETRIEVE — Mission 7.5's semantic search</span>
+  <span class="kw">const</span> relevant = <span class="fn">semanticSearch</span>(question, chunks, embed, <span class="num">2</span>);
+
+  <span class="comment">// 2. AUGMENT — build a grounded prompt</span>
+  <span class="kw">const</span> context = relevant.<span class="fn">map</span>(r =&gt; r.text).<span class="fn">join</span>(<span class="str">"\n"</span>);
+  <span class="kw">const</span> prompt = <span class="str">`Answer using ONLY this context. If it's not here, say you don't know.
+
+Context:
+${context}
+
+Question: ${question}`</span>;
+
+  <span class="comment">// 3. GENERATE — Mission 7.3's safe proxy call</span>
+  <span class="kw">return</span> <span class="kw">await</span> <span class="fn">callYourProxy</span>(prompt);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Every single piece of this function is something you've already built in an earlier mission — <code>semanticSearch</code> and <code>embed</code> from 7.5, a proxy call from 7.3. RAG isn't new machinery; it's an assembly of tools you already have, in a specific, deliberate order.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>ragAnswer(question, notes)</code> runs the full pipeline against a small set of personal notes: it retrieves the most relevant note (using simple keyword overlap here, standing in for Mission 7.5's real embeddings so this console can focus on the augment-and-answer step), builds a grounded prompt, and gets a mock answer that honestly refuses when nothing relevant was found.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>RAG DISPLAY</span><span>●</span></div>
+            <div id="ragDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (ask about the appointment)</button>
+        <button class="console-btn" id="btnUnknown">try: ask something NOT in the notes</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Add your own notes and prove the honesty guardrail actually works.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Add 2 new notes of your own to the <code>NOTES</code> array with specific, checkable details (a date, a place, a name)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Call <code>ragAnswer()</code> with a question that should be answerable from one of your new notes — confirm the answer is grounded in the retrieved text</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Call <code>ragAnswer()</code> with a question totally unrelated to anything in <code>NOTES</code> — confirm it honestly says it doesn't know, instead of guessing</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a code comment, explain what would likely happen if you removed the "if it's not here, say you don't know" instruction from the prompt template</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your new note isn't being retrieved correctly, check that your question shares actual words with the note — this console's simplified retrieval scores by keyword overlap, so a question using completely different wording than the note might not match, exactly the limitation real semantic embeddings (Mission 7.5) are designed to overcome.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Rewrite <code>ragAnswer()</code> to retrieve and include the TOP 2 notes in the context instead of just 1, even when only one is truly relevant. What's the risk of including an irrelevant second note in the context alongside a relevant one?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">RAG<span>Retrieval-Augmented Generation</span></div>
+        <div class="cheat-card">Retrieve<span>Find relevant chunks via semantic search (7.5)</span></div>
+        <div class="cheat-card">Augment<span>Build a prompt including that retrieved context</span></div>
+        <div class="cheat-card">Generate<span>Send the augmented prompt through your proxy (7.3)</span></div>
+        <div class="cheat-card">Chunking<span>Splitting documents into smaller, focused, embeddable pieces</span></div>
+        <div class="cheat-card">"Say you don't know"<span>The instruction that keeps RAG grounded, not hallucinating</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Embedding one giant document as a single chunk instead of splitting it into focused, individually retrievable pieces.</li>
+          <li>Forgetting to instruct the model to say "I don't know" when context is missing — without it, a model tends to guess instead of refusing.</li>
+          <li>Assuming RAG means the model was "trained" on your notes — it wasn't; the notes are just retrieved and inserted into the prompt fresh, every single query.</li>
+          <li>Retrieving too many irrelevant chunks "just in case," diluting the context and making it harder for the model to focus on what's actually relevant.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in the RAG pipeline, when does the model actually "learn" about your private notes?</p>
+        <button class="quiz-btn" data-correct="false">During a special one-time training step on your notes</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — RAG never trains anything. Relevant text is retrieved and inserted into the prompt fresh, every single time.">It doesn't "learn" them at all — relevant text is inserted into the prompt fresh, every query</button>
+        <button class="quiz-btn" data-correct="false">The first time you ever ask it a question</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- RAG pipeline (retrieve via keyword overlap, generate
+     via a mock that honestly refuses when nothing relevant was found) ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+
+  window.NOTES = [
+    "Meeting with Zed on 2087-03-05 to discuss the new engine design.",
+    "Grocery list: milk, eggs, bread, coffee.",
+    "Vacation planned for July to Kepler Station, need to book transport by June.",
+    "Doctor's appointment rescheduled to next Tuesday at 3pm.",
+  ];
+
+  function keywordOverlapScore(question, note) {
+    const stopwords = new Set(["the", "a", "an", "is", "are", "when", "what", "where", "to", "my", "for", "on", "in"]);
+    const qWords = question.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w) => w && !stopwords.has(w));
+    const noteWords = new Set(note.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/));
+    const matches = qWords.filter((w) => noteWords.has(w));
+    return qWords.length ? matches.length / qWords.length : 0;
+  }
+
+  window.retrieveRelevantNotes = function (question, notes, topN) {
+    topN = topN || 1;
+    return notes
+      .map((note) => ({ text: note, score: keywordOverlapScore(question, note) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topN);
+  };
+
+  window.ragAnswer = function (question, notes) {
+    const retrieved = window.retrieveRelevantNotes(question, notes, 1);
+    const best = retrieved[0];
+    const RELEVANCE_THRESHOLD = 0.25;
+    const grounded = best && best.score >= RELEVANCE_THRESHOLD;
+
+    const answer = grounded
+      ? `Based on your notes: "${best.text}"`
+      : "I don't know — nothing in your notes seems to answer that.";
+
+    const el = document.getElementById("ragDisplay");
+    if (el) {
+      el.innerHTML =
+        '<div class="rag-context"><strong>RETRIEVED CONTEXT</strong><br>' + (grounded ? best.text : "(nothing relevant enough found)") + '</div>'
+        + '<div class="rag-answer"><strong>ANSWER:</strong> ' + answer + '</div>';
+    }
+    return { answer, retrieved: best, grounded };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const result = ragAnswer("When is my doctor's appointment?", NOTES);
+console.log(result.answer);`;
+
+  const EXAMPLE_UNKNOWN = `// Ask something with NOTHING relevant in the notes
+const result = ragAnswer("What is the capital of France?", NOTES);
+console.log(result.answer);
+console.log("Grounded in real context:", result.grounded);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "ragDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnUnknown", code: EXAMPLE_UNKNOWN },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

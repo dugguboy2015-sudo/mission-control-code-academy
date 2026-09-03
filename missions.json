@@ -115,16 +115,16 @@
       "subtitle": "The Pivot",
       "accent": "pink",
       "missions": [
-        { "id": "s7-m01", "num": "7.1", "title": "What AI/ML/LLMs Actually Are", "subtitle": "Tokens, Prediction, No Magic", "file": "missions/s7-m01-what-is-ai.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s7-m02", "num": "7.2", "title": "Prompt Engineering Fundamentals", "subtitle": "Talking to the Model Precisely", "file": "missions/s7-m02-prompt-engineering.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s7-m03", "num": "7.3", "title": "Calling an LLM API Safely", "subtitle": "Build a Chatbot Through Your Own Proxy", "file": "missions/s7-m03-calling-llm-apis.html", "status": "planned", "difficulty": "commander", "estMinutes": 65, "threadNote": "Thread 1 formalized: keys never touch the client" },
-        { "id": "s7-m04", "num": "7.4", "title": "Structured Output & Tool Calling", "subtitle": "Making the Model Speak JSON", "file": "missions/s7-m04-structured-output-tools.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
-        { "id": "s7-m05", "num": "7.5", "title": "Embeddings & Semantic Search", "subtitle": "Meaning as Numbers", "file": "missions/s7-m05-embeddings.html", "status": "planned", "difficulty": "commander", "estMinutes": 55 },
-        { "id": "s7-m06", "num": "7.6", "title": "RAG: Chat With Your Own Notes", "subtitle": "Retrieval-Augmented Generation", "file": "missions/s7-m06-rag.html", "status": "planned", "difficulty": "commander", "estMinutes": 70 },
-        { "id": "s7-m07", "num": "7.7", "title": "AI in the UI", "subtitle": "Streaming, Loading States, Guardrails", "file": "missions/s7-m07-ai-in-the-ui.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s7-m08", "num": "7.8", "title": "AI Economics & Model Selection", "subtitle": "Token Math, Routing, Fallbacks", "file": "missions/s7-m08-ai-economics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45, "threadNote": "Thread 3 formalized: napkin-math the monthly bill before building" },
-        { "id": "s7-m09", "num": "7.9", "title": "Context Engineering", "subtitle": "Managing the Context Window", "file": "missions/s7-m09-context-engineering.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
-        { "id": "s7-m10", "num": "7.10", "title": "Capstone: AI-Enabled Web App", "subtitle": "Deployed, Cost-Estimated, Guardrailed", "file": "missions/s7-m10-capstone-ai-enabled-app.html", "status": "planned", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L4" }
+        { "id": "s7-m01", "num": "7.1", "title": "What AI/ML/LLMs Actually Are", "subtitle": "Tokens, Prediction, No Magic", "file": "missions/s7-m01-what-is-ai.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m02", "num": "7.2", "title": "Prompt Engineering Fundamentals", "subtitle": "Talking to the Model Precisely", "file": "missions/s7-m02-prompt-engineering.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m03", "num": "7.3", "title": "Calling an LLM API Safely", "subtitle": "Build a Chatbot Through Your Own Proxy", "file": "missions/s7-m03-calling-llm-apis.html", "status": "live", "difficulty": "commander", "estMinutes": 65, "threadNote": "Thread 1 formalized: keys never touch the client" },
+        { "id": "s7-m04", "num": "7.4", "title": "Structured Output & Tool Calling", "subtitle": "Making the Model Speak JSON", "file": "missions/s7-m04-structured-output-tools.html", "status": "live", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s7-m05", "num": "7.5", "title": "Embeddings & Semantic Search", "subtitle": "Meaning as Numbers", "file": "missions/s7-m05-embeddings.html", "status": "live", "difficulty": "commander", "estMinutes": 55 },
+        { "id": "s7-m06", "num": "7.6", "title": "RAG: Chat With Your Own Notes", "subtitle": "Retrieval-Augmented Generation", "file": "missions/s7-m06-rag.html", "status": "live", "difficulty": "commander", "estMinutes": 70 },
+        { "id": "s7-m07", "num": "7.7", "title": "AI in the UI", "subtitle": "Streaming, Loading States, Guardrails", "file": "missions/s7-m07-ai-in-the-ui.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s7-m08", "num": "7.8", "title": "AI Economics & Model Selection", "subtitle": "Token Math, Routing, Fallbacks", "file": "missions/s7-m08-ai-economics.html", "status": "live", "difficulty": "commander", "estMinutes": 45, "threadNote": "Thread 3 formalized: napkin-math the monthly bill before building" },
+        { "id": "s7-m09", "num": "7.9", "title": "Context Engineering", "subtitle": "Managing the Context Window", "file": "missions/s7-m09-context-engineering.html", "status": "live", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s7-m10", "num": "7.10", "title": "Capstone: AI-Enabled Web App", "subtitle": "Deployed, Cost-Estimated, Guardrailed", "file": "missions/s7-m10-capstone-ai-enabled-app.html", "status": "live", "difficulty": "commander", "estMinutes": 130, "capstone": true, "ladderLevel": "L4" }
       ]
     },
     {

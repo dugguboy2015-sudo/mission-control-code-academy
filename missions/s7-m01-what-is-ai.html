@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.1: What AI/ML/LLMs Actually Are — Tokens, Prediction, No Magic | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  /* ---------- Token/probability visualizer (bespoke to this mission) ---------- */
+  .token-chip { display: inline-block; padding: 2px 7px; margin: 2px; border-radius: 5px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); font-family: var(--font-code); font-size: 12.5px; }
+  .prob-bars { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .prob-row { display: flex; align-items: center; gap: 8px; font-family: var(--font-code); font-size: 12px; }
+  .prob-word { width: 90px; flex-shrink: 0; color: var(--text-primary); }
+  .prob-track { flex: 1; height: 12px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 6px; overflow: hidden; }
+  .prob-fill { height: 100%; background: var(--accent-pink); }
+  .prob-pct { width: 40px; text-align: right; color: var(--text-muted); }
+  .gen-output { font-family: var(--font-code); font-size: 14px; line-height: 1.8; }
+  .gen-output .chosen { background: rgba(255,110,199,0.15); border-bottom: 2px solid var(--accent-pink); padding: 0 2px; border-radius: 3px; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7 · THE PIVOT</div>
+    <h1>MISSION 7.1: WHAT AI/ML/LLMs ACTUALLY ARE</h1>
+    <div class="subtitle">Tokens, Prediction, No Magic</div>
+    <p class="briefing-line">Everything you've built through Sector 6 was <strong>deterministic</strong> — the same input always produces the exact same output, forever. An LLM (Large Language Model) breaks that rule on purpose. It's not thinking, it doesn't "know" things the way a database does, and it can be confidently, fluently wrong. Before you write a single line of code that calls one, you need an honest, no-magic mental model of what's actually happening inside — because every good decision in the rest of this sector depends on it.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Strip away the marketing language and an LLM does exactly one thing, over and over: given some text, predict the single most statistically likely <strong>next chunk of text</strong>, then repeat with that chunk appended, then repeat again. That's it. There's no separate "thinking" step, no lookup into a database of facts, no understanding in the way a person understands. It's pattern-completion, at a massive scale, trained on an enormous amount of human-written text — which is precisely why it's often right (most text about a topic agrees on the facts) and occasionally, fluently wrong (it's still just completing a pattern, not checking a source).</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;">
+          <rect x="20" y="50" width="200" height="60" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="2"/>
+          <text x="120" y="75" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">"The sky is"</text>
+          <text x="120" y="93" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">the text so far</text>
+
+          <rect x="260" y="50" width="200" height="60" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="2"/>
+          <text x="360" y="75" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">predict next token</text>
+          <text x="360" y="93" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">a probability per option</text>
+
+          <rect x="500" y="50" width="180" height="60" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="590" y="75" fill="#ffe66d" font-family="Fira Code, monospace" font-size="12" text-anchor="middle">"blue" (70%)</text>
+          <text x="590" y="93" fill="#6b7699" font-family="Fira Code, monospace" font-size="9.5" text-anchor="middle">sampled &amp; appended</text>
+
+          <line x1="220" y1="80" x2="260" y2="80" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a3)"/>
+          <line x1="460" y1="80" x2="500" y2="80" stroke="#6b7699" stroke-width="1.5" marker-end="url(#a3)"/>
+          <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+
+          <path d="M590,110 C590,140 120,140 120,110" fill="none" stroke="#a8b3d1" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#a3)"/>
+          <text x="355" y="150" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">the chosen word joins the text, and the whole loop repeats — one token at a time</text>
+        </svg>
+        <div class="diagram-caption">This loop — predict, pick, append, repeat — is the entire mechanism. Every single word of every LLM response was produced this way, one token at a time.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Tokens — Not Words, Not Letters</h3>
+        <p>LLMs don't process text one letter or even one whole word at a time — they process <strong>tokens</strong>, chunks somewhere in between. A common word like <code>"the"</code> is usually one token. A rarer or longer word might get split into several: <code>"unbelievable"</code> might become <code>un</code> + <code>believ</code> + <code>able</code>. This matters for a reason you'll use directly in Mission 7.8: every provider charges by the token, not by the word or character, so unusual words, code, and non-English text often cost more than plain English of the same length.</p>
+        <div class="diagram-box">
+          <p style="text-align:center;margin:0 0 10px;"><span class="token-chip">Mission</span><span class="token-chip">Control</span><span class="token-chip">un</span><span class="token-chip">believ</span><span class="token-chip">able</span><span class="token-chip">!</span></p>
+          <div class="diagram-caption">"Mission Control unbelievable!" — 4 words, but roughly 6 tokens once you count how "unbelievable" gets split.</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>How Prediction Actually Works</h3>
+        <p>At every single step, the model doesn't just pick "the best next word" — it computes a <strong>probability for every possible next token</strong> in its entire vocabulary (tens of thousands of options), then samples one, weighted by those probabilities. Most of the time the highest-probability option wins, which is why output usually looks coherent — but it's still a roll of a very loaded die, not a certainty.</p>
+        <div class="diagram-box">
+          <div class="prob-bars">
+            <div class="prob-row"><span class="prob-word">"blue"</span><div class="prob-track"><div class="prob-fill" style="width:70%"></div></div><span class="prob-pct">70%</span></div>
+            <div class="prob-row"><span class="prob-word">"cloudy"</span><div class="prob-track"><div class="prob-fill" style="width:20%"></div></div><span class="prob-pct">20%</span></div>
+            <div class="prob-row"><span class="prob-word">"falling"</span><div class="prob-track"><div class="prob-fill" style="width:5%"></div></div><span class="prob-pct">5%</span></div>
+            <div class="prob-row"><span class="prob-word">"purple"</span><div class="prob-track"><div class="prob-fill" style="width:5%"></div></div><span class="prob-pct">5%</span></div>
+          </div>
+          <div class="diagram-caption">After "The sky is", these four options (of many thousands) got the highest probability. "blue" will usually win, but "purple" is not literally impossible — just unlikely.</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Temperature — Dialing Randomness Up or Down</h3>
+        <p><strong>Temperature</strong> is a setting you control when calling most LLM APIs, and it directly controls that sampling step. At <strong>temperature 0</strong>, the model always picks the single highest-probability token — fully deterministic, same input, same output, every time. At a <strong>higher temperature</strong>, lower-probability options get picked more often too, producing more varied, "creative" output — at the cost of consistency and, past a point, coherence.</p>
+        <div class="whatjusthappened">
+          <strong>WHEN TO USE WHICH</strong>
+          Low temperature suits tasks with one right answer — extracting a date from text, classifying a support ticket, generating code. Higher temperature suits creative tasks — brainstorming names, writing varied practice dialogue. There's no universally "correct" temperature; it's a deliberate trade-off you choose per use case.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Why LLMs "Hallucinate"</h3>
+        <p>A <strong>hallucination</strong> is when a model states something false with the exact same fluent confidence as something true. This isn't a bug that a future update simply removes — it's a direct consequence of how prediction works. The model isn't checking a fact database; it's producing the most statistically plausible continuation of the text so far. Most of the time, "statistically plausible" and "actually true" line up, because most training text is accurate. But nothing in the mechanism guarantees it — which is exactly why Sector 8's Evals mission exists: for anything that matters, you verify the output instead of trusting it blindly.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Training vs. Your Conversation</h3>
+        <p>"Training" is a separate, one-time (or periodically repeated) process where the model reads an enormous amount of text and adjusts its internal parameters — it is NOT reading your conversation as it happens. Once trained, the model itself doesn't change or "remember" you between separate conversations. Anything it needs to know about your specific conversation has to be re-sent as text in the <strong>context window</strong> every single time — a concept Mission 7.9 covers in full.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A <strong>Tiny Predictor</strong> — a genuinely honest, radically simplified stand-in for the predict → sample → append loop above (a real LLM's actual math is far more complex, but the loop shape is identical). <code>TOY_MODEL</code> holds a few starting phrases, each with a real probability distribution over next words. Call <code>generate(startPhrase, numWords, temperature)</code> to watch it run.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>GENERATED OUTPUT</span><span>●</span></div>
+            <div id="genDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnTempZero">try: temperature 0 (run 3 times)</button>
+        <button class="console-btn" id="btnTempHigh">try: temperature 1.5 (run 3 times)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Extend the Tiny Predictor and study temperature's effect for yourself.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Add a new starting phrase to <code>TOY_MODEL</code> with at least 4 possible next words and realistic probabilities that sum to 1.0</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Call <code>generate()</code> on your new phrase at <code>temperature: 0</code> three separate times — confirm you get the exact same result every time</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Call <code>generate()</code> on the same phrase at <code>temperature: 1.5</code> three separate times — confirm the results actually differ</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a code comment, explain in your own words why temperature 0 is called "deterministic" and higher temperatures are not</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>At temperature 0, <code>sampleToken()</code> should always return the option with the single highest probability — no randomness involved at all. Everything above 0 should genuinely use randomness, weighted by the probabilities (and temperature).</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a deliberately wrong-sounding but high-probability option to one of your distributions (something a real LLM might actually get subtly wrong) and generate text until it comes up. This is a toy version of exactly what a hallucination is: a fluent, confident, wrong continuation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>Token</code><span>A sub-word chunk of text — the model's real unit</span></div>
+        <div class="cheat-card"><code>Prediction loop</code><span>Predict → sample → append → repeat</span></div>
+        <div class="cheat-card"><code>Temperature</code><span>Controls how random the sampling is</span></div>
+        <div class="cheat-card"><code>Temperature 0</code><span>Deterministic — always the highest-probability token</span></div>
+        <div class="cheat-card"><code>Hallucination</code><span>A fluent, confident, false continuation</span></div>
+        <div class="cheat-card"><code>Training</code><span>A separate, one-time process — not your live conversation</span></div>
+        <div class="cheat-card"><code>Context window</code><span>What the model can "see" for this request only</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Assuming an LLM "looked something up" when it stated a fact — it produced a plausible continuation, which may or may not be accurate.</li>
+          <li>Expecting identical output on every call without setting temperature to 0 — some randomness is the default behavior of most APIs.</li>
+          <li>Treating a fluent, confident answer as automatically a correct one — fluency and accuracy are not the same thing for a next-token predictor.</li>
+          <li>Assuming the model "remembers" a previous, separate conversation — without it being resent as context, it's gone.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does setting temperature to 0 actually do?</p>
+        <button class="quiz-btn" data-correct="false">Makes the model respond faster</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — temperature 0 removes randomness from the sampling step entirely.">Makes the model always pick the single highest-probability token</button>
+        <button class="quiz-btn" data-correct="false">Turns off hallucinations completely</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Tiny Predictor renderer ----------------
+     Lives outside the sandboxed new Function so it can touch the real DOM
+     directly — the cadet's code just calls the global generate(...). */
+  window.TOY_MODEL = {
+    "the sky is": [["blue", 0.7], ["cloudy", 0.2], ["falling", 0.05], ["purple", 0.05]],
+    "the best pet is a": [["dog", 0.5], ["cat", 0.35], ["dragon", 0.1], ["rock", 0.05]],
+  };
+
+  window.sampleToken = function (distribution, temperature) {
+    if (temperature <= 0) {
+      // Deterministic: always the single highest-probability option.
+      return distribution.reduce((best, cur) => (cur[1] > best[1] ? cur : best))[0];
+    }
+    // Higher temperature flattens the distribution toward uniform randomness
+    // by raising each probability to the power of (1 / temperature).
+    const adjusted = distribution.map(([word, p]) => [word, Math.pow(p, 1 / temperature)]);
+    const total = adjusted.reduce((sum, [, p]) => sum + p, 0);
+    let roll = Math.random() * total;
+    for (const [word, p] of adjusted) {
+      roll -= p;
+      if (roll <= 0) return word;
+    }
+    return adjusted[adjusted.length - 1][0];
+  };
+
+  window.generate = function (startPhrase, numWords, temperature) {
+    const el = document.getElementById("genDisplay");
+    const distribution = window.TOY_MODEL[startPhrase];
+    if (!distribution) {
+      if (el) el.innerHTML = '<div class="out-status">Unknown starting phrase — add it to TOY_MODEL first.</div>';
+      return null;
+    }
+    let text = startPhrase;
+    const chosenWords = [];
+    for (let i = 0; i < numWords; i++) {
+      const next = window.sampleToken(distribution, temperature);
+      chosenWords.push(next);
+      text += " " + next;
+    }
+    if (el) {
+      el.innerHTML = '<div class="gen-output">' + startPhrase + ' <span class="chosen">' + chosenWords.join("</span> <span class=\"chosen\">") + '</span></div>'
+        + '<div style="margin-top:10px;color:var(--text-muted);font-size:12px;">temperature: ' + temperature + '</div>';
+    }
+    return text;
+  };
+  window.generate("the sky is", 1, 0);
+
+  const STARTER = `// Try me — then hit RUN
+const result = generate("the sky is", 1, 0);
+console.log("Generated:", result);`;
+
+  const EXAMPLE_TEMP_ZERO = `console.log("Running temperature 0 three times — watch for the SAME result every time:");
+for (let i = 1; i <= 3; i++) {
+  const result = generate("the best pet is a", 1, 0);
+  console.log("Run " + i + ":", result);
+}`;
+
+  const EXAMPLE_TEMP_HIGH = `console.log("Running temperature 1.5 three times — watch for DIFFERENT results:");
+for (let i = 1; i <= 3; i++) {
+  const result = generate("the best pet is a", 1, 1.5);
+  console.log("Run " + i + ":", result);
+}`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "genDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnTempZero", code: EXAMPLE_TEMP_ZERO },
+        { btnId: "btnTempHigh", code: EXAMPLE_TEMP_HIGH },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

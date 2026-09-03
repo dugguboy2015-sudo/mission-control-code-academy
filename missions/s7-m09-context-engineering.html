@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 7.9: Context Engineering — Managing the Context Window | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .budget-bar-track { height: 20px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; overflow: hidden; display: flex; margin-bottom: 8px; }
+  .budget-seg { height: 100%; }
+  .budget-seg.system { background: var(--accent-pink); }
+  .budget-seg.rag { background: var(--accent-cyan); }
+  .budget-seg.history { background: var(--accent-green); }
+  .budget-legend { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-code); font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+  .budget-legend span.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+</style>
+</head>
+<body class="accent-pink" data-mission-id="s7-m09">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 7</div>
+    <h1>MISSION 7.9: CONTEXT ENGINEERING</h1>
+    <div class="subtitle">Managing the Context Window</div>
+    <p class="briefing-line">Mission 7.7's conversation history only grows. Mission 7.6's RAG pipeline adds retrieved text on top. Every one of those pieces, plus the system prompt, plus the current question, all count toward one shared, finite limit: the <strong>context window</strong> — the total amount the model can "see" in a single request. This mission is about deliberately managing what fits inside that limited space, because eventually, without a plan, something has to get cut.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every model has a maximum context window, measured in tokens (Mission 7.1) — and everything you send counts against it together: the system prompt, the full conversation history so far, any RAG-retrieved chunks, and the current question. Exceed it, and the request either fails outright or gets silently truncated, depending on the provider. A long-running chatbot conversation, left unmanaged, will eventually hit this wall — context engineering is the practice of making sure it never does.</p>
+
+      <div class="diagram-box">
+        <div class="budget-legend">
+          <span><span class="dot" style="background:#ff6ec7;"></span>system prompt</span>
+          <span><span class="dot" style="background:#4ee1ff;"></span>RAG context</span>
+          <span><span class="dot" style="background:#4dffb4;"></span>conversation history</span>
+        </div>
+        <div class="budget-bar-track">
+          <div class="budget-seg system" style="width:10%"></div>
+          <div class="budget-seg rag" style="width:25%"></div>
+          <div class="budget-seg history" style="width:45%"></div>
+        </div>
+        <div class="diagram-caption">These three pieces (plus the current question, and room left over for the response) all share ONE budget — the context window. This example is only 80% full, leaving room to grow before anything needs to be cut.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Truncation Strategies — What Gets Cut, and How</h3>
+        <p>When the budget is about to be exceeded, something has to give. The simplest and most common approach is a <strong>sliding window</strong>: drop the OLDEST messages first, keeping the most recent conversation intact, since recent turns are usually most relevant to the current question.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function trimHistory(history, maxMessages) {&#10;  if (history.length &lt;= maxMessages) return history;&#10;  // Keep the newest N messages, drop the oldest ones first.&#10;  return history.slice(history.length - maxMessages);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">trimHistory</span>(history, maxMessages) {
+  <span class="kw">if</span> (history.length &lt;= maxMessages) <span class="kw">return</span> history;
+  <span class="comment">// Keep the newest N messages, drop the oldest ones first.</span>
+  <span class="kw">return</span> history.<span class="fn">slice</span>(history.length - maxMessages);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.slice(history.length - maxMessages)</code> is Mission 6.2's slicing, applied here to keep only the tail end of an array — the most recent messages. A more advanced strategy <strong>summarizes</strong> the dropped older messages into a short condensed note instead of deleting them outright, preserving some memory of the earlier conversation without the full token cost.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>More Context Isn't Always Better</h3>
+        <p>It's tempting to think "just include everything, to be safe." Two real problems argue against that. First, cost (Mission 7.8) — every extra token in the context is billed as input, every single request. Second, and less obvious: research on real models has found a <strong>"lost in the middle"</strong> effect, where relevant information buried in the middle of a very long context is sometimes used less reliably than the same information near the start or end. Padding context with marginally-relevant material can measurably hurt answer quality, not just cost more.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>A Practical Context Budget</h3>
+        <p>Treat the context window like Mission 7.8's cost budget: decide, ahead of time, roughly how much of it each piece is allowed to use. A reasonable starting split for a RAG-powered chatbot: a small fixed amount for the system prompt, a moderate chunk reserved for retrieved RAG context, most of the remainder for recent conversation history — and critically, some budget held back, unused, for the model's own response, since input and output usually share the same total window.</p>
+        <div class="whatjusthappened">
+          <strong>WHY RESERVE SPACE FOR THE OUTPUT</strong>
+          If your input already uses the entire context window, there's no room left for the model to actually respond — some providers will error, others will simply cut the reply short mid-sentence. Always budget input to leave real headroom for the response.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>estimateTokens(text)</code> is a rough approximation (real tokenization, per Mission 7.1, is more precise — this is close enough for budgeting purposes). <code>buildContext()</code> assembles a system prompt, RAG chunks, and conversation history within a token budget, dropping the OLDEST history messages first when there isn't room for everything.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONTEXT BUDGET</span><span>●</span></div>
+            <div id="budgetDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (fits comfortably)</button>
+        <button class="console-btn" id="btnOverflow">try: a long history that overflows</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Simulate a long-running conversation and confirm your budget management actually works.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Build a <code>history</code> array of at least 12 alternating user/assistant messages (can be short, made-up dialogue)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Call <code>buildContext()</code> with a deliberately small <code>maxTokens</code> budget and confirm some of the OLDEST messages were dropped, not the newest</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Print the final <code>totalTokens</code> and confirm it's under your budget</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Increase <code>maxTokens</code> until zero messages get dropped, and note roughly how many tokens your full history actually uses</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If your budget is too small to even fit the system prompt and RAG context alone, there's no history left to include at all — that's a real failure mode worth testing deliberately, not just the "some history fits" case.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write a <code>summarizeDroppedHistory(droppedMessages)</code> function that condenses the dropped messages into one short string (even just "Earlier, we discussed: [topics]") and have <code>buildContext()</code> include that summary in place of the raw dropped messages, instead of losing them entirely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Context window<span>The total token budget for one request, input + output combined</span></div>
+        <div class="cheat-card">Sliding window<span>Drop the oldest messages first when over budget</span></div>
+        <div class="cheat-card">Summarization<span>Condense old context instead of deleting it outright</span></div>
+        <div class="cheat-card">"Lost in the middle"<span>Excess context can dilute answer quality, not just cost more</span></div>
+        <div class="cheat-card">Reserved output budget<span>Never let input consume the entire context window</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Letting conversation history grow forever with no trimming strategy until a request suddenly fails.</li>
+          <li>Dropping the NEWEST messages instead of the oldest when trimming — usually backwards from what the user actually needs.</li>
+          <li>Assuming more context always means a better answer, when irrelevant padding can dilute the model's focus.</li>
+          <li>Budgeting input right up to the context limit, leaving no room for the model's own response.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in a basic sliding-window trimming strategy, which messages get dropped first when the context window is full?</p>
+        <button class="quiz-btn" data-correct="false">The newest messages</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the oldest messages are dropped first, keeping the most recent (usually most relevant) conversation intact.">The oldest messages</button>
+        <button class="quiz-btn" data-correct="false">Messages are chosen to drop at random</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Context budget helpers + renderer ----------------
+     Lives outside the sandboxed new Function so it can render into the
+     real DOM — the cadet's code calls estimateTokens()/buildContext(). */
+  window.estimateTokens = function (text) {
+    // A rough approximation (~1.3 tokens per word) — real tokenization is
+    // more precise (Mission 7.1) but this is close enough for budgeting.
+    const words = String(text).split(/\s+/).filter(Boolean).length;
+    return Math.ceil(words * 1.3);
+  };
+
+  window.buildContext = function ({ system, ragChunks, history, question, maxTokens }) {
+    system = system || "";
+    ragChunks = ragChunks || [];
+    history = history || [];
+    question = question || "";
+    maxTokens = maxTokens || 1000;
+
+    const systemTokens = window.estimateTokens(system);
+    const ragText = ragChunks.join(" ");
+    const ragTokens = window.estimateTokens(ragText);
+    const questionTokens = window.estimateTokens(question);
+    const fixedTokens = systemTokens + ragTokens + questionTokens;
+
+    let remaining = maxTokens - fixedTokens;
+    const kept = [];
+    let historyTokens = 0;
+    // Walk history NEWEST-first, keeping messages until the remaining budget runs out.
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msgTokens = window.estimateTokens(history[i].content);
+      if (msgTokens > remaining) break;
+      kept.unshift(history[i]);
+      remaining -= msgTokens;
+      historyTokens += msgTokens;
+    }
+    const droppedCount = history.length - kept.length;
+    const totalTokens = fixedTokens + historyTokens;
+
+    const el = document.getElementById("budgetDisplay");
+    if (el) {
+      const pct = (n) => Math.min(100, Math.round((n / maxTokens) * 100));
+      el.innerHTML =
+        '<div class="budget-legend">'
+        + '<span><span class="dot" style="background:#ff6ec7;"></span>system: ' + systemTokens + '</span>'
+        + '<span><span class="dot" style="background:#4ee1ff;"></span>RAG: ' + ragTokens + '</span>'
+        + '<span><span class="dot" style="background:#4dffb4;"></span>history: ' + historyTokens + '</span>'
+        + '</div>'
+        + '<div class="budget-bar-track">'
+        + '<div class="budget-seg system" style="width:' + pct(systemTokens) + '%"></div>'
+        + '<div class="budget-seg rag" style="width:' + pct(ragTokens) + '%"></div>'
+        + '<div class="budget-seg history" style="width:' + pct(historyTokens) + '%"></div>'
+        + '</div>'
+        + '<div style="font-family:var(--font-code);font-size:12px;color:var(--text-secondary);">'
+        + totalTokens + ' / ' + maxTokens + ' tokens used'
+        + (droppedCount > 0 ? ' — <span style="color:var(--danger);">' + droppedCount + ' oldest message(s) dropped</span>' : ' — nothing dropped')
+        + '</div>';
+    }
+
+    return { messages: kept, totalTokens, droppedCount, systemTokens, ragTokens, historyTokens, questionTokens };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const history = [
+  { role: "user", content: "What's the weather like on Kepler Station?" },
+  { role: "assistant", content: "Kepler Station reports clear skies and mild temperatures today." },
+  { role: "user", content: "Good, I'm planning a spacewalk." },
+];
+
+const result = buildContext({
+  system: "You are a helpful mission control assistant.",
+  ragChunks: ["Kepler Station weather log: clear, 18C, low wind."],
+  history: history,
+  question: "Is it safe to go outside?",
+  maxTokens: 200,
+});
+
+console.log("Total tokens used:", result.totalTokens);
+console.log("Messages dropped:", result.droppedCount);`;
+
+  const EXAMPLE_OVERFLOW = `// A much longer history, with a SMALL budget — something has to be dropped.
+const history = [];
+for (let i = 1; i <= 12; i++) {
+  history.push({ role: i % 2 === 1 ? "user" : "assistant", content: "This is message number " + i + " in a long ongoing conversation." });
+}
+
+const result = buildContext({
+  system: "You are a helpful mission control assistant.",
+  ragChunks: ["Some retrieved background context goes here for the current question."],
+  history: history,
+  question: "What did we talk about most recently?",
+  maxTokens: 120,
+});
+
+console.log("Total tokens used:", result.totalTokens);
+console.log("Messages dropped:", result.droppedCount, "out of", history.length);
+console.log("Oldest KEPT message:", result.messages[0] ? result.messages[0].content : "(none kept)");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "budgetDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnOverflow", code: EXAMPLE_OVERFLOW },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
