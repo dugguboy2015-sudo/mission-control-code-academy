@@ -14,7 +14,9 @@
 
   --text-primary: #e8ecfb;
   --text-secondary: #a8b3d1;
-  --text-muted: #6b7699;
+  /* Lightened from the original #6b7699 (4.29:1 on --bg-void, 3.85:1 on
+     --bg-panel) to clear the WCAG AA 4.5:1 text-contrast threshold. */
+  --text-muted: #7b85a8;
 
   --accent-cyan: #4ee1ff;
   --accent-purple: #b083ff;
@@ -47,6 +49,35 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+
+/* ---------- Accessibility baseline ---------- */
+/* A visible focus ring for every interactive element reachable by keyboard —
+   :focus-visible skips it for mouse clicks (browsers already do this) so it
+   only appears for keyboard/assistive-tech navigation, never a stray click. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute; top: -60px; left: 12px; z-index: 200;
+  background: var(--bg-panel); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 8px;
+  padding: 10px 18px; font-family: var(--font-display); font-size: 13px;
+  text-decoration: none; transition: top 0.15s ease;
+}
+.skip-link:focus { top: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  #starfield { display: none; }
+}
 
 body {
   margin: 0;
@@ -142,6 +173,15 @@ section.panel { margin-bottom: 56px; }
 
 /* ---------- Code blocks ---------- */
 .code-block { position: relative; background: var(--bg-panel-alt); border-left: 3px solid var(--accent); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+/* A permanent, subtle hint that a code line can be scrolled horizontally —
+   most noticeable on mobile, where there's no visible scrollbar to signal
+   it. Harmless on lines that already fit; pointer-events:none so it never
+   blocks the actual touch-scroll gesture underneath it. */
+.code-block::after {
+  content: ""; position: absolute; top: 37px; right: 0; bottom: 0; width: 28px;
+  background: linear-gradient(90deg, transparent, var(--bg-panel-alt) 80%);
+  pointer-events: none;
+}
 .code-tab { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(0,0,0,0.25); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); }
 .copy-btn { background: transparent; border: 1px solid var(--border-glow); color: var(--text-secondary); font-family: var(--font-body); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
 .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -193,6 +233,13 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
   box-shadow: var(--glow-shadow);
   display: flex;
   flex-direction: column;
+  transition: border-color 0.15s ease;
+}
+/* The editor textarea itself has outline:none (its own border would clip
+   awkwardly) — so the surrounding pane lights up on focus instead, the
+   only visual cue a keyboard user gets that they've tabbed into it. */
+.sandbox-pane:focus-within, .editor-pane:focus-within {
+  border-color: var(--accent);
 }
 .pane-header {
   display: flex;
@@ -327,9 +374,21 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
   color: var(--success); border: 2px solid var(--success); padding: 14px 28px; border-radius: 10px;
   transform: rotate(-3deg); box-shadow: 0 0 20px rgba(77, 255, 180, 0.25); margin-bottom: 28px;
   cursor: pointer; background: transparent; font-family: var(--font-display);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.stamp:hover { transform: rotate(-3deg) scale(1.06); }
 .stamp.is-complete { color: var(--success); }
 .stamp.not-complete { color: var(--text-muted); border-color: var(--border-glow); box-shadow: none; }
+
+/* A one-time, satisfying "stamped down" pop the moment a mission is
+   actually marked complete (not replayed on every later visit to an
+   already-completed mission — see initStamp()'s one-time class add). */
+@keyframes stampPop {
+  0%   { transform: rotate(-3deg) scale(0.7); }
+  55%  { transform: rotate(-3deg) scale(1.25); }
+  100% { transform: rotate(-3deg) scale(1); }
+}
+.stamp.just-completed { animation: stampPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .nav-links { display: flex; justify-content: center; gap: 20px; font-family: var(--font-display); font-size: 13px; flex-wrap: wrap; }
 .nav-links a { text-decoration: none; color: var(--text-secondary); border: 1px solid var(--border-glow); padding: 10px 18px; border-radius: 8px; transition: all 0.15s ease; }
 .nav-links a:hover { color: var(--accent); border-color: var(--accent); }
@@ -362,6 +421,26 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 .sector-progress-mini span { font-size: 12px; color: var(--text-muted); font-family: var(--font-code); white-space: nowrap; }
 .sector-caret { color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
 .sector-card.open .sector-caret { transform: rotate(180deg); }
+
+@media (max-width: 480px) {
+  /* At narrow widths there isn't room for the title, a fixed 100px
+     progress bar, AND the caret on one line without the title wrapping
+     into a cramped, overlapping mess. Wrap to two rows instead: title
+     stays with the badge and caret on row 1, the progress bar (now
+     free to stretch full-width) takes row 2 on its own. */
+  .sector-head { flex-wrap: wrap; padding: 16px 18px; row-gap: 10px; }
+  .sector-head-text { order: 1; }
+  .sector-caret { order: 2; }
+  .sector-progress-mini { order: 3; flex: 1 1 100%; margin-left: 0; }
+  .sector-progress-mini .progress-track { width: auto; flex: 1; }
+
+  /* A mission title wrapping to 2-3 lines on a narrow screen otherwise
+     leaves the checkmark icon and LIVE/planned pill oddly centered against
+     the whole block instead of aligned with its first line. */
+  .mission-row { align-items: flex-start; padding: 14px 18px; }
+  .mission-check { margin-top: 1px; }
+  .mission-row-tags { margin-top: 1px; }
+}
 
 .mission-rows { display: none; border-top: 1px solid var(--border-glow); }
 .sector-card.open .mission-rows { display: block; }
@@ -412,18 +491,21 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 
   --text-primary: #141a2e;
   --text-secondary: #454f6b;
-  --text-muted: #6d7793;
+  /* text-muted, and every accent below, is tuned to clear the WCAG AA 4.5:1
+     text-contrast threshold against --bg-void (#eef1f8) — the originals
+     ranged 2.9-4.2:1, readable but a real accessibility gap at small sizes. */
+  --text-muted: #5c6580;
 
-  --accent-cyan: #0e8fb3;
+  --accent-cyan: #0b7593;
   --accent-purple: #7b46d6;
-  --accent-orange: #c96a12;
-  --accent-green: #0f9d63;
-  --accent-pink: #c43e8f;
-  --accent-yellow: #a67c00;
+  --accent-orange: #a9590f;
+  --accent-green: #0c7e4f;
+  --accent-pink: #b83a86;
+  --accent-yellow: #8b6800;
 
-  --success: #0f9d63;
-  --warning: #b8860b;
-  --danger: #d13b3b;
+  --success: #0c7e4f;
+  --warning: #8c6608;
+  --danger: #c43737;
 
   --accent: var(--accent-cyan);
   --glow-shadow: 0 2px 14px rgba(20, 26, 46, 0.08);
@@ -465,7 +547,7 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
   --border-glow: #2e3d63;
   --text-primary: #e8ecfb;
   --text-secondary: #a8b3d1;
-  --text-muted: #6b7699;
+  --text-muted: #7b85a8;
   --accent-cyan: #4ee1ff;
   --accent-purple: #b083ff;
   --accent-orange: #ff9d4d;
@@ -474,7 +556,7 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
   --accent-yellow: #ffe66d;
 }
 :root[data-theme="light"] .diagram-box { background: #0f1526; border-color: #2e3d63; }
-:root[data-theme="light"] .diagram-caption { color: #6b7699; }
+:root[data-theme="light"] .diagram-caption { color: #7b85a8; }
 
 /* ============================================================
    SIDEBAR NAVIGATOR (injected by academy.js on mission pages)
@@ -524,6 +606,12 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 .mcca-nav { flex: 1; overflow-y: auto; padding: 8px 0 24px; }
 .mcca-nav-sector { padding: 12px 16px 4px; font-family: var(--font-display); font-size: 10px; letter-spacing: 0.12em; color: var(--text-muted); text-transform: uppercase; }
 .mcca-nav-sector .s-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+.s-dot-cyan   { background: var(--accent-cyan); }
+.s-dot-purple { background: var(--accent-purple); }
+.s-dot-orange { background: var(--accent-orange); }
+.s-dot-green  { background: var(--accent-green); }
+.s-dot-pink   { background: var(--accent-pink); }
+.s-dot-yellow { background: var(--accent-yellow); }
 .mcca-nav-link { display: flex; align-items: center; gap: 9px; padding: 7px 16px 7px 20px; text-decoration: none; color: var(--text-secondary); font-size: 13px; border-left: 2px solid transparent; }
 .mcca-nav-link:hover { background: rgba(127,127,127,0.08); color: var(--text-primary); }
 .mcca-nav-link.current { border-left-color: var(--accent); color: var(--accent); background: rgba(127,127,127,0.06); }
