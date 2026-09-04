@@ -219,6 +219,13 @@
       const nowComplete = !getProgress()[missionId];
       setMissionComplete(missionId, nowComplete);
       updateStamp(missionId);
+      // Only the moment of actually completing gets the celebratory pop —
+      // never replayed just from reloading an already-completed mission.
+      if (nowComplete) {
+        stamp.classList.remove("just-completed");
+        void stamp.offsetWidth; // restart the animation even on rapid re-clicks
+        stamp.classList.add("just-completed");
+      }
     });
   }
 
@@ -289,12 +296,16 @@
     if (!manifest) return;
     const progress = getProgress();
 
-    const DOT = { cyan: "#4ee1ff", purple: "#b083ff", orange: "#ff9d4d", green: "#4dffb4", pink: "#ff6ec7", yellow: "#ffe66d" };
+    const VALID_ACCENTS = ["cyan", "purple", "orange", "green", "pink", "yellow"];
 
     let total = 0, done = 0;
     let navHtml = "";
     manifest.sectors.forEach((sector) => {
-      navHtml += `<div class="mcca-nav-sector"><span class="s-dot" style="background:${DOT[sector.accent] || "#4ee1ff"}"></span>S${sector.num} · ${sector.name}</div>`;
+      // A CSS class (var(--accent-*)) rather than a hardcoded hex — so the dot
+      // automatically uses each theme's own contrast-adjusted accent color
+      // instead of always the dark theme's (too low-contrast on a light panel).
+      const dotClass = "s-dot-" + (VALID_ACCENTS.includes(sector.accent) ? sector.accent : "cyan");
+      navHtml += `<div class="mcca-nav-sector"><span class="s-dot ${dotClass}"></span>S${sector.num} · ${sector.name}</div>`;
       sector.missions.forEach((m) => {
         total++;
         const isDone = !!progress[m.id];
@@ -324,7 +335,8 @@
       + `<button class="mcca-theme-toggle" data-theme-toggle aria-label="Toggle theme"></button>`
       + `</div>`
       + `<div class="mcca-sidebar-progress"><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="lbl">${done} / ${total} MISSIONS COMPLETE</div></div>`
-      + `<nav class="mcca-nav">${navHtml}</nav>`;
+      + `<nav class="mcca-nav">${navHtml}</nav>`
+      + `<div class="mcca-resize-handle" title="Drag to resize"></div>`;
 
     document.body.appendChild(hamburger);
     document.body.appendChild(aside);
@@ -347,6 +359,51 @@
     // Scroll the current mission into view within the sidebar.
     const cur = aside.querySelector(".mcca-nav-link.current");
     if (cur) cur.scrollIntoView({ block: "center" });
+
+    /* ---------------- Resizable width (drag handle, persisted) ---------------- */
+    const SIDEBAR_WIDTH_KEY = "mcca_sidebar_width";
+    const MIN_WIDTH = 220, MAX_WIDTH = 480;
+
+    function applyWidth(px) {
+      const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, px));
+      document.documentElement.style.setProperty("--sidebar-width", clamped + "px");
+      return clamped;
+    }
+
+    let storedWidth = null;
+    try { storedWidth = parseInt(localStorage.getItem(SIDEBAR_WIDTH_KEY), 10); } catch (e) {}
+    applyWidth(Number.isFinite(storedWidth) ? storedWidth : 270);
+
+    const handle = aside.querySelector(".mcca-resize-handle");
+    let dragging = false;
+
+    handle.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      handle.classList.add("active");
+      aside.classList.add("resizing");
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    handle.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const railLeft = aside.getBoundingClientRect().left;
+      applyWidth(e.clientX - railLeft);
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove("active");
+      aside.classList.remove("resizing");
+      const finalWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"), 10);
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalWidth)); } catch (err) {}
+    }
+    handle.addEventListener("pointerup", endDrag);
+    handle.addEventListener("pointercancel", endDrag);
+    // Double-click the handle to reset to the default width.
+    handle.addEventListener("dblclick", () => {
+      const reset = applyWidth(270);
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(reset)); } catch (e) {}
+    });
   }
 
   /* ---------------- Floating theme toggle (non-mission pages) ---------------- */
@@ -361,8 +418,22 @@
     applyTheme(getTheme());
   }
 
+  /* ---------------- Skip-to-content link (every page) ---------------- */
+  function injectSkipLink() {
+    const main = document.querySelector(".content-wrap") || document.querySelector("main");
+    if (!main) return;
+    if (!main.id) main.id = "main-content";
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    const link = document.createElement("a");
+    link.className = "skip-link";
+    link.href = "#" + main.id;
+    link.textContent = "Skip to main content";
+    document.body.insertBefore(link, document.body.firstChild);
+  }
+
   /* ---------------- Boot ---------------- */
   document.addEventListener("DOMContentLoaded", async () => {
+    injectSkipLink();
     initStarfield();
     initCopyButtons();
     initQuizzes();

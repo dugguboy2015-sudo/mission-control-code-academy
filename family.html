@@ -91,7 +91,7 @@
 
 <!-- Add/Edit child modal -->
 <div class="modal-overlay" id="childModal">
-  <div class="card modal">
+  <div class="card modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <h2 id="modalTitle">Add a Cadet</h2>
     <div class="avatar-picker" id="avatarPicker"></div>
     <div class="modal-field">
@@ -191,6 +191,8 @@
     });
   }
 
+  let modalOpenerEl = null;
+
   function openModal(child) {
     editingChildId = child ? child.id : null;
     document.getElementById("modalTitle").textContent = child ? "Edit Cadet" : "Add a Cadet";
@@ -199,11 +201,45 @@
     document.getElementById("childPin").value = "";
     document.getElementById("modalMsg").textContent = "";
     renderAvatarPicker(child ? child.avatar : AVATARS[0]);
+    modalOpenerEl = document.activeElement;
     document.getElementById("childModal").classList.add("open");
+    // Move keyboard/screen-reader focus INTO the dialog — without this, a
+    // keyboard user opening the modal has no indication focus moved at all.
+    document.getElementById("childName").focus();
   }
   function closeModal() {
     document.getElementById("childModal").classList.remove("open");
+    // Return focus to whatever triggered the modal (the Add/Edit button) —
+    // otherwise a keyboard user's focus silently lands back at <body>.
+    if (modalOpenerEl && typeof modalOpenerEl.focus === "function") modalOpenerEl.focus();
   }
+
+  function isModalOpen() {
+    return document.getElementById("childModal").classList.contains("open");
+  }
+
+  // Escape closes the dialog, and Tab/Shift+Tab are trapped inside it — a
+  // dialog that lets keyboard focus silently wander into the page behind
+  // an open modal is a common, confusing accessibility gap.
+  document.addEventListener("keydown", (e) => {
+    if (!isModalOpen()) return;
+    if (e.key === "Escape") {
+      closeModal();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const dialog = document.querySelector("#childModal .modal");
+    const focusable = dialog.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 
   let selectedAvatar = AVATARS[0];
   function renderAvatarPicker(selected) {
@@ -242,6 +278,13 @@
     document.getElementById("childModal").addEventListener("click", (e) => { if (e.target.id === "childModal") closeModal(); });
 
     document.getElementById("modalSave").addEventListener("click", async () => {
+      const saveBtn = document.getElementById("modalSave");
+      // Guard against double-submission: a slow network plus an impatient
+      // second click (or a double-tap on mobile) previously fired createChild()
+      // twice, each generating its own random username suffix and silently
+      // creating two separate cadet profiles with the same name.
+      if (saveBtn.disabled) return;
+
       const name = document.getElementById("childName").value.trim();
       const username = document.getElementById("childUsername").value.trim();
       const pin = document.getElementById("childPin").value.trim();
@@ -249,6 +292,10 @@
       if (!name) { msgEl.textContent = "Give your cadet a name."; return; }
       if (username && !/^[a-zA-Z0-9]{3,20}$/.test(username)) { msgEl.textContent = "Username must be 3-20 letters/numbers, no spaces."; return; }
       if (pin && !/^\d{4}$/.test(pin)) { msgEl.textContent = "PIN must be exactly 4 digits, or left blank."; return; }
+
+      const originalLabel = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
       try {
         if (editingChildId) {
           const patch = { name, avatar: selectedAvatar };
@@ -262,6 +309,9 @@
         renderChildren();
       } catch (err) {
         msgEl.textContent = err.message || "Something went wrong.";
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalLabel;
       }
     });
 

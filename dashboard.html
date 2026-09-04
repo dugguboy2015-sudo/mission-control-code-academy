@@ -55,7 +55,7 @@
 
 <!-- PIN entry -->
 <div class="pin-overlay" id="pinOverlay">
-  <div class="card pin-box">
+  <div class="card pin-box" role="dialog" aria-modal="true" aria-labelledby="pinChildName">
     <div id="pinChildName" style="font-family:var(--font-display);margin-bottom:6px;"></div>
     <div style="color:var(--text-muted);font-size:12px;">Enter 4-digit PIN</div>
     <div><input type="password" id="pinInput" maxlength="4" inputmode="numeric" autofocus></div>
@@ -86,10 +86,6 @@
   </div>
 
   <div class="sector-list" id="sectorList"></div>
-
-  <footer class="mission-footer" style="margin-top:56px;">
-    <p style="color:var(--text-muted);font-size:13px;">Progress syncs to this cadet's account. <a href="CURRICULUM-PLAN.md" style="color:var(--text-secondary);">View the full curriculum plan ▸</a></p>
-  </footer>
 
 </div>
 
@@ -207,6 +203,7 @@
     }
     function onCancel() { cleanup(); }
     async function onKey(e) {
+      if (e.key === "Escape") { cleanup(); return; }
       if (e.key !== "Enter") return;
       const ok = await window.Academy.family.verifyPin(child.id, pinInput.value.trim());
       if (ok) {
