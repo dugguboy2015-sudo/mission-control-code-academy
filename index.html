@@ -7,41 +7,40 @@
 <meta name="description" content="A 69-mission, zero-to-AI-native coding curriculum with real interactive practice built into every lesson — for parents who want their kid building real software, not just watching tutorials.">
 <link rel="stylesheet" href="assets/academy.css">
 <style>
-  .landing { min-height: 100vh; width: 100%; display: flex; align-items: stretch; position: relative; z-index: 1; }
-  .landing-pitch, .landing-auth { padding: 64px 48px; display: flex; flex-direction: column; justify-content: flex-start; }
+  /* Both columns share the SAME page background (no seam) — the auth side's
+     own identity comes only from the .card it contains, exactly like every
+     .pitch-feature card on the left. One continuous surface, not two panels
+     glued together. */
+  .landing { height: 100vh; width: 100%; display: flex; align-items: stretch; position: relative; z-index: 1; overflow: hidden; }
+  .landing-pitch, .landing-auth { padding: 28px 44px; display: flex; flex-direction: column; justify-content: center; min-height: 0; }
   /* Pitch side grows to absorb ALL leftover width on wide screens — its own
      content is capped via .pitch-inner below so lines stay readable, but the
-     column itself (and the auth panel's background/border) still reach the
-     true edges of the viewport instead of leaving dead space beside them. */
-  .landing-pitch { flex: 1 1 0%; min-width: 0; }
-  .pitch-inner { max-width: 640px; }
-  .landing-auth { flex: 0 0 460px; background: rgba(30,40,66,0.65); border-left: 1px solid var(--border-glow); }
+     column itself still reaches the true edge of the viewport instead of
+     leaving dead space beside it. */
+  .landing-pitch { flex: 1 1 0%; min-width: 0; overflow-y: auto; }
+  .pitch-inner { max-width: 640px; margin: auto 0; }
+  .landing-auth { flex: 0 0 440px; border-left: 1px solid var(--border-glow); overflow-y: auto; }
   @media (max-width: 900px) {
-    .landing { flex-direction: column; }
-    .landing-auth { flex-basis: auto; border-left: none; border-top: 1px solid var(--border-glow); padding: 40px 24px; }
-    .landing-pitch { padding: 40px 24px; }
+    .landing { height: auto; overflow: visible; flex-direction: column; }
+    .landing-auth { flex-basis: auto; border-left: none; border-top: 1px solid var(--border-glow); padding: 32px 24px; overflow-y: visible; }
+    .landing-pitch { padding: 32px 24px; overflow-y: visible; }
   }
 
-  .pitch-eyebrow { display: inline-block; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.2em; color: var(--accent-pink); margin-bottom: 20px; }
-  .pitch-headline { font-family: var(--font-display); font-size: clamp(32px, 4.2vw, 50px); line-height: 1.12; margin: 0 0 20px; text-shadow: 0 0 30px rgba(78,225,255,0.25); }
+  .pitch-eyebrow { display: inline-block; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.2em; color: var(--accent-pink); margin-bottom: 10px; }
+  .pitch-headline { font-family: var(--font-display); font-size: clamp(24px, 3vw, 38px); line-height: 1.14; margin: 0 0 12px; text-shadow: 0 0 30px rgba(78,225,255,0.25); }
   .pitch-headline em { font-style: normal; color: var(--accent-cyan); }
-  .pitch-sub { font-size: 18px; color: var(--text-secondary); max-width: 560px; margin-bottom: 36px; }
+  .pitch-sub { font-size: 15px; color: var(--text-secondary); max-width: 560px; margin-bottom: 16px; line-height: 1.5; }
 
-  .pitch-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 40px; }
-  .pitch-stat .num { font-family: var(--font-display); font-size: 30px; color: var(--accent-cyan); text-shadow: 0 0 18px rgba(78,225,255,0.35); }
-  .pitch-stat .lbl { font-size: 12px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .pitch-stats { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 18px; }
+  .pitch-stat .num { font-family: var(--font-display); font-size: 24px; color: var(--accent-cyan); text-shadow: 0 0 18px rgba(78,225,255,0.35); }
+  .pitch-stat .lbl { font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; }
 
-  .pitch-features { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 40px; }
+  .pitch-features { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   @media (max-width: 560px) { .pitch-features { grid-template-columns: 1fr; } }
-  .pitch-feature { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 18px 20px; }
-  .pitch-feature .icon { font-size: 22px; margin-bottom: 8px; display: block; }
-  .pitch-feature h3 { font-family: var(--font-display); font-size: 14px; margin: 0 0 6px; color: var(--text-primary); }
-  .pitch-feature p { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
-
-  .pitch-path { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 20px 22px; }
-  .pitch-path h3 { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.04em; color: var(--accent); margin: 0 0 12px; }
-  .pitch-path-track { display: flex; flex-wrap: wrap; gap: 8px; }
-  .pitch-chip { font-family: var(--font-code); font-size: 11.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-secondary); white-space: nowrap; }
+  .pitch-feature { background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 12px 14px; }
+  .pitch-feature .icon { font-size: 18px; margin-bottom: 4px; display: block; }
+  .pitch-feature h3 { font-family: var(--font-display); font-size: 12.5px; margin: 0 0 4px; color: var(--text-primary); }
+  .pitch-feature p { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.4; }
 
   /* ---- Auth card ---- */
   .auth-card-inner { width: 100%; max-width: 380px; margin: 0 auto; }
@@ -113,22 +112,6 @@
         <span class="icon">🚀</span>
         <h3>Ships real, deployed work</h3>
         <p>Capstone missions end with a real live URL — kids learn that "done" means deployed, not just running on one laptop.</p>
-      </div>
-    </div>
-
-    <div class="pitch-path">
-      <h3>THE PATH</h3>
-      <div class="pitch-path-track">
-        <span class="pitch-chip">0 · Ground School</span>
-        <span class="pitch-chip">1 · Web Building</span>
-        <span class="pitch-chip">2 · JavaScript</span>
-        <span class="pitch-chip">3 · Git</span>
-        <span class="pitch-chip">4 · APIs & Deploy</span>
-        <span class="pitch-chip">5 · Data & Backends</span>
-        <span class="pitch-chip">6 · Python</span>
-        <span class="pitch-chip">7 · AI-Enabled Apps</span>
-        <span class="pitch-chip">8 · AI Agents</span>
-        <span class="pitch-chip">9 · Engineering Craft</span>
       </div>
     </div>
    </div>
