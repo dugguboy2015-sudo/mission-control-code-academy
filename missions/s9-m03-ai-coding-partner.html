@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.3: Using AI as a Coding Partner — Responsibly, and Well | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .flag-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12px; background: var(--bg-panel-alt); border-left: 3px solid var(--danger); }
+  .flag-row.clean { border-left-color: var(--success); }
+  .verdict-line { font-family: var(--font-code); font-size: 13px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m03">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9</div>
+    <h1>MISSION 9.3: USING AI AS A CODING PARTNER</h1>
+    <div class="subtitle">Responsibly, and Well</div>
+    <p class="briefing-line">You've been building alongside an AI assistant this whole journey — that habit deserves its own dedicated mission, formalized as a real skill, not just a background fact of how you learned. The rule that matters most: <strong>AI writes the first draft; you are the engineer who understands and owns it.</strong> Never blind-paste code you haven't read, understood, and verified — the exact same hallucination risk from Mission 7.1 applies just as much to generated code as to any other AI output.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>An AI coding assistant is a genuine force-multiplier — but it's still Mission 7.1's next-token predictor underneath, applied to code instead of prose. It can write code that looks completely plausible, is stylistically clean, and is subtly wrong: an off-by-one error, a forgotten edge case, a security hole. "It compiled" and "it looks right" are not the same as "it's correct" — the same discipline from Mission 9.1's testing and 9.2's debugging applies directly here.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Prompting for Code, Specifically</h3>
+        <p>Mission 7.2's prompt engineering applies directly: be specific about the exact behavior you want, mention constraints ("no external libraries," "must handle an empty array"), and ask for one focused change at a time rather than "rewrite my whole app." A vague request like "make this better" gets a vague, hard-to-verify result.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Always Read and Verify — Never Blind-Paste</h3>
+        <p>Before accepting any generated code, you should be able to explain, in your own words, what every line does and why it's correct. If you can't, that's not a reason to trust it more — it's the exact signal to slow down and actually read it, or ask the assistant to explain the specific part you don't follow.</p>
+        <div class="whatjusthappened">
+          <strong>THE RULE, PLAINLY</strong>
+          "AI writes the first draft; you are the engineer who understands and owns it." If a bug ships, "the AI wrote it" is not a valid explanation — you accepted and shipped it, which means you're responsible for having verified it first.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Using It to Debug Alongside You, Not Instead of You</h3>
+        <p>Pasting an error message and asking "what's wrong" can be genuinely useful — but Mission 9.2's method still applies. Read the AI's explanation the same way you'd read a stack trace: as a hypothesis to verify, not an automatic truth. A useful pattern: explain what you already tried and ruled out, so the assistant doesn't waste your time re-suggesting it.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>When NOT to Trust AI-Generated Code Blindly</h3>
+        <p>Some code deserves extra scrutiny before you ever accept it: anything touching authentication or permissions (Mission 5.3), anything handling money or user data, anything you genuinely can't verify because you don't yet understand the underlying concept well enough to check it. In those cases, slow down, ask it to explain its reasoning, and cross-check against what you've actually learned — don't accept code you can't personally vouch for.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>reviewGeneratedCode(code)</code> is a real, working checklist scanner — it flags common red flags in "AI-generated" code snippets you paste in: hardcoded secrets, unchecked input, leftover TODOs, and missing error handling around risky calls. Practice the "always verify" habit directly.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>REVIEW RESULTS</span><span>●</span></div>
+            <div id="reviewDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (review a risky snippet)</button>
+        <button class="console-btn" id="btnClean">try: review a clean snippet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Practice reviewing generated code before ever "accepting" it.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Run <code>reviewGeneratedCode()</code> on the starter's risky snippet and read every flag it raises</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Write your own small snippet (as a string) containing at least 2 of the checker's red flags on purpose, and confirm it catches both</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Fix your snippet so it passes cleanly, then re-run the reviewer to confirm zero flags remain</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, write the specific prompt you'd give an AI coding assistant to ask it to fix ONE of those red flags — specific enough that you could verify the result yourself</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A hardcoded secret in this checker means a string that looks like a real credential pattern (e.g. <code>"sk-..."</code> or <code>apiKey = "..."</code>) — reviewing your own snippet's exact wording against the checker's rules is itself good practice for reading code carefully.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add ONE new red-flag rule of your own to <code>reviewGeneratedCode()</code> — something you personally think is worth flagging in generated code — and prove it works against a snippet you write.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">The core rule<span>AI writes the first draft; you understand and own it</span></div>
+        <div class="cheat-card">Never blind-paste<span>Read and verify every line before accepting it</span></div>
+        <div class="cheat-card">Specific prompts<span>Mission 7.2's principles, applied to code requests</span></div>
+        <div class="cheat-card">Debug alongside, not instead of<span>Treat its explanation as a hypothesis to verify</span></div>
+        <div class="cheat-card">Extra scrutiny<span>Auth, money, and data-handling code deserve more care</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Accepting generated code you can't explain in your own words, just because it "looks right" and runs without errors.</li>
+          <li>Treating an AI's debugging explanation as automatically correct instead of a hypothesis to verify (Mission 9.2).</li>
+          <li>Asking for one giant rewrite instead of one focused, specific, independently-verifiable change at a time.</li>
+          <li>Giving less scrutiny to security- or money-sensitive generated code than to code you wrote yourself.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — if AI-generated code you accepted ships with a bug, who's responsible?</p>
+        <button class="quiz-btn" data-correct="false">The AI assistant, since it wrote the code</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — accepting and shipping code means you vouched for it, whether you wrote every character yourself or not.">You — accepting and shipping code means you're the engineer who verified and owns it</button>
+        <button class="quiz-btn" data-correct="false">Nobody — bugs in generated code don't really count</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- reviewGeneratedCode ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.reviewGeneratedCode = function (code) {
+    const el = document.getElementById("reviewDisplay");
+    const flags = [];
+
+    if (/(api[_-]?key|secret|password)\s*[:=]\s*["'][^"']{6,}["']/i.test(code)) {
+      flags.push("Possible hardcoded secret/API key found directly in the code.");
+    }
+    if (/\bTODO\b|\bFIXME\b/.test(code)) {
+      flags.push("Leftover TODO/FIXME comment — unfinished work left in.");
+    }
+    if (/\bawait\s+fetch\s*\(/.test(code) && !/\btry\s*\{/.test(code)) {
+      flags.push("An await fetch() call with no surrounding try/catch — unhandled failure risk (Mission 4.6).");
+    }
+    if (/\bparseInt\(|\bJSON\.parse\(/.test(code) && !/\btry\s*\{/.test(code)) {
+      flags.push("Parsing input (parseInt/JSON.parse) with no validation or try/catch around it.");
+    }
+
+    if (el) {
+      el.innerHTML = flags.length
+        ? flags.map((f) => '<div class="flag-row">⚠ ' + f + '</div>').join("") + '<div class="verdict-line">' + flags.length + ' flag(s) — read each one before accepting this code.</div>'
+        : '<div class="flag-row clean">✓ No obvious red flags detected.</div><div class="verdict-line">Still read it yourself before accepting — this checker catches common patterns, not correctness.</div>';
+    }
+    return flags;
+  };
+
+  const STARTER = `// A risky "AI-generated" snippet — try me, then hit RUN
+const riskySnippet = \`
+const apiKey = "sk-1234567890abcdef";
+async function getData(url) {
+  const response = await fetch(url);
+  return response.json();
+}
+// TODO: handle errors properly later
+\`;
+
+const flags = reviewGeneratedCode(riskySnippet);
+console.log(flags.length + " flag(s) found:");
+flags.forEach(f => console.log("- " + f));`;
+
+  const EXAMPLE_CLEAN = `const cleanSnippet = \`
+async function getData(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Request failed: " + response.status);
+    return await response.json();
+  } catch (err) {
+    console.error("getData failed:", err.message);
+    return null;
+  }
+}
+\`;
+
+const flags = reviewGeneratedCode(cleanSnippet);
+console.log(flags.length + " flag(s) found — this snippet handles errors and has no hardcoded secrets.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "reviewDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnClean", code: EXAMPLE_CLEAN },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

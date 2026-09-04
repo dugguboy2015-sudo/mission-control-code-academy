@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.1: Testing Basics — Proving Your Code Works | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .test-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12px; background: var(--bg-panel-alt); }
+  .test-row.pass { border-left: 3px solid var(--success); }
+  .test-row.fail { border-left: 3px solid var(--danger); color: var(--danger); }
+  .test-summary { font-family: var(--font-code); font-size: 13px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m01">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9 · ENGINEERING CRAFT</div>
+    <h1>MISSION 9.1: TESTING BASICS</h1>
+    <div class="subtitle">Proving Your Code Works</div>
+    <p class="briefing-line">Every mission so far, you've tested your code by looking at it — running it and eyeballing the output. That works for a five-line script. It stops working the moment your project grows past a handful of functions, because you can't realistically re-click through every feature by hand after every single change. A <strong>test</strong> is a small program that checks another program's behavior automatically — write it once, run it forever, for free.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A <strong>unit test</strong> checks one small unit of code — usually one function — in isolation. It follows a simple, repeatable shape called <strong>Arrange-Act-Assert</strong>: arrange the inputs you need, act by calling the function, then assert (check) that the result is what you expected. Run a hundred of these in under a second, every time you change anything, and you know immediately if you broke something that used to work — this is the exact same instinct as Mission 8.6's evals, applied to ordinary deterministic code instead of AI output.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Arrange, Act, Assert</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function calculateTip(bill, percent) {&#10;  return bill * (percent / 100);&#10;}&#10;&#10;// ARRANGE&#10;const bill = 50;&#10;const percent = 20;&#10;&#10;// ACT&#10;const result = calculateTip(bill, percent);&#10;&#10;// ASSERT&#10;if (result !== 10) {&#10;  throw new Error(&quot;Expected 10, got &quot; + result);&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">calculateTip</span>(bill, percent) {
+  <span class="kw">return</span> bill * (percent / <span class="num">100</span>);
+}
+
+<span class="comment">// ARRANGE</span>
+<span class="kw">const</span> bill = <span class="num">50</span>;
+<span class="kw">const</span> percent = <span class="num">20</span>;
+
+<span class="comment">// ACT</span>
+<span class="kw">const</span> result = <span class="fn">calculateTip</span>(bill, percent);
+
+<span class="comment">// ASSERT</span>
+<span class="kw">if</span> (result !== <span class="num">10</span>) {
+  <span class="kw">throw new</span> Error(<span class="str">"Expected 10, got "</span> + result);
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          This IS a real, working test — a program checking another program's behavior, with no human watching. It just isn't organized or reported nicely yet. A tiny test framework (below) fixes that part.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Minimal Test Framework, From Scratch</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="function assert(condition, message) {&#10;  if (!condition) throw new Error(message || &quot;Assertion failed&quot;);&#10;}&#10;&#10;function test(name, fn) {&#10;  try {&#10;    fn();&#10;    console.log(&quot;✓ &quot; + name);&#10;  } catch (err) {&#10;    console.error(&quot;✗ &quot; + name + &quot; — &quot; + err.message);&#10;  }&#10;}&#10;&#10;test(&quot;calculateTip returns correct amount&quot;, () =&gt; {&#10;  assert(calculateTip(50, 20) === 10, &quot;Expected 10&quot;);&#10;});">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">assert</span>(condition, message) {
+  <span class="kw">if</span> (!condition) <span class="kw">throw new</span> Error(message || <span class="str">"Assertion failed"</span>);
+}
+
+<span class="kw">function</span> <span class="fn">test</span>(name, fn) {
+  <span class="kw">try</span> {
+    <span class="fn">fn</span>();
+    console.<span class="fn">log</span>(<span class="str">"✓ "</span> + name);
+  } <span class="kw">catch</span> (err) {
+    console.<span class="fn">error</span>(<span class="str">"✗ "</span> + name + <span class="str">" — "</span> + err.message);
+  }
+}
+
+<span class="fn">test</span>(<span class="str">"calculateTip returns correct amount"</span>, () =&gt; {
+  <span class="fn">assert</span>(<span class="fn">calculateTip</span>(<span class="num">50</span>, <span class="num">20</span>) === <span class="num">10</span>, <span class="str">"Expected 10"</span>);
+});</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>test()</code> wraps the risky call in a <code>try/catch</code> (Mission 4.6) so ONE failing test doesn't stop the rest from running, and reports a clean pass/fail line either way. This tiny amount of code is, structurally, exactly what real test frameworks like Jest or Vitest do underneath — just with far more features.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>The Happy Path Is Not Enough</h3>
+        <p>A test that only checks the expected, well-behaved input (the "happy path") misses the bugs that actually matter. Good tests also check <strong>edge cases</strong>: zero, negative numbers, empty strings, missing fields — the exact inputs a careless assumption tends to break on.</p>
+        <div class="whatjusthappened">
+          <strong>WHY THIS MATTERS</strong>
+          <code>calculateTip(50, 0)</code> should return <code>0</code>, not crash or return <code>NaN</code>. A test suite that only ever calls a function with "normal" numbers will confidently report 100% passing while a genuine bug sits untested right next to it.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real, working <code>test()</code>/<code>assert()</code> framework, preloaded with a <code>calculateTip</code> function that has a real, deliberate bug. Write tests, find it.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>TEST RESULTS</span><span>●</span></div>
+            <div id="testDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (happy-path test)</button>
+        <button class="console-btn" id="btnEdgeCase">try: an edge-case test that finds the bug</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p><code>calculateTip</code> has a real bug. Find it with tests, then fix it.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Write a test for <code>calculateTip(50, 0)</code> — a 0% tip should be exactly 0</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Write a test for <code>calculateTip(0, 20)</code> — a $0 bill should tip exactly 0</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Write a test for a negative bill, <code>calculateTip(-10, 20)</code> — decide and assert what SHOULD happen (should it throw an error instead of returning a nonsense negative tip?)</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Fix <code>calculateTip</code>'s actual bug so all your tests pass</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Look closely at the starter code's <code>calculateTip</code> — the bug isn't in the multiplication itself. Try a 0% tip specifically, and think about what JavaScript considers "falsy" — <code>0</code> is a perfectly valid percentage, but it's also falsy.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Extend the tiny <code>test()</code> framework with a <code>runAllTests()</code> function that tracks a running pass/fail count across every test called so far, and prints a final summary line like "4 / 5 tests passed."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Unit test<span>Checks one small unit of code, in isolation</span></div>
+        <div class="cheat-card">Arrange-Act-Assert<span>Set up inputs, run the code, check the result</span></div>
+        <div class="cheat-card"><code>assert(condition)</code><span>Throws if the condition is false</span></div>
+        <div class="cheat-card">Happy path<span>The expected, well-behaved input — not enough alone</span></div>
+        <div class="cheat-card">Edge case<span>Zero, negative, empty, missing — where bugs actually hide</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Only testing the happy path and never an edge case, missing exactly the inputs bugs tend to hide behind.</li>
+          <li>Writing a test so broad it checks multiple unrelated behaviors at once, making a failure hard to diagnose.</li>
+          <li>Letting a test depend on something non-deterministic (today's date, a random number) without controlling for it — Mission 7.1's lesson, applied to test design.</li>
+          <li>Writing code first and never writing a single test for it, then discovering a bug only when a real user hits it.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why is testing only the "happy path" not enough?</p>
+        <button class="quiz-btn" data-correct="false">Happy-path tests run too slowly</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — real bugs usually hide in the unusual inputs, not the expected ones a happy-path test checks.">Bugs usually hide in edge cases — zero, negative, empty — that a happy-path test never exercises</button>
+        <button class="quiz-btn" data-correct="false">It's actually always sufficient on its own</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Tiny test framework + renderer ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.__testResults = [];
+
+  window.assert = function (condition, message) {
+    if (!condition) throw new Error(message || "Assertion failed");
+  };
+
+  window.test = function (name, fn) {
+    let ok = true, message = "";
+    try {
+      fn();
+    } catch (err) {
+      ok = false;
+      message = err.message;
+    }
+    window.__testResults.push({ name, ok, message });
+    const el = document.getElementById("testDisplay");
+    if (el) {
+      const passed = window.__testResults.filter((r) => r.ok).length;
+      el.innerHTML = window.__testResults.map((r) =>
+        '<div class="test-row ' + (r.ok ? "pass" : "fail") + '">' + (r.ok ? "✓" : "✗") + ' ' + r.name + (r.ok ? "" : " — " + r.message) + '</div>'
+      ).join("") + '<div class="test-summary">' + passed + ' / ' + window.__testResults.length + ' passed</div>';
+    }
+  };
+
+  // A deliberately buggy tip calculator: passes the "happy path" test just
+  // fine, but breaks on a real, discoverable edge case.
+  window.calculateTip = function (bill, percent) {
+    if (!percent) return bill * 0.15; // bug: falsy percent (INCLUDING 0!) silently defaults to 15%
+    return bill * (percent / 100);
+  };
+
+  const STARTER = `// Try me — then hit RUN
+window.__testResults = [];
+
+test("calculateTip on a normal bill", () => {
+  assert(calculateTip(50, 20) === 10, "Expected 10, got " + calculateTip(50, 20));
+});`;
+
+  const EXAMPLE_EDGE_CASE = `window.__testResults = [];
+
+test("calculateTip on a normal bill", () => {
+  assert(calculateTip(50, 20) === 10, "Expected 10, got " + calculateTip(50, 20));
+});
+
+test("calculateTip with 0 percent", () => {
+  assert(calculateTip(50, 0) === 0, "Expected 0, got " + calculateTip(50, 0));
+});
+
+test("calculateTip with a $0 bill", () => {
+  assert(calculateTip(0, 20) === 0, "Expected 0, got " + calculateTip(0, 20));
+});`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "testDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnEdgeCase", code: EXAMPLE_EDGE_CASE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

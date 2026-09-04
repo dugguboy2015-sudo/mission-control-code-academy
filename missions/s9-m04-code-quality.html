@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.4: Code Quality & Refactoring — Making It Good, Not Just Working | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .smell-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12px; background: var(--bg-panel-alt); border-left: 3px solid var(--danger); }
+  .smell-row.clean { border-left-color: var(--success); }
+  .smell-count { font-family: var(--font-code); font-size: 13px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9</div>
+    <h1>MISSION 9.4: CODE QUALITY & REFACTORING</h1>
+    <div class="subtitle">Making It Good, Not Just Working</div>
+    <p class="briefing-line">"It works" is the minimum bar, not the finish line. Code that works but is duplicated, unreadable, or tangled into one giant function is a real liability — every future change to it costs more time and carries more risk than it should. <strong>Refactoring</strong> is changing code's internal structure without changing what it does, and Mission 9.1's tests are exactly what makes that safe to do with confidence.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>A <strong>code smell</strong> isn't a bug — the code still works — but it's a warning sign that maintaining it will get harder over time. Duplicated logic, deeply nested conditionals, a function doing five unrelated things, unexplained "magic numbers" scattered through the code: none of these crash anything today, but each one makes tomorrow's change slower and riskier.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>DRY — Don't Repeat Yourself</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — BEFORE</span><button class="copy-btn" data-copy="function greetCaptain(name) {&#10;  return &quot;Welcome aboard, Captain &quot; + name + &quot;.&quot;;&#10;}&#10;function greetEngineer(name) {&#10;  return &quot;Welcome aboard, Engineer &quot; + name + &quot;.&quot;;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">greetCaptain</span>(name) {
+  <span class="kw">return</span> <span class="str">"Welcome aboard, Captain "</span> + name + <span class="str">"."</span>;
+}
+<span class="kw">function</span> <span class="fn">greetEngineer</span>(name) {
+  <span class="kw">return</span> <span class="str">"Welcome aboard, Engineer "</span> + name + <span class="str">"."</span>;
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT — AFTER</span><button class="copy-btn" data-copy="function greetCrewMember(name, rank) {&#10;  return &quot;Welcome aboard, &quot; + rank + &quot; &quot; + name + &quot;.&quot;;&#10;}">COPY</button></div>
+          <pre><code><span class="kw">function</span> <span class="fn">greetCrewMember</span>(name, rank) {
+  <span class="kw">return</span> <span class="str">"Welcome aboard, "</span> + rank + <span class="str">" "</span> + name + <span class="str">"."</span>;
+}</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Both original functions did the exact same thing with one word different. One shared function, parameterized, replaces both — and fixing a typo in the greeting now only needs to happen in one place instead of two (or ten).
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Magic Numbers — Name Your Constants</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="// BEFORE: what does 0.15 mean here? Someone reading this has to guess.&#10;const tip = bill * 0.15;&#10;&#10;// AFTER: the name IS the documentation&#10;const STANDARD_TIP_PERCENT = 0.15;&#10;const tip = bill * STANDARD_TIP_PERCENT;">COPY</button></div>
+          <pre><code><span class="comment">// BEFORE: what does 0.15 mean here? Someone reading this has to guess.</span>
+<span class="kw">const</span> tip = bill * <span class="num">0.15</span>;
+
+<span class="comment">// AFTER: the name IS the documentation</span>
+<span class="kw">const</span> STANDARD_TIP_PERCENT = <span class="num">0.15</span>;
+<span class="kw">const</span> tip = bill * STANDARD_TIP_PERCENT;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          A named constant explains itself on sight. It also means changing the standard tip rate everywhere only requires editing one line, instead of hunting down every place <code>0.15</code> was typed by hand.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>One Function, One Job (Recap from Mission 6.4)</h3>
+        <p>A function handling five unrelated responsibilities is hard to test, hard to reuse, and hard to change safely — exactly Mission 6.4's function-decomposition lesson, now framed as a general refactoring target. If a function's name needs the word "and" to describe what it does (<code>validateAndSaveAndEmail</code>), it's very likely doing too much.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Tests Make Refactoring Safe</h3>
+        <p>Refactoring means changing HOW code works without changing WHAT it does. The only way to be confident you didn't accidentally change behavior is to have tests (Mission 9.1) that pass before the refactor and still pass, unchanged, after it. Refactoring without tests is really just "hoping."</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p><code>detectCodeSmells(sourceCode)</code> is a real, working scanner — it flags duplicated lines, magic numbers, and overly long functions in a source string you provide.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>SMELL REPORT</span><span>●</span></div>
+            <div id="smellDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (scan smelly code)</button>
+        <button class="console-btn" id="btnRefactored">try: scan the refactored version</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Refactor the smelly starter code until the scanner reports zero smells.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Run <code>detectCodeSmells()</code> on <code>SMELLY_CODE</code> and read every flag it raises</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Write your own refactored version as a new string, removing the duplication by extracting one shared function</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Replace the magic number in your refactored version with a named constant</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Run <code>detectCodeSmells()</code> on your refactored version and confirm the smell count actually dropped</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>The scanner flags duplication by finding two non-trivial lines that are IDENTICAL, ignoring leading whitespace — restructuring duplicated logic into one shared function called from two places removes the duplicate lines entirely.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a new smell rule to <code>detectCodeSmells()</code> that flags deeply nested code — for example, a line indented 12+ spaces, suggesting 3+ levels of nesting. Test it against a snippet you write with genuinely nested <code>if</code> statements.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Code smell<span>A warning sign, not a bug — still works, harder to maintain</span></div>
+        <div class="cheat-card">DRY<span>Don't Repeat Yourself — extract shared logic once</span></div>
+        <div class="cheat-card">Magic number<span>An unexplained literal value — name it as a constant</span></div>
+        <div class="cheat-card">One job per function<span>A name needing "and" is doing too much</span></div>
+        <div class="cheat-card">Refactoring<span>Change structure, not behavior — tests prove it</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Copy-pasting similar code instead of extracting one shared, parameterized function.</li>
+          <li>Sprinkling unexplained numeric literals through code instead of naming them as constants.</li>
+          <li>Refactoring with no tests in place, unable to confirm behavior genuinely didn't change.</li>
+          <li>Confusing refactoring with rewriting — refactoring preserves behavior exactly; a rewrite doesn't have to.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's the actual definition of "refactoring"?</p>
+        <button class="quiz-btn" data-correct="false">Adding new features to existing code</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — refactoring changes the internal structure without changing what the code actually does.">Changing code's internal structure without changing its external behavior</button>
+        <button class="quiz-btn" data-correct="false">Rewriting a project from scratch in a different language</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- detectCodeSmells ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.detectCodeSmells = function (sourceCode) {
+    const el = document.getElementById("smellDisplay");
+    const smells = [];
+    const lines = sourceCode.split("\n").map((l) => l.trim()).filter(Boolean);
+
+    // Duplicate non-trivial lines
+    const seen = new Map();
+    lines.forEach((line) => {
+      if (line.length < 8) return; // skip trivial lines like "}" or "{"
+      seen.set(line, (seen.get(line) || 0) + 1);
+    });
+    seen.forEach((count, line) => {
+      if (count > 1) smells.push('Duplicated line (' + count + 'x): "' + line + '"');
+    });
+
+    // Magic numbers: a numeric literal (other than 0/1) NOT on a line that
+    // itself declares a named UPPER_SNAKE_CASE constant for it.
+    const magicNumbers = [];
+    sourceCode.split("\n").forEach((line) => {
+      const trimmed = line.trim();
+      if (/^const\s+[A-Z][A-Z0-9_]*\s*=/.test(trimmed)) return; // this line IS the named constant
+      const matches = trimmed.match(/\b\d+\.\d+\b|\b\d{2,}\b/g) || [];
+      magicNumbers.push(...matches);
+    });
+    const uniqueMagic = [...new Set(magicNumbers)];
+    if (uniqueMagic.length > 0) {
+      smells.push("Magic number(s) found with no named constant: " + uniqueMagic.join(", "));
+    }
+
+    // Overly long function: a function body spanning more than 12 non-blank lines
+    const functionBodies = sourceCode.match(/function[^{]*\{[\s\S]*?\n\}/g) || [];
+    functionBodies.forEach((body) => {
+      const bodyLines = body.split("\n").filter((l) => l.trim());
+      if (bodyLines.length > 12) smells.push("A function is " + bodyLines.length + " lines long — consider splitting it (Mission 6.4).");
+    });
+
+    if (el) {
+      el.innerHTML = smells.length
+        ? smells.map((s) => '<div class="smell-row">⚠ ' + s + '</div>').join("") + '<div class="smell-count">' + smells.length + ' smell(s) found</div>'
+        : '<div class="smell-row clean">✓ No smells detected.</div>';
+    }
+    return smells;
+  };
+
+  const STARTER = `// A duplicated, magic-number-laden snippet — try me, then hit RUN
+const SMELLY_CODE = \`
+function greetCaptain(name) {
+  if (!name) return "Unknown crew member";
+  return "Welcome aboard, Captain " + name + ".";
+}
+function greetEngineer(name) {
+  if (!name) return "Unknown crew member";
+  return "Welcome aboard, Engineer " + name + ".";
+}
+const tip = bill * 0.15;
+\`;
+
+const smells = detectCodeSmells(SMELLY_CODE);
+console.log(smells.length + " smell(s):");
+smells.forEach(s => console.log("- " + s));`;
+
+  const EXAMPLE_REFACTORED = `const REFACTORED_CODE = \`
+const STANDARD_TIP_PERCENT = 0.15;
+
+function greetCrewMember(name, rank) {
+  return "Welcome aboard, " + rank + " " + name + ".";
+}
+
+const tip = bill * STANDARD_TIP_PERCENT;
+\`;
+
+const smells = detectCodeSmells(REFACTORED_CODE);
+console.log(smells.length + " smell(s) after refactoring — compare this to the original.");`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "smellDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnRefactored", code: EXAMPLE_REFACTORED },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
