@@ -490,12 +490,20 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 .mcca-hamburger:hover { border-color: var(--accent); }
 
 .mcca-sidebar {
-  position: fixed; top: 0; left: 0; bottom: 0; width: 270px; z-index: 55;
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width, 270px); z-index: 55;
   background: var(--bg-panel); border-right: 1px solid var(--border-glow);
   display: flex; flex-direction: column;
   transform: translateX(-100%); transition: transform 0.25s ease;
 }
 .mcca-sidebar.open { transform: translateX(0); box-shadow: 6px 0 30px rgba(0,0,0,0.35); }
+.mcca-sidebar.resizing { transition: none; }
+
+.mcca-resize-handle {
+  position: absolute; top: 0; right: -3px; bottom: 0; width: 7px;
+  cursor: ew-resize; z-index: 56; background: transparent;
+  touch-action: none;
+}
+.mcca-resize-handle:hover, .mcca-resize-handle.active { background: var(--accent); opacity: 0.35; }
 
 .mcca-sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 12px; border-bottom: 1px solid var(--border-glow); }
 .mcca-home { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 6px; }
@@ -524,10 +532,10 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 .mcca-nav-link.current .m-num { color: var(--accent); }
 .mcca-nav-check { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border-glow); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
 .mcca-nav-check.done { background: var(--success); border-color: var(--success); color: var(--bg-void); }
-.mcca-nav-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcca-nav-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 @media (min-width: 1100px) {
-  body.mcca-push { padding-left: 270px; }
+  body.mcca-push { padding-left: var(--sidebar-width, 270px); }
   body.mcca-push .mcca-hamburger { left: auto; right: 16px; }
   body.mcca-push .mcca-theme-float { display: none; }
 }

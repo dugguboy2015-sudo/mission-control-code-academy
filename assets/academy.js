@@ -324,7 +324,8 @@
       + `<button class="mcca-theme-toggle" data-theme-toggle aria-label="Toggle theme"></button>`
       + `</div>`
       + `<div class="mcca-sidebar-progress"><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="lbl">${done} / ${total} MISSIONS COMPLETE</div></div>`
-      + `<nav class="mcca-nav">${navHtml}</nav>`;
+      + `<nav class="mcca-nav">${navHtml}</nav>`
+      + `<div class="mcca-resize-handle" title="Drag to resize"></div>`;
 
     document.body.appendChild(hamburger);
     document.body.appendChild(aside);
@@ -347,6 +348,51 @@
     // Scroll the current mission into view within the sidebar.
     const cur = aside.querySelector(".mcca-nav-link.current");
     if (cur) cur.scrollIntoView({ block: "center" });
+
+    /* ---------------- Resizable width (drag handle, persisted) ---------------- */
+    const SIDEBAR_WIDTH_KEY = "mcca_sidebar_width";
+    const MIN_WIDTH = 220, MAX_WIDTH = 480;
+
+    function applyWidth(px) {
+      const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, px));
+      document.documentElement.style.setProperty("--sidebar-width", clamped + "px");
+      return clamped;
+    }
+
+    let storedWidth = null;
+    try { storedWidth = parseInt(localStorage.getItem(SIDEBAR_WIDTH_KEY), 10); } catch (e) {}
+    applyWidth(Number.isFinite(storedWidth) ? storedWidth : 270);
+
+    const handle = aside.querySelector(".mcca-resize-handle");
+    let dragging = false;
+
+    handle.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      handle.classList.add("active");
+      aside.classList.add("resizing");
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    handle.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const railLeft = aside.getBoundingClientRect().left;
+      applyWidth(e.clientX - railLeft);
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove("active");
+      aside.classList.remove("resizing");
+      const finalWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"), 10);
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalWidth)); } catch (err) {}
+    }
+    handle.addEventListener("pointerup", endDrag);
+    handle.addEventListener("pointercancel", endDrag);
+    // Double-click the handle to reset to the default width.
+    handle.addEventListener("dblclick", () => {
+      const reset = applyWidth(270);
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(reset)); } catch (e) {}
+    });
   }
 
   /* ---------------- Floating theme toggle (non-mission pages) ---------------- */

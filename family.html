@@ -242,6 +242,13 @@
     document.getElementById("childModal").addEventListener("click", (e) => { if (e.target.id === "childModal") closeModal(); });
 
     document.getElementById("modalSave").addEventListener("click", async () => {
+      const saveBtn = document.getElementById("modalSave");
+      // Guard against double-submission: a slow network plus an impatient
+      // second click (or a double-tap on mobile) previously fired createChild()
+      // twice, each generating its own random username suffix and silently
+      // creating two separate cadet profiles with the same name.
+      if (saveBtn.disabled) return;
+
       const name = document.getElementById("childName").value.trim();
       const username = document.getElementById("childUsername").value.trim();
       const pin = document.getElementById("childPin").value.trim();
@@ -249,6 +256,10 @@
       if (!name) { msgEl.textContent = "Give your cadet a name."; return; }
       if (username && !/^[a-zA-Z0-9]{3,20}$/.test(username)) { msgEl.textContent = "Username must be 3-20 letters/numbers, no spaces."; return; }
       if (pin && !/^\d{4}$/.test(pin)) { msgEl.textContent = "PIN must be exactly 4 digits, or left blank."; return; }
+
+      const originalLabel = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
       try {
         if (editingChildId) {
           const patch = { name, avatar: selectedAvatar };
@@ -262,6 +273,9 @@
         renderChildren();
       } catch (err) {
         msgEl.textContent = err.message || "Something went wrong.";
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalLabel;
       }
     });
 
