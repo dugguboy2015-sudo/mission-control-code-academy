@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.7: CI/CD & Deploy Pipelines — Automated Build → Test → Ship | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .pipeline-step { display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-radius: 7px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12.5px; background: var(--bg-panel-alt); border-left: 3px solid var(--border-glow); }
+  .pipeline-step.pass { border-left-color: var(--success); }
+  .pipeline-step.fail { border-left-color: var(--danger); color: var(--danger); }
+  .pipeline-step.skipped { opacity: 0.4; }
+  .pipeline-verdict { font-family: var(--font-code); font-size: 13px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9</div>
+    <h1>MISSION 9.7: CI/CD & DEPLOY PIPELINES</h1>
+    <div class="subtitle">Automated Build → Test → Ship</div>
+    <p class="briefing-line">Mission 9.1's tests are only as valuable as how reliably they actually run. "I'll remember to run them before I push" fails eventually — everyone forgets sometimes. <strong>CI/CD</strong> (Continuous Integration / Continuous Deployment) automates this: every single change automatically triggers a pipeline that builds the project, runs every test, and only deploys if everything passes. No memory required, no exceptions.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p><strong>Continuous Integration (CI)</strong> means every change automatically gets built and tested the moment it's pushed. <strong>Continuous Deployment (CD)</strong> means code that passes CI gets automatically shipped to production, with no manual "click deploy" step. Together, a failing test literally blocks a bad deploy from ever reaching real users — a safety net that works even on the day you forget to run tests yourself.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>A Real GitHub Actions Workflow</h3>
+        <p>Mission 4.5 deployed by hand. A real CI/CD pipeline runs the same steps automatically, on every push, using a config file GitHub itself reads and executes.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>YAML — .github/workflows/deploy.yml</span><button class="copy-btn" data-copy="name: Build, Test, Deploy&#10;on: push&#10;&#10;jobs:&#10;  ci:&#10;    runs-on: ubuntu-latest&#10;    steps:&#10;      - uses: actions/checkout@v4&#10;      - run: npm install&#10;      - run: npm test&#10;      - run: npm run build&#10;      - name: Deploy to Cloudflare Pages&#10;        if: success()&#10;        run: npx wrangler pages deploy ./dist">COPY</button></div>
+          <pre><code><span class="kw">name:</span> Build, Test, Deploy
+<span class="kw">on:</span> push
+
+<span class="kw">jobs:</span>
+  ci:
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">steps:</span>
+      - <span class="kw">uses:</span> actions/checkout@v4
+      - <span class="kw">run:</span> npm install
+      - <span class="kw">run:</span> npm test
+      - <span class="kw">run:</span> npm run build
+      - <span class="kw">name:</span> Deploy to Cloudflare Pages
+        <span class="kw">if:</span> success()
+        <span class="kw">run:</span> npx wrangler pages deploy ./dist</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>on: push</code> means this runs automatically on every single push, with zero manual action. The steps run in order, top to bottom, and — this is the critical part — <code>if: success()</code> means the deploy step only runs if EVERY previous step (including <code>npm test</code>) succeeded. A failing test genuinely, automatically blocks a bad deploy.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Fail Fast</h3>
+        <p>A well-designed pipeline stops at the FIRST failing step instead of continuing pointlessly. If tests fail, there's no reason to spend time building or deploying — the pipeline should stop immediately and report exactly which step failed.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>The Pipeline as a Safety Net, Not a Formality</h3>
+        <p>The whole point is that a pipeline catches mistakes automatically, before they reach real users — not after a bug report comes in. This is Sector 9's central theme, made concrete and automatic: testing (9.1), code quality (9.4), and security checks (9.5-9.6) all become dramatically more valuable once they run on every single change, guaranteed, instead of "whenever someone remembers."</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real, working <strong>Pipeline Simulator</strong>. <code>runPipeline(steps)</code> executes each step function in order, stopping immediately (fail-fast) at the first one that fails or throws.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>PIPELINE RUN</span><span>●</span></div>
+            <div id="pipelineDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (all steps pass)</button>
+        <button class="console-btn" id="btnFailing">try: a failing test blocks the deploy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build and break your own pipeline, then design the real one.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Build a <code>steps</code> array of at least 4 named step functions (lint, test, build, deploy) and run them all successfully through <code>runPipeline()</code></label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Make your "test" step deliberately fail, re-run the pipeline, and confirm "build" and "deploy" never execute at all</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Confirm the pipeline reports exactly WHICH step failed and why, not just "something went wrong"</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Write a real <code>.github/workflows/deploy.yml</code> file for an actual project of yours (or a placeholder one), running <code>npm test</code> before any deploy step</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>A step function should <code>throw</code> a real, descriptive error message on failure rather than just returning <code>false</code> — that's what lets the pipeline report a specific, useful reason instead of a generic failure.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Add a step that only runs conditionally — for example, a "deploy to staging" step that only fires on certain conditions, versus "deploy to production" that requires an extra explicit flag. This mirrors how real pipelines often deploy differently based on which branch triggered them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">CI<span>Continuous Integration — auto build + test on every push</span></div>
+        <div class="cheat-card">CD<span>Continuous Deployment — auto-ship what passes CI</span></div>
+        <div class="cheat-card">Fail fast<span>Stop at the first failing step, don't continue pointlessly</span></div>
+        <div class="cheat-card"><code>if: success()</code><span>Gate a step on every previous step passing</span></div>
+        <div class="cheat-card">Pipeline as safety net<span>Catches mistakes automatically, before users see them</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Deploying manually "just this once" instead of trusting and using the automated pipeline consistently.</li>
+          <li>A pipeline that continues running steps after an earlier one already failed, wasting time and obscuring the real failure.</li>
+          <li>Writing tests (Mission 9.1) but never actually wiring them into an automated pipeline that runs on every push.</li>
+          <li>A deploy step with no gate at all, so it runs regardless of whether tests passed.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does "fail fast" mean in a CI/CD pipeline?</p>
+        <button class="quiz-btn" data-correct="false">The pipeline should run as quickly as possible, regardless of failures</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — continuing after a known failure wastes time and can obscure which step actually broke.">Stop immediately at the first failing step instead of continuing needlessly</button>
+        <button class="quiz-btn" data-correct="false">Tests should be skipped to make deploys faster</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- runPipeline ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  window.runPipeline = function (steps) {
+    const el = document.getElementById("pipelineDisplay");
+    const results = [];
+    let stoppedAt = null;
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      try {
+        step.run();
+        results.push({ name: step.name, status: "pass" });
+      } catch (err) {
+        results.push({ name: step.name, status: "fail", error: err.message });
+        stoppedAt = step.name;
+        break;
+      }
+    }
+
+    const ranNames = results.map((r) => r.name);
+    const skipped = steps.filter((s) => !ranNames.includes(s.name)).map((s) => ({ name: s.name, status: "skipped" }));
+    const allSteps = [...results, ...skipped];
+
+    if (el) {
+      el.innerHTML = allSteps.map((r) =>
+        '<div class="pipeline-step ' + r.status + '">'
+        + (r.status === "pass" ? "✓" : r.status === "fail" ? "✗" : "○") + ' ' + r.name
+        + (r.error ? " — " + r.error : "")
+        + '</div>'
+      ).join("")
+        + '<div class="pipeline-verdict">' + (stoppedAt ? "⛔ Pipeline stopped at: " + stoppedAt : "✅ Pipeline completed successfully") + '</div>';
+    }
+    return { success: !stoppedAt, stoppedAt, results };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const steps = [
+  { name: "lint", run: () => { /* no issues */ } },
+  { name: "test", run: () => { /* all tests pass */ } },
+  { name: "build", run: () => { /* build succeeds */ } },
+  { name: "deploy", run: () => { console.log("Deployed to production!"); } },
+];
+
+const result = runPipeline(steps);
+console.log("Pipeline success:", result.success);`;
+
+  const EXAMPLE_FAILING = `// The "test" step fails — watch "build" and "deploy" never run at all
+const steps = [
+  { name: "lint", run: () => { /* no issues */ } },
+  { name: "test", run: () => { throw new Error("2 tests failed: calculateTip(50, 0)"); } },
+  { name: "build", run: () => { console.log("This should NEVER print."); } },
+  { name: "deploy", run: () => { console.log("This should NEVER print either."); } },
+];
+
+const result = runPipeline(steps);
+console.log("Pipeline success:", result.success);
+console.log("Stopped at:", result.stoppedAt);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "pipelineDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnFailing", code: EXAMPLE_FAILING },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

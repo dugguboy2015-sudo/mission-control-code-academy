@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.5: Security & Privacy Basics — Protecting Users and Data | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  #xssDemoBox { border: 2px solid var(--border-glow); border-radius: 8px; padding: 10px; min-height: 40px; margin-top: 8px; }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9</div>
+    <h1>MISSION 9.5: SECURITY & PRIVACY BASICS</h1>
+    <div class="subtitle">Protecting Users and Data</div>
+    <p class="briefing-line">Every feature that accepts input from someone else — a comment box, a URL parameter, a file upload — is a place where a careless assumption becomes a real vulnerability. The single most important habit in this mission: <strong>never trust input you didn't generate yourself.</strong> That's the root cause behind nearly every entry on the classic list of web vulnerabilities.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Picture a comment box on a page. A normal visitor types "great post!" — but nothing stops a different visitor from typing actual HTML, like <code>&lt;img src=x onerror="doSomethingMalicious()"&gt;</code>. If your code inserts that text directly into the page as HTML, the browser doesn't know it "wasn't supposed to be code" — it just renders it, exactly like any other tag. This is <strong>XSS (Cross-Site Scripting)</strong>, and it's real, common, and entirely preventable with one specific habit.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>innerHTML vs textContent — the Actual Difference That Matters</h3>
+        <p><code>element.innerHTML = userInput</code> parses the string AS HTML — any tags inside it become real, live elements. <code>element.textContent = userInput</code> inserts it as plain, inert text — tags stay as literal visible characters, never becoming real elements.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>JAVASCRIPT</span><button class="copy-btn" data-copy="const userComment = '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;';&#10;&#10;// VULNERABLE: the browser actually renders (and runs) the injected tag&#10;commentBox.innerHTML = userComment;&#10;&#10;// SAFE: the browser shows the literal text, tags and all, as plain characters&#10;commentBox.textContent = userComment;">COPY</button></div>
+          <pre><code><span class="kw">const</span> userComment = <span class="str">'&lt;img src=x onerror="alert(1)"&gt;'</span>;
+
+<span class="comment">// VULNERABLE: the browser actually renders (and runs) the injected tag</span>
+commentBox.innerHTML = userComment;
+
+<span class="comment">// SAFE: the browser shows the literal text, tags and all, as plain characters</span>
+commentBox.textContent = userComment;</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          The exact same string produces two completely different outcomes depending on one method choice. The rule: whenever you're inserting text that came from a user (or any source you don't fully control) and it's meant to be DISPLAYED, not rendered as markup, <code>textContent</code> is almost always the right call.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Input Validation, Recap</h3>
+        <p>Missions 5.1 and 7.7 already covered this from two angles — database constraints and AI-feature guardrails — and the underlying principle is the same everywhere: validate input at the boundary, before it's used for anything, rather than hoping it's well-formed.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Least Privilege</h3>
+        <p>Mission 5.2's Row Level Security is a real-world example of a bigger idea: grant only the access something actually needs, never more "to be safe" or "just in case." A support tool that only needs to read order status shouldn't also have permission to delete accounts — even if it would never intentionally use that power, a bug or a compromised credential now has a much smaller blast radius.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Privacy: Data Minimization</h3>
+        <p>The most private piece of data is the one you never collected in the first place. Before adding a field to a signup form or a database table, ask whether the feature genuinely needs it. Data you don't store can't be leaked, subpoenaed, or misused later — a real, practical form of security that costs nothing to apply.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real, live comment box. <code>renderComment(text, useInnerHTML)</code> genuinely renders your text either way — try a plain comment, then try one containing an actual HTML tag, and watch the difference for real.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>RENDERED COMMENT</span><span>●</span></div>
+            <div id="xssDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (safe textContent)</button>
+        <button class="console-btn" id="btnVulnerable">try: the SAME input with innerHTML instead</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>See the vulnerability for real, then confirm the fix.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Call <code>renderComment()</code> with <code>useInnerHTML: true</code> on a payload containing <code>&lt;img src=x onerror="..."&gt;</code> and confirm the injected code actually executes (watch for the box's border changing color)</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Call <code>renderComment()</code> with the EXACT same payload and <code>useInnerHTML: false</code>, and confirm it now displays as inert, literal text instead</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Write your own comment containing a different HTML tag of your choosing and confirm the same safe-vs-vulnerable pattern holds</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">In a comment, name one real feature from an earlier mission in this Academy where you used <code>innerHTML</code> — was the content being inserted ever from a genuinely untrusted source?</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>If you genuinely need to render SOME formatting from user content (like allowing bold or links) without allowing full arbitrary HTML, that's a real, harder problem called sanitization — outside this mission's scope, but worth knowing the name of before you need it for real.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write an <code>escapeHTML(text)</code> function that manually replaces <code>&lt;</code> and <code>&gt;</code> characters with their safe HTML-entity equivalents (<code>&amp;lt;</code> and <code>&amp;gt;</code>), then confirm using it before an <code>innerHTML</code> assignment produces the same safe result as using <code>textContent</code> directly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Never trust input<span>The root cause behind most real vulnerabilities</span></div>
+        <div class="cheat-card">XSS<span>Cross-Site Scripting — injected HTML/script rendered as real markup</span></div>
+        <div class="cheat-card"><code>textContent</code><span>Safe — inserts text as inert, literal characters</span></div>
+        <div class="cheat-card"><code>innerHTML</code><span>Dangerous with untrusted input — parses it as real HTML</span></div>
+        <div class="cheat-card">Least privilege<span>Grant only the access something actually needs</span></div>
+        <div class="cheat-card">Data minimization<span>Don't collect or store what you don't need</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Using <code>innerHTML</code> to display user-provided text "because it was convenient," without considering what happens if that text contains real HTML.</li>
+          <li>Assuming your own app's users would never try this — XSS payloads are often submitted by automated scanning tools, not just deliberate human attackers.</li>
+          <li>Granting broad access "to be safe" instead of the minimum a feature actually needs.</li>
+          <li>Collecting more personal data than a feature genuinely requires, "in case it's useful later."</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — why does <code>element.textContent = userInput</code> prevent an XSS attack that <code>innerHTML</code> wouldn't?</p>
+        <button class="quiz-btn" data-correct="false">textContent runs faster, so there's no time for an attack</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — textContent never parses the string as markup, so any embedded tags just display as plain, inert text.">textContent inserts the string as plain text, never parsing it as real HTML/tags</button>
+        <button class="quiz-btn" data-correct="false">textContent automatically scans for malicious code and removes it</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- renderComment ----------------
+     A REAL, live XSS demo — genuinely uses innerHTML vs textContent so the
+     difference is directly observable, contained entirely to a local demo
+     box with no real external effect (no network calls, no navigation,
+     nothing beyond that one element's own border color). Lives outside the
+     sandboxed new Function so it can render into the real DOM. */
+  window.__xssFired = false;
+
+  window.renderComment = function (text, useInnerHTML) {
+    window.__xssFired = false;
+    let box = document.getElementById("xssDemoBox");
+    if (!box) {
+      // The sandbox's own display reset may have removed our nested box —
+      // recreate it inside whatever the current display element is.
+      const display = document.getElementById("xssDisplay");
+      box = document.createElement("div");
+      box.id = "xssDemoBox";
+      if (display) display.appendChild(box);
+    }
+    box.style.borderColor = "var(--border-glow)";
+
+    if (useInnerHTML) {
+      box.innerHTML = text;
+    } else {
+      box.textContent = text;
+    }
+    return { renderedAs: useInnerHTML ? "innerHTML (parsed as real HTML)" : "textContent (plain, inert text)" };
+  };
+
+  const STARTER = `// SAFE — try me, then hit RUN
+const payload = '<img src=x onerror="window.__xssFired = true; document.getElementById(\\'xssDemoBox\\').style.borderColor = \\'red\\';">';
+
+const result = renderComment(payload, false);
+console.log("Rendered as:", result.renderedAs);
+console.log("Did injected code execute?", window.__xssFired);`;
+
+  const EXAMPLE_VULNERABLE = `// SAME payload, but now via innerHTML — watch the demo box's border turn red.
+// The browser tries to LOAD the (fake) image src="x" first, which fails and
+// fires onerror ASYNCHRONOUSLY — a moment after innerHTML is set, not instantly.
+const payload = '<img src=x onerror="window.__xssFired = true; document.getElementById(\\'xssDemoBox\\').style.borderColor = \\'red\\';">';
+
+const result = renderComment(payload, true);
+console.log("Rendered as:", result.renderedAs);
+
+setTimeout(() => {
+  console.log("Did injected code execute?", window.__xssFired);
+  console.log(window.__xssFired ? "⚠ The injected onerror handler actually ran! Check the box's border above." : "");
+}, 100);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "xssDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnVulnerable", code: EXAMPLE_VULNERABLE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

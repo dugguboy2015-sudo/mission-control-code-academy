@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.2: Debugging Methodology — Reading Errors Like an Engineer | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .trace-line { font-family: var(--font-code); font-size: 12px; padding: 3px 10px; border-left: 2px solid var(--border-glow); color: var(--text-secondary); }
+  .trace-line.suspect { border-left-color: var(--danger); color: var(--danger); background: rgba(255,107,107,0.06); }
+  .bisect-range { font-family: var(--font-code); font-size: 12.5px; padding: 8px 12px; background: var(--bg-panel-alt); border-radius: 6px; margin-bottom: 8px; }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m02">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 9</div>
+    <h1>MISSION 9.2: DEBUGGING METHODOLOGY</h1>
+    <div class="subtitle">Reading Errors Like an Engineer</div>
+    <p class="briefing-line">Mission 2.9 showed you DevTools. This mission is about the METHOD, not the tool — a repeatable process that works whether you're debugging a browser tab, a Python script, or a deployed server: reproduce it reliably, read the error fully, isolate where it actually happens, form a real hypothesis, and fix the root cause — not the symptom.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~40 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>The single biggest difference between an engineer who debugs efficiently and one who doesn't isn't tool knowledge — it's method. Randomly changing code and re-running it, hoping something works ("shotgun debugging"), can occasionally get lucky, but it doesn't build understanding, and it often introduces new bugs while chasing the old one. A real method finds the actual cause, reliably, every time.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Step 1: Reproduce It Reliably</h3>
+        <p>You can't fix what you can't reliably trigger. Before touching any code, find the EXACT steps or input that cause the bug, every single time. "It happens sometimes" is not yet debuggable — narrowing "sometimes" down to a specific, repeatable condition is real progress, even before you've written a single fix.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Step 2: Read the Error Message, Completely</h3>
+        <p>A stack trace lists function calls from the error's exact location (top) down to where the program started (bottom). The very first line — the actual error type and message — is usually the most important, and it's the line people skim past fastest.</p>
+        <div class="whatjusthappened">
+          <strong>A HABIT WORTH BUILDING</strong>
+          Before searching anything online or asking an AI (Mission 9.3), read the full error message and the specific line number it points to, out loud if it helps. A large share of "mystery" bugs are explained in plain language in the very first line of the error — the mystery is usually just not having read it carefully yet.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Step 3: Isolate — Binary Search the Problem</h3>
+        <p>If a bug could be anywhere in 200 lines of code, don't read all 200 hoping to spot it. Comment out or bypass half the code; if the bug disappears, it's in the half you removed — if it's still there, it's in the half you kept. Repeat on the remaining half. This is the exact same idea as binary search from Mission 2.10's algorithmic thinking, applied to finding a bug instead of finding a value in a sorted list.</p>
+        <div class="bisect-range">
+          200 lines → bug still happens? → check lines 1-100 → still happens? → check lines 1-50 → ... → found it in ~8 steps instead of reading 200 lines top to bottom.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Step 4: Form a Hypothesis, Then Test It</h3>
+        <p>Before changing any code, state — even just to yourself — a specific, falsifiable theory: "I think <code>total</code> is <code>undefined</code> because this function is called before the data loads." Then check that ONE specific thing (a <code>console.log</code>, a breakpoint) before changing anything. If you're wrong, you've still learned something real and can form a better hypothesis — that's still progress, unlike a random edit that happens to "fix" something you don't understand.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Step 5: Fix the Root Cause, Not the Symptom</h3>
+        <p>Wrapping a crashing line in a <code>try/catch</code> that silently swallows the error makes the crash go away — without fixing anything. The underlying wrong assumption is still there, waiting to cause a different, harder-to-trace symptom later. Understand WHY the bug happened before deciding how to fix it.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A function with a real bug buried somewhere inside several nested helper calls. <code>traceCall(fn, ...args)</code> logs each internal step's intermediate value so you can practice isolating exactly where things go wrong, without needing real breakpoints.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>TRACE</span><span>●</span></div>
+            <div id="traceDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (reproduce the bug)</button>
+        <button class="console-btn" id="btnTrace">try: trace every internal step</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p><code>processOrder()</code> gives a wrong total for some orders. Find the exact cause using the method above, not by guessing.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Reproduce the bug reliably — find and write down the EXACT input that triggers a wrong total</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">Use <code>traceCall()</code> to see each internal step's value, and identify which specific step first produces a wrong number</label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">State your hypothesis in a comment BEFORE looking at the source of that one function — then confirm or reject it</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Fix the root cause and confirm the same input now produces the correct total</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>The bug only shows up for orders containing a discount. Isolate: does it also happen with no discount at all? That answer alone narrows the search dramatically.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Write a Mission 9.1-style test that would have caught this exact bug automatically, before it ever shipped. What specific input does your test need to include to expose it?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card">Reproduce first<span>Find the exact, repeatable trigger</span></div>
+        <div class="cheat-card">Read the full error<span>The first line usually explains it directly</span></div>
+        <div class="cheat-card">Binary search the bug<span>Isolate by cutting the search space in half</span></div>
+        <div class="cheat-card">Hypothesis, then test it<span>Never guess-and-check randomly</span></div>
+        <div class="cheat-card">Root cause &gt; symptom<span>A caught exception isn't a fix</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Randomly changing code hoping something works, without a specific theory about what's actually wrong.</li>
+          <li>Skimming the error message instead of reading the exact line and message it reports.</li>
+          <li>Wrapping a crash in <code>try/catch</code> and calling it fixed, without understanding why it crashed.</li>
+          <li>Reading through an entire large file top to bottom instead of isolating which half the bug is actually in.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what's wrong with fixing a bug by wrapping the crashing line in a silent <code>try/catch</code>?</p>
+        <button class="quiz-btn" data-correct="false">try/catch is always the wrong tool to use</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — hiding the crash doesn't fix the underlying wrong assumption, which will likely surface again as a different, harder bug.">It hides the symptom without fixing the root cause, which will likely resurface later</button>
+        <button class="quiz-btn" data-correct="false">try/catch makes the program run slower</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Buggy order pipeline + traceCall ----------------
+     Lives outside the sandboxed new Function so it can render into the real DOM. */
+  function applyDiscount(subtotal, discountPercent) {
+    // BUG: discount is subtracted as a flat amount equal to the percent
+    // number itself, instead of being applied as a percentage of subtotal.
+    return subtotal - discountPercent;
+  }
+
+  function calculateSubtotal(items) {
+    return items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  }
+
+  window.processOrder = function (items, discountPercent) {
+    const subtotal = calculateSubtotal(items);
+    const total = applyDiscount(subtotal, discountPercent || 0);
+    return total;
+  };
+
+  window.traceCall = function (items, discountPercent) {
+    const el = document.getElementById("traceDisplay");
+    const subtotal = calculateSubtotal(items);
+    const total = applyDiscount(subtotal, discountPercent || 0);
+    const expectedTotal = subtotal - subtotal * ((discountPercent || 0) / 100);
+    const isWrong = Math.abs(total - expectedTotal) > 0.001;
+
+    if (el) {
+      el.innerHTML =
+        '<div class="trace-line">calculateSubtotal(items) → ' + subtotal + '</div>'
+        + '<div class="trace-line' + (isWrong ? " suspect" : "") + '">applyDiscount(' + subtotal + ', ' + discountPercent + ') → ' + total + (isWrong ? "  ⚠ expected " + expectedTotal.toFixed(2) : "") + '</div>';
+    }
+    return { subtotal, total, expectedTotal, isWrong };
+  };
+
+  const STARTER = `// Try me — then hit RUN
+const items = [{ price: 20, qty: 2 }, { price: 5, qty: 1 }]; // subtotal = 45
+const total = processOrder(items, 10); // 10% discount expected
+
+console.log("Total with 10% discount:", total);
+console.log("Expected roughly:", 45 - 45 * 0.10);`;
+
+  const EXAMPLE_TRACE = `const items = [{ price: 20, qty: 2 }, { price: 5, qty: 1 }]; // subtotal = 45
+const result = traceCall(items, 10);
+
+console.log("subtotal:", result.subtotal);
+console.log("total:", result.total);
+console.log("expected:", result.expectedTotal.toFixed(2));
+console.log("Bug confirmed in applyDiscount:", result.isWrong);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "traceDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnTrace", code: EXAMPLE_TRACE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

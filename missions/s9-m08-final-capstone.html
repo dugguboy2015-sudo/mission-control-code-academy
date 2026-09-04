@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 9.8: Final Capstone — Ship a Real AI-Native Product | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .capstone-strip { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+  .capstone-chip { font-family: var(--font-code); font-size: 10.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-muted); }
+  .capstone-chip.l1 { border-color: rgba(78,225,255,0.4); color: var(--accent-cyan); }
+  .capstone-chip.l2 { border-color: rgba(255,157,77,0.4); color: var(--accent-orange); }
+  .capstone-chip.l3 { border-color: rgba(77,255,180,0.4); color: var(--success); }
+  .capstone-chip.l4 { border-color: rgba(255,110,199,0.4); color: var(--accent-pink); }
+  .capstone-chip.l5 { border-color: rgba(255,230,109,0.4); color: var(--accent-yellow); }
+
+  .ladder-check { display: flex; align-items: flex-start; gap: 8px; padding: 7px 11px; border-radius: 7px; margin-bottom: 4px; font-family: var(--font-code); font-size: 12px; background: var(--bg-panel-alt); border-left: 3px solid var(--border-glow); }
+  .ladder-check.pass { border-left-color: var(--success); }
+  .ladder-check.fail { border-left-color: var(--danger); color: var(--danger); }
+  .ladder-level-header { font-family: var(--font-display); font-size: 12px; color: var(--accent); margin: 10px 0 4px; letter-spacing: 0.05em; }
+  .final-verdict { font-family: var(--font-code); font-size: 14px; margin-top: 10px; padding: 10px; border-radius: 8px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s9-m08">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · FINAL CAPSTONE</div>
+    <h1>MISSION 9.8: FINAL CAPSTONE</h1>
+    <div class="subtitle">Ship a Real AI-Native Product on the Architect's Stack</div>
+    <p class="briefing-line">Sixty-eight missions ago, Mission 0.1 asked what a computer actually does with input. Since then you've built with HTML, CSS, and JavaScript; learned Git, Python, databases, and deployment; and spent two full sectors on AI — prompting, safe API calls, RAG, agents, evals, and security. This final mission asks for exactly one thing: build and ship a real, working, AI-native product, held to the entire Production-Readiness Ladder at once, from L1 through L5.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-commander">🔴 COMMANDER LEVEL</span>
+      <span class="badge">⏱ ~180 MIN</span>
+      <span class="badge">🛠 BROWSER + GITHUB ACCOUNT</span>
+    </div>
+    <div class="capstone-strip">
+      <span class="capstone-chip l1">L1 · Deployed, works on mobile</span>
+      <span class="capstone-chip l2">L2 · Env vars, error/loading states, README</span>
+      <span class="capstone-chip l3">L3 · Real data + auth, free-tier proof</span>
+      <span class="capstone-chip l4">L4 · Proxy, guardrails, cost, fallback</span>
+      <span class="capstone-chip l5">L5 · Evals, observability, injection-aware, diagram</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Every capstone before this one graded you against the ladder level current to that sector. This is the only mission that grades against the WHOLE ladder at once — because that's genuinely what shipping something real requires. Nothing here is a new skill; it's the discipline of actually doing all of it together, on one real project, instead of any single piece in isolation.</p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;">
+          <rect x="10" y="40" width="120" height="50" rx="8" fill="#1b2540" stroke="#4ee1ff" stroke-width="1.5"/>
+          <text x="70" y="70" fill="#4ee1ff" font-family="Fira Code, monospace" font-size="10.5" text-anchor="middle">UI</text>
+          <rect x="150" y="40" width="130" height="50" rx="8" fill="#1b2540" stroke="#ff6ec7" stroke-width="1.5"/>
+          <text x="215" y="70" fill="#ff6ec7" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Edge API (keys hidden)</text>
+          <rect x="300" y="40" width="160" height="50" rx="8" fill="#1b2540" stroke="#ffe66d" stroke-width="2"/>
+          <text x="380" y="63" fill="#ffe66d" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Orchestration</text>
+          <text x="380" y="78" fill="#6b7699" font-family="Fira Code, monospace" font-size="8.5" text-anchor="middle">prompt / agent / tools</text>
+          <rect x="480" y="40" width="210" height="50" rx="8" fill="#1b2540" stroke="#4dffb4" stroke-width="1.5"/>
+          <text x="585" y="70" fill="#4dffb4" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Model + Memory/Vector + Data</text>
+          <line x1="130" y1="65" x2="150" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#af)"/>
+          <line x1="280" y1="65" x2="300" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#af)"/>
+          <line x1="460" y1="65" x2="480" y2="65" stroke="#6b7699" stroke-width="1.5" marker-end="url(#af)"/>
+          <defs><marker id="af" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7699"/></marker></defs>
+          <text x="350" y="115" fill="#a8b3d1" font-family="Fira Code, monospace" font-size="10" text-anchor="middle">Plus, hanging off every box: Gateway (cost/cache), Evals, Observability, Guardrails.</text>
+        </svg>
+        <div class="diagram-caption">You should be able to draw this from memory by now — it's the same architecture every AI mission since Sector 7 has mapped onto. Your final project's real diagram should follow this shape.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">No new syntax today — just the full ladder, stated once, plainly, as your actual grading rubric.</p>
+
+      <div class="subsection">
+        <h3>The Whole Ladder, Restated as Your Rubric</h3>
+        <ul style="color:var(--text-secondary);line-height:2;">
+          <li><strong>L1 (Sector 1):</strong> deployed to a real public URL; works on mobile.</li>
+          <li><strong>L2 (Sector 4):</strong> secrets in env vars, never in code; real error and loading states; a README covering what it does, how to run it, what it uses.</li>
+          <li><strong>L3 (Sector 5):</strong> real data and real auth; input validation; provably inside your provider's free tier.</li>
+          <li><strong>L4 (Sector 7):</strong> AI calls go through your own proxy; guardrails on input and output; cost estimated AND tracked; a graceful fallback when the model fails or is slow.</li>
+          <li><strong>L5 (Sectors 8-9):</strong> an eval suite that proves it works; observability/logging; explicit prompt-injection awareness in your design; a documented architecture diagram.</li>
+        </ul>
+        <div class="whatjusthappened">
+          <strong>WHY EVERY LEVEL AT ONCE</strong>
+          A real product doesn't get to skip L1 because it's focused on L5 — it needs to actually be reachable, on mobile, with a working README, AND have evals and observability. Production readiness stacks; it doesn't replace earlier levels, it adds to them.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>A real <strong>Final Readiness Checker</strong> — describe your actual project as a JavaScript object, and <code>runFinalReadinessCheck(project)</code> grades it against every level of the ladder at once, telling you exactly what's still missing.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.JS</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="jsEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>READINESS REPORT</span><span>●</span></div>
+            <div id="readinessDisplay" class="sandbox-display">STATUS: STANDBY</div>
+          </div>
+          <div class="sandbox-pane">
+            <div class="pane-header"><span>CONSOLE OUTPUT</span><span>●</span></div>
+            <div id="consoleOutput" class="sandbox-output"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter (an incomplete project)</button>
+        <button class="console-btn" id="btnComplete">try: a fully L1-L5-ready project</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build a real AI-native product of your own choosing — small in scope is fine, but every item below must genuinely be true of the finished, deployed thing.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="ch1"><label for="ch1">Deployed to a real public URL (Cloudflare Pages or GitHub Pages), confirmed working on your phone over mobile data — not just your home Wi-Fi</label></li>
+        <li><input type="checkbox" id="ch2"><label for="ch2">No secrets anywhere in your committed code; real error and loading states; a genuine <code>README.md</code></label></li>
+        <li><input type="checkbox" id="ch3"><label for="ch3">Real data storage and real authentication if your product needs either; a written note showing you're within your provider's free tier at realistic usage</label></li>
+        <li><input type="checkbox" id="ch4"><label for="ch4">Every AI call routed through your own proxy; input AND output guardrails; a real cost estimate AND, if feasible, actual tracked usage; a working fallback path</label></li>
+        <li><input type="checkbox" id="ch5"><label for="ch5">At least 3 real eval cases proving your AI feature behaves correctly; basic logging of AI calls (success/failure, latency); a written note on how your design avoids blindly trusting retrieved/observed content</label></li>
+        <li><input type="checkbox" id="ch6"><label for="ch6">A real architecture diagram (hand-drawn photo, or a tool like Excalidraw) showing your actual system mapped onto the UI → Edge API → Orchestration → Model+Data shape</label></li>
+        <li><input type="checkbox" id="ch7"><label for="ch7">Run your real project's description through this mission's <code>runFinalReadinessCheck()</code> and resolve every flag it raises</label></li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Scope down before you cut corners on the ladder. A genuinely small, single-feature AI-native tool that hits every level cleanly is a far stronger finish than an ambitious app that skips half the checklist.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Share your finished, deployed project's public URL with someone who has never seen it — a family member, a friend — and watch them use it without any explanation from you. Note every point of confusion; that's real, unfiltered user feedback, the kind no amount of testing it yourself ever produces.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <p style="color:var(--text-secondary);margin-top:0;">The full Production-Readiness Ladder — your graduation summary.</p>
+      <div class="cheat-grid">
+        <div class="cheat-card">L1 — Ship it<span>Public URL, works on mobile</span></div>
+        <div class="cheat-card">L2 — Handle reality<span>Env vars, error/loading states, README</span></div>
+        <div class="cheat-card">L3 — Real & safe<span>Real data + auth, validated, in the free tier</span></div>
+        <div class="cheat-card">L4 — AI, properly<span>Proxy, guardrails, cost, fallback</span></div>
+        <div class="cheat-card">L5 — Prove it<span>Evals, observability, injection-aware, diagrammed</span></div>
+        <div class="cheat-card">The reference architecture<span>UI → Edge API → Orchestration → Model + Data</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Polishing the AI feature (L4-L5) while skipping basics like a working README or mobile support (L1-L2).</li>
+          <li>Scoping a project too ambitiously to actually finish every ladder level cleanly.</li>
+          <li>Treating the architecture diagram as an afterthought instead of drawing it before finalizing the build.</li>
+          <li>Shipping without ever testing on a real device over a real, non-home network connection.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — does reaching L5 mean you can skip L1-L4's requirements?</p>
+        <button class="quiz-btn" data-correct="false">Yes — later levels replace earlier ones</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — production readiness stacks. A real product needs every level's requirements at once, not just the most advanced one.">No — every level's requirements apply at once; they stack, they don't replace each other</button>
+        <button class="quiz-btn" data-correct="false">Only L3 can be skipped if there's no database</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record. This is the final mission of the Academy — congratulations, Cadet.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- runFinalReadinessCheck ----------------
+     Consolidates every prior capstone's ladder level (4.6/L2, 5.7/L3,
+     7.10/L4, 8.8/L5) into one final rubric checker. Lives outside the
+     sandboxed new Function so it can render into the real DOM. */
+  window.runFinalReadinessCheck = function (project) {
+    project = project || {};
+    const el = document.getElementById("readinessDisplay");
+
+    const checks = [
+      { level: "L1", label: "Deployed to a public URL", pass: !!project.deployedUrl },
+      { level: "L1", label: "Confirmed working on mobile", pass: !!project.worksOnMobile },
+      { level: "L2", label: "No secrets committed in code", pass: project.secretsInEnvVars === true },
+      { level: "L2", label: "Has error and loading states", pass: !!project.hasErrorAndLoadingStates },
+      { level: "L2", label: "Has a real README", pass: !!project.hasReadme },
+      { level: "L3", label: "Real data + auth (or a documented decision it's not needed)", pass: project.usesRealDataAndAuth === true || project.usesRealDataAndAuth === false },
+      { level: "L3", label: "Confirmed within free-tier limits", pass: !!project.withinFreeTier },
+      { level: "L4", label: "AI calls go through your own proxy", pass: !!project.usesProxy },
+      { level: "L4", label: "Input AND output guardrails", pass: !!project.hasGuardrails },
+      { level: "L4", label: "Cost estimated (and ideally tracked)", pass: !!project.costEstimated },
+      { level: "L4", label: "Has a fallback path", pass: !!project.hasFallback },
+      { level: "L5", label: "Has a real eval suite", pass: !!project.hasEvals },
+      { level: "L5", label: "Has observability/logging", pass: !!project.hasObservability },
+      { level: "L5", label: "Prompt-injection awareness in design", pass: !!project.injectionAware },
+      { level: "L5", label: "Has a real architecture diagram", pass: !!project.hasArchitectureDiagram },
+    ];
+
+    const passCount = checks.filter((c) => c.pass).length;
+
+    if (el) {
+      let html = "";
+      let lastLevel = null;
+      checks.forEach((c) => {
+        if (c.level !== lastLevel) {
+          html += '<div class="ladder-level-header">' + c.level + '</div>';
+          lastLevel = c.level;
+        }
+        html += '<div class="ladder-check ' + (c.pass ? "pass" : "fail") + '">' + (c.pass ? "✓" : "✗") + ' ' + c.label + '</div>';
+      });
+      html += '<div class="final-verdict">' + passCount + ' / ' + checks.length + ' ready' + (passCount === checks.length ? " — 🎓 fully production-ready!" : "") + '</div>';
+      el.innerHTML = html;
+    }
+
+    return { passCount, total: checks.length, checks, fullyReady: passCount === checks.length };
+  };
+
+  const STARTER = `// An honestly incomplete project — try me, then hit RUN
+const myProject = {
+  deployedUrl: "https://my-ai-app.pages.dev",
+  worksOnMobile: true,
+  secretsInEnvVars: true,
+  hasErrorAndLoadingStates: true,
+  hasReadme: true,
+  usesRealDataAndAuth: false, // no database needed for this project
+  withinFreeTier: true,
+  usesProxy: true,
+  hasGuardrails: false, // <- not done yet
+  costEstimated: false, // <- not done yet
+  hasFallback: false,   // <- not done yet
+  hasEvals: false,      // <- not done yet
+  hasObservability: false,
+  injectionAware: false,
+  hasArchitectureDiagram: false,
+};
+
+const result = runFinalReadinessCheck(myProject);
+console.log(result.passCount + " / " + result.total + " ready");`;
+
+  const EXAMPLE_COMPLETE = `const myProject = {
+  deployedUrl: "https://my-ai-app.pages.dev",
+  worksOnMobile: true,
+  secretsInEnvVars: true,
+  hasErrorAndLoadingStates: true,
+  hasReadme: true,
+  usesRealDataAndAuth: true,
+  withinFreeTier: true,
+  usesProxy: true,
+  hasGuardrails: true,
+  costEstimated: true,
+  hasFallback: true,
+  hasEvals: true,
+  hasObservability: true,
+  injectionAware: true,
+  hasArchitectureDiagram: true,
+};
+
+const result = runFinalReadinessCheck(myProject);
+console.log(result.passCount + " / " + result.total + " ready");
+console.log("Fully production-ready:", result.fullyReady);`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initJsSandbox({
+      editorId: "jsEditor",
+      displayId: "readinessDisplay",
+      outputId: "consoleOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      displayResetText: "STATUS: STANDBY",
+      examples: [
+        { btnId: "btnComplete", code: EXAMPLE_COMPLETE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

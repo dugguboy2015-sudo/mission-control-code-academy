@@ -151,14 +151,14 @@ window.MISSION_MANIFEST = {
       "subtitle": "Woven Throughout, Formalized Here",
       "accent": "orange",
       "missions": [
-        { "id": "s9-m01", "num": "9.1", "title": "Testing Basics", "subtitle": "Proving Your Code Works", "file": "missions/s9-m01-testing-basics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s9-m02", "num": "9.2", "title": "Debugging Methodology", "subtitle": "Reading Errors Like an Engineer", "file": "missions/s9-m02-debugging-methodology.html", "status": "planned", "difficulty": "commander", "estMinutes": 40 },
-        { "id": "s9-m03", "num": "9.3", "title": "Using AI as a Coding Partner", "subtitle": "Responsibly, and Well", "file": "missions/s9-m03-ai-coding-partner.html", "status": "planned", "difficulty": "commander", "estMinutes": 40, "threadNote": "Thread 1 formalized as its own mission" },
-        { "id": "s9-m04", "num": "9.4", "title": "Code Quality & Refactoring", "subtitle": "Making It Good, Not Just Working", "file": "missions/s9-m04-code-quality.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s9-m05", "num": "9.5", "title": "Security & Privacy Basics", "subtitle": "Protecting Users and Data", "file": "missions/s9-m05-security-basics.html", "status": "planned", "difficulty": "commander", "estMinutes": 45 },
-        { "id": "s9-m06", "num": "9.6", "title": "AI Security", "subtitle": "Prompt Injection, Exfiltration, Key Safety", "file": "missions/s9-m06-ai-security.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
-        { "id": "s9-m07", "num": "9.7", "title": "CI/CD & Deploy Pipelines", "subtitle": "Automated Build → Test → Ship", "file": "missions/s9-m07-cicd.html", "status": "planned", "difficulty": "commander", "estMinutes": 50 },
-        { "id": "s9-m08", "num": "9.8", "title": "Final Capstone: AI-Native Product", "subtitle": "On the Architect's Stack, Fully Production-Ready", "file": "missions/s9-m08-final-capstone.html", "status": "planned", "difficulty": "commander", "estMinutes": 180, "capstone": true, "ladderLevel": "L5" }
+        { "id": "s9-m01", "num": "9.1", "title": "Testing Basics", "subtitle": "Proving Your Code Works", "file": "missions/s9-m01-testing-basics.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m02", "num": "9.2", "title": "Debugging Methodology", "subtitle": "Reading Errors Like an Engineer", "file": "missions/s9-m02-debugging-methodology.html", "status": "live", "difficulty": "commander", "estMinutes": 40 },
+        { "id": "s9-m03", "num": "9.3", "title": "Using AI as a Coding Partner", "subtitle": "Responsibly, and Well", "file": "missions/s9-m03-ai-coding-partner.html", "status": "live", "difficulty": "commander", "estMinutes": 40, "threadNote": "Thread 1 formalized as its own mission" },
+        { "id": "s9-m04", "num": "9.4", "title": "Code Quality & Refactoring", "subtitle": "Making It Good, Not Just Working", "file": "missions/s9-m04-code-quality.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m05", "num": "9.5", "title": "Security & Privacy Basics", "subtitle": "Protecting Users and Data", "file": "missions/s9-m05-security-basics.html", "status": "live", "difficulty": "commander", "estMinutes": 45 },
+        { "id": "s9-m06", "num": "9.6", "title": "AI Security", "subtitle": "Prompt Injection, Exfiltration, Key Safety", "file": "missions/s9-m06-ai-security.html", "status": "live", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s9-m07", "num": "9.7", "title": "CI/CD & Deploy Pipelines", "subtitle": "Automated Build → Test → Ship", "file": "missions/s9-m07-cicd.html", "status": "live", "difficulty": "commander", "estMinutes": 50 },
+        { "id": "s9-m08", "num": "9.8", "title": "Final Capstone: AI-Native Product", "subtitle": "On the Architect's Stack, Fully Production-Ready", "file": "missions/s9-m08-final-capstone.html", "status": "live", "difficulty": "commander", "estMinutes": 180, "capstone": true, "ladderLevel": "L5" }
       ]
     }
   ]
