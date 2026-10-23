@@ -373,5 +373,102 @@
     },
   };
 
-  window.Academy = { auth, family, session, childLink, progress, checklist };
+  /* ---------------- identity: which child is learning on this device right now? ----------------
+     Both session modes resolve to the same (childId, accessToken) pair, so
+     anything that needs to act "as this child" — the activity log, or the
+     live-AI proxy's per-child quota — has one shape to work with. A parent
+     can read their own children's tokens (RLS: own children only). */
+  let cachedIdentity = null;
+  async function identity() {
+    const mode = progress.mode();
+    if (mode === "child") {
+      const link = getChildLinkSession();
+      return { childId: link.childId, accessToken: link.accessToken };
+    }
+    if (mode === "parent") {
+      const childId = getActiveChild();
+      if (cachedIdentity && cachedIdentity.childId === childId) return cachedIdentity;
+      const { data, error } = await client.from("children").select("access_token").eq("id", childId).single();
+      if (error) throw error;
+      cachedIdentity = { childId, accessToken: data.access_token };
+      return cachedIdentity;
+    }
+    return null;
+  }
+
+  /* ---------------- activity log (XP, quizzes, badges — see engagement.js) ----------------
+     Throws a tagged error when the engagement tables haven't been created
+     yet (schema.sql not re-run), so engagement.js can fall back to its
+     localStorage copy instead of treating it as a real failure. */
+  function isMissingSchema(error) {
+    const msg = (error && (error.message || "")) + " " + (error && error.code ? error.code : "");
+    return /PGRST202|PGRST205|42P01|42883|does not exist|Could not find the (function|table)/i.test(msg);
+  }
+  function tagMissing(error) {
+    if (isMissingSchema(error)) error.missingSchema = true;
+    return error;
+  }
+
+  const activity = {
+    async all() {
+      const mode = progress.mode();
+      if (mode === "parent") {
+        const { data, error } = await client
+          .from("activity").select("kind, ref, correct, xp, created_at")
+          .eq("child_id", getActiveChild()).order("created_at");
+        if (error) throw tagMissing(error);
+        return data || [];
+      }
+      if (mode === "child") {
+        const link = getChildLinkSession();
+        const { data, error } = await client.rpc("child_get_activity", { p_child_id: link.childId, p_access_token: link.accessToken });
+        if (error) throw tagMissing(error);
+        return data || [];
+      }
+      return [];
+    },
+
+    /** Insert-once (the table dedupes on child+kind+ref) — safe to retry. */
+    async log(kind, ref, correct, xp) {
+      const mode = progress.mode();
+      if (mode === "parent") {
+        const { error } = await client.from("activity").upsert(
+          { child_id: getActiveChild(), kind, ref, correct, xp },
+          { onConflict: "child_id,kind,ref", ignoreDuplicates: true }
+        );
+        if (error) throw tagMissing(error);
+        return;
+      }
+      if (mode === "child") {
+        const link = getChildLinkSession();
+        const { error } = await client.rpc("child_log_activity", {
+          p_child_id: link.childId, p_access_token: link.accessToken,
+          p_kind: kind, p_ref: ref, p_correct: correct, p_xp: xp,
+        });
+        if (error) throw tagMissing(error);
+      }
+    },
+  };
+
+  /* ---------------- parent insights (family.html) — read any OWN child's records ---------------- */
+  const insights = {
+    async forChild(childId) {
+      const c = requireClient();
+      const [prog, acts, checks] = await Promise.all([
+        c.from("progress").select("mission_id, completed_at").eq("child_id", childId),
+        c.from("activity").select("kind, ref, correct, xp, created_at").eq("child_id", childId).order("created_at"),
+        c.from("checklist_state").select("mission_id, item_id, checked, updated_at").eq("child_id", childId),
+      ]);
+      if (prog.error) throw prog.error;
+      if (checks.error) throw checks.error;
+      return {
+        progress: prog.data || [],
+        activity: acts.error ? null : (acts.data || []),      // null = engagement schema not installed yet
+        activityMissing: !!(acts.error && isMissingSchema(acts.error)),
+        checklist: checks.data || [],
+      };
+    },
+  };
+
+  window.Academy = { auth, family, session, childLink, progress, checklist, identity, activity, insights };
 })();

@@ -134,7 +134,9 @@
       <div class="console-controls">
         <button class="console-btn" id="btnReset">reset starter (stream a reply)</button>
         <button class="console-btn" id="btnGuardrail">try: input/output guardrail checks</button>
+        <button class="console-btn live-btn" id="btnLive">⚡ try: the LIVE model</button>
       </div>
+      <p class="live-note">⚡ <strong>LIVE model:</strong> that button calls a real AI model through this academy's own proxy (a Cloudflare Pages Function with a daily limit per cadet). If it can't be reached — on a local copy, offline, or after today's calls are used up — you get this mission's practice model instead, clearly labelled.</p>
     </div>
   </section>
 
@@ -209,7 +211,9 @@
 <script src="../assets/auth-guard.js"></script>
 <script src="../assets/missions-data.js"></script>
 <script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
 <script src="../assets/sandbox.js"></script>
+<script src="../assets/live-ai.js"></script>
 <script>
 (function () {
   "use strict";
@@ -280,6 +284,20 @@ console.log("Normal input:", JSON.stringify(goodCheck));
 const emptyOutput = checkOutputGuardrail("");
 console.log("Empty output:", JSON.stringify(emptyOutput));`;
 
+  const EXAMPLE_LIVE = `// A REAL model reply, revealed chunk by chunk, then checked by your output guardrail.
+let text = "";
+const box = document.getElementById("streamDisplay");
+LiveAI.stream("", "Describe the weather on Mars in 2 short sentences.", (chunk) => {
+  text += chunk;
+  box.textContent = text;
+}).then(() => {
+  console.log("Output guardrail:", JSON.stringify(checkOutputGuardrail(text)));
+  console.log("Answered by:", LiveAI.last.model);
+});`;
+
+  // Practice model the live client falls back to when /api/ai isn't reachable.
+  if (window.LiveAI) window.LiveAI.setFallback((s, u) => "Here is a short practice reply about: " + u);
+
   document.addEventListener("DOMContentLoaded", function () {
     initJsSandbox({
       editorId: "jsEditor",
@@ -291,6 +309,7 @@ console.log("Empty output:", JSON.stringify(emptyOutput));`;
       displayResetText: "STATUS: STANDBY",
       examples: [
         { btnId: "btnGuardrail", code: EXAMPLE_GUARDRAILS },
+        { btnId: "btnLive", code: EXAMPLE_LIVE },
       ],
     });
   });

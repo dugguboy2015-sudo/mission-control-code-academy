@@ -1,0 +1,14 @@
+# Cloudflare Pages configuration (read automatically on every deploy).
+# The site itself is static — this file only exists to give the live-AI
+# proxy in functions/api/ai.js its Workers AI binding and its two public
+# Supabase settings. Neither value is a secret (see assets/config.js).
+name = "mission-control-code-academy"
+pages_build_output_dir = "."
+compatibility_date = "2026-09-01"
+
+[ai]
+binding = "AI"
+
+[vars]
+SUPABASE_URL = "https://orfqqwollyvwlmowuast.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_jZflsfaHy9loyASVG7RUUA_G2TM7K6H"

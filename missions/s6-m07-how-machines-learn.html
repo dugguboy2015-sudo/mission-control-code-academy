@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.6: How Machines Learn — Build a Classifier From Scratch | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .fruit-plot { position: relative; height: 260px; max-width: 420px; margin: 16px auto 4px; border-left: 2px solid var(--border-glow); border-bottom: 2px solid var(--border-glow); }
+  .fruit-plot .pt { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .fruit-plot .pt.mystery { border: 2px dashed var(--accent-yellow); border-radius: 50%; font-size: 14px; color: var(--accent-yellow); font-family: var(--font-display); }
+  .fruit-plot .axis-x, .fruit-plot .axis-y { position: absolute; font-size: 11px; color: var(--text-muted); font-family: var(--font-display); letter-spacing: 0.05em; }
+  .fruit-plot .axis-x { right: 0; bottom: -22px; }
+  .fruit-plot .axis-y { left: -6px; top: -20px; }
+  .plot-caption { text-align: center; color: var(--text-muted); font-size: 12.5px; margin-top: 28px; }
+  #pyEditor { min-height: 380px; tab-size: 4; }
+  #pyOutput { min-height: 380px; max-height: 460px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m07">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.6: HOW MACHINES LEARN</h1>
+    <div class="subtitle">Build a Classifier From Scratch</div>
+    <p class="briefing-line">Every program so far followed rules you wrote. Machine learning flips that: you hand the computer <em>examples</em> with the right answers, and it works out how to answer new questions itself. In this mission you build a real machine-learning model — k-nearest neighbours — in about twenty lines of plain Python, then measure honestly how often it's right. Sector 7's language models are the same idea, scaled up enormously.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~55 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Try writing rules that tell lemons, apples and oranges apart. "Small and sour is a lemon" works… until you meet a big lemon. Rules break on the cases you didn't think of. Instead, measure a dozen real fruits — how big (1–10) and how sweet (1–10) — and label each one. To identify a mystery fruit, find the fruits in your examples that are <strong>most similar</strong> to it and let them vote. No rules about lemons anywhere. The <strong>data</strong> is the knowledge.</p>
+      <div class="fruit-plot" id="fruitPlot" aria-label="Scatter plot of the training fruits: lemons cluster small and sour, apples medium and sweet, oranges large and medium-sweet; the mystery fruit sits among the lemons.">
+        <span class="axis-y">SWEETNESS ↑</span><span class="axis-x">SIZE →</span>
+      </div>
+      <p class="plot-caption">Each emoji is one training example plotted by size and sweetness. The dashed <strong>?</strong> is a mystery fruit — which group is it nearest to?</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Features and Labels</h3>
+        <p>Each example is a list of <strong>features</strong> (measurements) plus a <strong>label</strong> (the right answer). The model never sees "lemon-ness" directly — only numbers.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="TRAIN = [&#10;    (4, 2, &quot;lemon&quot;),   # (size, sweetness, label)&#10;    (6, 8, &quot;apple&quot;),&#10;    (9, 5, &quot;orange&quot;),&#10;]&#10;size, sweetness, label = TRAIN[0]&#10;print(size, sweetness, label)   # 4 2 lemon">COPY</button></div>
+          <pre><code>TRAIN = [
+    (<span class="num">4</span>, <span class="num">2</span>, <span class="str">"lemon"</span>),   <span class="comment"># (size, sweetness, label)</span>
+    (<span class="num">6</span>, <span class="num">8</span>, <span class="str">"apple"</span>),
+    (<span class="num">9</span>, <span class="num">5</span>, <span class="str">"orange"</span>),
+]
+size, sweetness, label = TRAIN[<span class="num">0</span>]
+<span class="fn">print</span>(size, sweetness, label)   <span class="comment"># 4 2 lemon</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Each example is a <strong>tuple</strong> — like a list that can't be changed. <code>size, sweetness, label = TRAIN[0]</code> "unpacks" it into three variables at once. Features should be on similar scales (both 1–10 here): if size were in grams (0–300) it would drown out sweetness completely.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>"Similar" Means "Close": Distance</h3>
+        <p>Plot two fruits as points. The straight-line distance between them (Pythagoras!) measures how different they are.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="import math&#10;&#10;def distance(a, b):&#10;    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)&#10;&#10;print(distance((0, 0), (3, 4)))   # 5.0">COPY</button></div>
+          <pre><code><span class="kw">import</span> math
+
+<span class="kw">def</span> <span class="fn">distance</span>(a, b):
+    <span class="kw">return</span> math.<span class="fn">sqrt</span>((a[<span class="num">0</span>] - b[<span class="num">0</span>]) ** <span class="num">2</span> + (a[<span class="num">1</span>] - b[<span class="num">1</span>]) ** <span class="num">2</span>)
+
+<span class="fn">print</span>(distance((<span class="num">0</span>, <span class="num">0</span>), (<span class="num">3</span>, <span class="num">4</span>)))   <span class="comment"># 5.0</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>a[0] - b[0]</code> is the size difference, <code>a[1] - b[1]</code> the sweetness difference. Square both, add, square-root: the classic 3-4-5 triangle gives exactly 5. With more features (weight, color…) you just add more squared differences — the idea works in any number of dimensions, which is how Mission 7.5's embeddings measure similarity too.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>k-Nearest Neighbours: Let the Closest Examples Vote</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="from collections import Counter&#10;&#10;def predict(point, k=3):&#10;    by_distance = sorted(TRAIN, key=lambda ex: distance(point, ex))&#10;    nearest = by_distance[:k]&#10;    votes = Counter(ex[2] for ex in nearest)&#10;    return votes.most_common(1)[0][0]">COPY</button></div>
+          <pre><code><span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">predict</span>(point, k=<span class="num">3</span>):
+    by_distance = <span class="fn">sorted</span>(TRAIN, key=<span class="kw">lambda</span> ex: distance(point, ex))
+    nearest = by_distance[:k]
+    votes = Counter(ex[<span class="num">2</span>] <span class="kw">for</span> ex <span class="kw">in</span> nearest)
+    <span class="kw">return</span> votes.<span class="fn">most_common</span>(<span class="num">1</span>)[<span class="num">0</span>][<span class="num">0</span>]</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>sorted(..., key=...)</code> lines every training fruit up from most to least similar. <code>[:k]</code> keeps the closest <code>k</code>. <code>Counter</code> tallies their labels, and <code>most_common(1)</code> returns the winner, like <code>[("lemon", 3)]</code> — hence <code>[0][0]</code>. <code>distance(point, ex)</code> works on a 3-item tuple because it only reads positions 0 and 1. Using an odd <code>k</code> like 3 helps avoid ties.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Testing Honestly: Train vs. Test</h3>
+        <p>A model that's only checked on the examples it learned from will look perfect — and tell you nothing. Keep some labelled examples <strong>back</strong> (a <strong>test set</strong>) and see how many it gets right.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="correct = 0&#10;for size, sweetness, truth in TEST:&#10;    guess = predict((size, sweetness))&#10;    print(f&quot;({size}, {sweetness}) guessed {guess}, really {truth}&quot;)&#10;    if guess == truth:&#10;        correct += 1&#10;&#10;print(f&quot;Accuracy: {correct / len(TEST):.0%}&quot;)">COPY</button></div>
+          <pre><code>correct = <span class="num">0</span>
+<span class="kw">for</span> size, sweetness, truth <span class="kw">in</span> TEST:
+    guess = predict((size, sweetness))
+    <span class="fn">print</span>(<span class="str">f"({size}, {sweetness}) guessed {guess}, really {truth}"</span>)
+    <span class="kw">if</span> guess == truth:
+        correct += <span class="num">1</span>
+
+<span class="fn">print</span>(<span class="str">f"Accuracy: {correct / len(TEST):.0%}"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>:.0%</code> formats 0.75 as <code>75%</code>. Expect mistakes — a model is only as good as its examples. If every apple you trained on was medium-sized, a giant apple will look like an orange. That's <strong>training-data bias</strong>, and it's the same reason real AI systems can be unfair to people their data under-represents.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Real Python, preloaded with <code>TRAIN</code> (12 labelled fruits) and <code>TEST</code> (4 held-back fruits). <code>distance()</code> and <code>predict()</code> are empty — that's your job.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: a hand-written rule (and watch it fail)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build the classifier, then test it the honest way. Keep <code>TRAIN</code> and <code>TEST</code> exactly as they are.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Implement <code>distance(a, b)</code> so the distance test prints <code>5.0</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Sort <code>TRAIN</code> by distance to the mystery fruit and print its 3 nearest neighbours</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Implement <code>predict(point, k=3)</code> with a majority vote, so the mystery fruit is identified correctly</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Loop over <code>TEST</code>, compare each guess to the real label, and print the model's accuracy</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">One test fruit is guessed wrong. In a comment, explain WHY it fooled the model and what extra training data would fix it</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>For the neighbours: <code>sorted(TRAIN, key=lambda ex: distance((4, 1), ex))[:3]</code>. Look at the wrong guess's numbers in your output, then find where that point sits on the plot in the Briefing.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Try <code>k=1</code> and <code>k=5</code>. Does accuracy change? Add one big, sweet apple like <code>(8, 8, "apple")</code> to <code>TRAIN</code> and re-test — you just "retrained" a model by giving it better data.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>features / label</code><span>The measurements / the right answer</span></div>
+        <div class="cheat-card"><code>math.sqrt(dx**2 + dy**2)</code><span>Straight-line distance</span></div>
+        <div class="cheat-card"><code>sorted(data, key=fn)[:k]</code><span>The k closest examples</span></div>
+        <div class="cheat-card"><code>Counter(labels).most_common(1)</code><span>Majority vote</span></div>
+        <div class="cheat-card"><code>TRAIN / TEST</code><span>Learn from one, measure on the other</span></div>
+        <div class="cheat-card"><code>f"{x:.0%}"</code><span>0.75 → 75%</span></div>
+        <div class="cheat-card"><code>a, b, c = (1, 2, 3)</code><span>Unpack a tuple</span></div>
+        <div class="cheat-card"><code>bias</code><span>Gaps in the data become gaps in the model</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Measuring accuracy on the training data — of course it looks perfect; it has seen the answers.</li>
+          <li>Mixing feature scales (grams next to a 1–10 rating) so one feature silently dominates the distance.</li>
+          <li>Using an even <code>k</code> and getting a tied vote.</li>
+          <li>Believing a model is "smart" because it's often right — it only knows what its examples showed it.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — what does a k-nearest-neighbours model actually "learn" from?</p>
+        <button class="quiz-btn" data-correct="false">Rules the programmer writes about each fruit</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — it keeps the labelled examples and answers new questions by finding the most similar ones.">The labelled examples it's given</button>
+        <button class="quiz-btn" data-correct="false">The internet</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Kept in one place so the plot and the Python data can never disagree.
+  const TRAIN = [
+    [4, 2, "lemon"], [5, 1, "lemon"], [4, 3, "lemon"], [3, 2, "lemon"],
+    [6, 8, "apple"], [7, 9, "apple"], [6, 7, "apple"], [5, 8, "apple"],
+    [9, 5, "orange"], [8, 6, "orange"], [9, 6, "orange"], [10, 5, "orange"],
+  ];
+  const TEST = [[5, 2, "lemon"], [6, 9, "apple"], [9, 4, "orange"], [8, 7, "apple"]];
+  const EMOJI = { lemon: "🍋", apple: "🍎", orange: "🍊" };
+
+  const pyRows = (rows) => rows.map((r) => `    (${r[0]}, ${r[1]}, "${r[2]}"),`).join("\n");
+  const DATA = `import math
+from collections import Counter
+
+# (size 1-10, sweetness 1-10, label)
+TRAIN = [
+${pyRows(TRAIN)}
+]
+TEST = [
+${pyRows(TEST)}
+]
+`;
+
+  const STARTER = DATA + `
+def distance(a, b):
+    # TODO: straight-line distance between two (size, sweetness) points
+    return 0
+
+def predict(point, k=3):
+    # TODO: find the k nearest TRAIN examples and return the most common label
+    return "???"
+
+print("distance test:", distance((0, 0), (3, 4)))
+print("mystery fruit (4, 1) is a", predict((4, 1)))`;
+
+  const EXAMPLE_RULE = DATA + `
+# The old way: hand-written rules. Watch them break on real data.
+def rule_based(size, sweetness):
+    if size < 5:
+        return "lemon"
+    if sweetness > 6:
+        return "apple"
+    return "orange"
+
+for size, sweetness, truth in TRAIN + TEST:
+    guess = rule_based(size, sweetness)
+    mark = "ok" if guess == truth else "WRONG"
+    print(f"({size}, {sweetness}) rule says {guess}, really {truth}  {mark}")`;
+
+  // Draw the scatter plot from the same data.
+  const plot = document.getElementById("fruitPlot");
+  if (plot) {
+    TRAIN.forEach(([size, sweet, label]) => {
+      const pt = document.createElement("span");
+      pt.className = "pt";
+      pt.textContent = EMOJI[label];
+      pt.title = `${label}: size ${size}, sweetness ${sweet}`;
+      pt.style.left = (size / 11) * 100 + "%";
+      pt.style.top = (1 - sweet / 10) * 100 + "%";
+      plot.appendChild(pt);
+    });
+    const m = document.createElement("span");
+    m.className = "pt mystery";
+    m.textContent = "?";
+    m.title = "mystery fruit: size 4, sweetness 1";
+    m.style.left = (4 / 11) * 100 + "%";
+    m.style.top = (1 - 1 / 10) * 100 + "%";
+    plot.appendChild(m);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_RULE },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

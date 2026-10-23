@@ -8,6 +8,30 @@
    so any new mission can wire one up without re-writing the runner.
    ============================================================ */
 
+/* ---------------- Run reporting (feeds auto-checked objectives) ----------------
+   Every runner announces each run as an `mcca:run` event. engagement.js
+   listens and re-checks the mission's objectives against what happened.
+
+   `authored` is the anti-freebie rule: a run only counts toward objectives
+   when the code differs from the starter AND from every example button's
+   code — otherwise the automatic first run on page load (or clicking a
+   "try:" example) would complete objectives the cadet never touched. */
+function mccaNormalizeCode(s) {
+  return String(s || "").replace(/\s+/g, " ").trim();
+}
+function mccaIsAuthored(code, cfg) {
+  const norm = mccaNormalizeCode(code);
+  if (!norm) return false;
+  const known = [cfg.starter].concat((cfg.examples || []).map((e) => e.code));
+  return !known.some((k) => mccaNormalizeCode(k) === norm);
+}
+function mccaReportRun(detail, cfg) {
+  if (cfg) detail.known = [cfg.starter].concat((cfg.examples || []).map((e) => e.code));
+  try {
+    document.dispatchEvent(new CustomEvent("mcca:run", { detail }));
+  } catch (e) { /* never let reporting break a run */ }
+}
+
 /* ---------------- JS Sandbox ---------------- */
 function initJsSandbox(cfg) {
   const editor = document.getElementById(cfg.editorId);
@@ -61,12 +85,22 @@ function initJsSandbox(cfg) {
       getElementById: (id) => document.getElementById(id),
       createElement: (tag) => document.createElement(tag),
     };
+    let threw = false;
     try {
       const runner = new Function("console", "document", editor.value);
       runner(fakeConsole, scopedDocument);
     } catch (err) {
+      threw = true;
       log(err.message, true);
     }
+    mccaReportRun({
+      kind: "js",
+      code: editor.value,
+      error: threw,
+      authored: mccaIsAuthored(editor.value, cfg),
+      outputEl: output,
+      displayId: cfg.displayId || null,
+    }, cfg);
   }
 
   runBtn.addEventListener("click", run);
@@ -121,12 +155,14 @@ function initPythonSandbox(cfg) {
         if (output.children.length === 0) {
           output.innerHTML = '<div class="out-status">Ran with no output — try adding a print() statement.</div>';
         }
+        mccaReportRun({ kind: "python", code: editor.value, error: false, authored: mccaIsAuthored(editor.value, cfg), outputEl: output }, cfg);
       },
       function (err) {
         const line = document.createElement("div");
         line.className = "out-error";
         line.textContent = err.toString();
         output.appendChild(line);
+        mccaReportRun({ kind: "python", code: editor.value, error: true, authored: mccaIsAuthored(editor.value, cfg), outputEl: output }, cfg);
       }
     );
   }
@@ -170,6 +206,7 @@ function initHtmlCssPreview(cfg) {
     );
     doc.close();
     if (charCount) charCount.textContent = editor.value.length + " chars";
+    mccaReportRun({ kind: "html", code: editor.value, error: false, authored: mccaIsAuthored(editor.value, cfg), frame }, cfg);
   }
 
   editor.addEventListener("input", render);

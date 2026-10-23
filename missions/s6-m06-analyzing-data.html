@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.5: Analyzing Data — Finding the Story in the Numbers | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .story-box { margin-top: 16px; background: rgba(255,230,109,0.07); border: 1px solid rgba(255,230,109,0.35); border-radius: 10px; padding: 14px 18px; font-size: 14px; color: var(--text-secondary); }
+  .story-box strong { color: var(--accent-yellow); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; display: block; margin-bottom: 6px; }
+  #pyEditor { min-height: 360px; tab-size: 4; }
+  #pyOutput { min-height: 360px; max-height: 440px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m06">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.5: ANALYZING DATA</h1>
+    <div class="subtitle">Finding the Story in the Numbers</div>
+    <p class="briefing-line">Loading data is the easy half. The interesting half is asking it questions — what's normal, what's unusual, which group wins, what changed — and answering with evidence instead of a hunch. This is the core skill behind data science, and it's also exactly what an AI model does when it "learns": find patterns in examples. You'll build every tool yourself from loops and dictionaries.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~50 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Your crew logged twelve gaming sessions across three games: how long each session lasted and the score. Is one game more fun? More rewarding? Are long sessions better? A spreadsheet would show you rows. Analysis turns the rows into a <strong>finding</strong> — one sentence, backed by a number, that someone could act on.</p>
+      <p>Real data scientists usually reach for libraries like <code>pandas</code>. You'll write the same calculations by hand first, because once you've built <code>mean</code>, <code>median</code> and a group-by yourself, every library afterward is just a shortcut you actually understand.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The Middle of the Data: Mean and Median</h3>
+        <p>The <strong>mean</strong> (average) adds everything and divides by how many there are. The <strong>median</strong> is the middle value once sorted — half the data is above it, half below.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="def mean(values):&#10;    return sum(values) / len(values)&#10;&#10;def median(values):&#10;    ordered = sorted(values)&#10;    middle = len(ordered) // 2&#10;    if len(ordered) % 2 == 1:&#10;        return ordered[middle]&#10;    return (ordered[middle - 1] + ordered[middle]) / 2&#10;&#10;print(mean([2, 4, 9]))     # 5.0&#10;print(median([2, 4, 9]))   # 4">COPY</button></div>
+          <pre><code><span class="kw">def</span> <span class="fn">mean</span>(values):
+    <span class="kw">return</span> <span class="fn">sum</span>(values) / <span class="fn">len</span>(values)
+
+<span class="kw">def</span> <span class="fn">median</span>(values):
+    ordered = <span class="fn">sorted</span>(values)
+    middle = <span class="fn">len</span>(ordered) // <span class="num">2</span>
+    <span class="kw">if</span> <span class="fn">len</span>(ordered) % <span class="num">2</span> == <span class="num">1</span>:
+        <span class="kw">return</span> ordered[middle]
+    <span class="kw">return</span> (ordered[middle - <span class="num">1</span>] + ordered[middle]) / <span class="num">2</span>
+
+<span class="fn">print</span>(mean([<span class="num">2</span>, <span class="num">4</span>, <span class="num">9</span>]))     <span class="comment"># 5.0</span>
+<span class="fn">print</span>(median([<span class="num">2</span>, <span class="num">4</span>, <span class="num">9</span>]))   <span class="comment"># 4</span></code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>//</code> is whole-number division, so <code>middle</code> is a valid index. With an even count there are two middle values, so the median is their average. Why have both? One huge outlier (a 2,000-point fluke) drags the mean up a lot but barely moves the median — when they disagree, something unusual is in your data.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Group By: One Total per Category</h3>
+        <p>"Total minutes per game" is the most common question in all of data work. A dictionary does it in one loop.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="minutes_by_game = {}&#10;for s in GAME_LOG:&#10;    game = s[&quot;game&quot;]&#10;    minutes_by_game[game] = minutes_by_game.get(game, 0) + s[&quot;minutes&quot;]&#10;&#10;for game, total in minutes_by_game.items():&#10;    print(game, total)">COPY</button></div>
+          <pre><code>minutes_by_game = {}
+<span class="kw">for</span> s <span class="kw">in</span> GAME_LOG:
+    game = s[<span class="str">"game"</span>]
+    minutes_by_game[game] = minutes_by_game.<span class="fn">get</span>(game, <span class="num">0</span>) + s[<span class="str">"minutes"</span>]
+
+<span class="kw">for</span> game, total <span class="kw">in</span> minutes_by_game.<span class="fn">items</span>():
+    <span class="fn">print</span>(game, total)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>.get(game, 0)</code> starts each new game at 0 the first time it appears, then keeps adding. The same pattern counts things (<code>+ 1</code> instead of <code>+ minutes</code>) or collects lists of scores per game (<code>.setdefault(game, []).append(score)</code>) so you can average each group.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>A Chart Made of Text</h3>
+        <p>You don't need a charting library to <em>see</em> a pattern. Multiplying a string repeats it:</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="for game, total in minutes_by_game.items():&#10;    bar = &quot;#&quot; * (total // 10)&#10;    print(f&quot;{game:12} {bar} {total}&quot;)">COPY</button></div>
+          <pre><code><span class="kw">for</span> game, total <span class="kw">in</span> minutes_by_game.<span class="fn">items</span>():
+    bar = <span class="str">"#"</span> * (total // <span class="num">10</span>)
+    <span class="fn">print</span>(<span class="str">f"{game:12} {bar} {total}"</span>)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>"#" * 17</code> is seventeen hashes — one per ten minutes here. <code>{game:12}</code> pads the name to 12 characters so the bars line up. Crude, but your eye spots the biggest bar instantly, which is the whole point of a chart.
+        </div>
+      </div>
+
+      <div class="story-box">
+        <strong>THE STORY RULE</strong>
+        A finding is one sentence + one number + an honest limit. "Code Quest gets the highest average score (157.5) — but we only have 4 sessions per game, so this could change." Data shows what happened together, not what <em>caused</em> it: long sessions and high scores appearing together doesn't prove that playing longer makes you score higher.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Real Python, preloaded with <code>GAME_LOG</code> — twelve sessions, each a dictionary with <code>day</code>, <code>game</code>, <code>minutes</code> and <code>score</code>.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: min and max</button>
+        <button class="console-btn" id="btnExample2">try: count sessions per game</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Answer real questions about <code>GAME_LOG</code> — keep the data block at the top exactly as it is.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Write your own <code>mean()</code> and <code>median()</code> functions (no imports) and print both for ALL twelve scores</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Group by game: print the total minutes played for each of the three games</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Find which game has the highest AVERAGE score and print it with that average
+          <span class="sub">Collect each game's scores into a list first, then use your mean()</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Print a text bar chart of minutes per game — one <code>#</code> per 10 minutes</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Write your finding as a comment: one sentence, one real number from your output, and one honest limit</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>For the averages, build <code>scores_by_game = {}</code> where each value is a list: <code>scores_by_game.setdefault(s["game"], []).append(s["score"])</code>. Then loop over it and call <code>mean(scores)</code> on each list.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Is there a link between session length and score? Split the sessions into "30 minutes or more" and "under 30", compare their average scores — then write one sentence on why that still doesn't prove longer sessions <em>cause</em> higher scores.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>sum(v) / len(v)</code><span>Mean (average)</span></div>
+        <div class="cheat-card"><code>sorted(v)[len(v)//2]</code><span>Median for an odd count</span></div>
+        <div class="cheat-card"><code>d[k] = d.get(k, 0) + x</code><span>Group-by total</span></div>
+        <div class="cheat-card"><code>d.setdefault(k, []).append(x)</code><span>Group-by list</span></div>
+        <div class="cheat-card"><code>min(v)</code> / <code>max(v)</code><span>Smallest / largest</span></div>
+        <div class="cheat-card"><code>"#" * n</code><span>A text bar n long</span></div>
+        <div class="cheat-card"><code>round(x, 1)</code><span>One decimal place</span></div>
+        <div class="cheat-card"><code>f"{name:12}"</code><span>Pad text so columns line up</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Taking the "middle" of an unsorted list — the median only means something after <code>sorted()</code>.</li>
+          <li>Averaging the averages of groups with different sizes — weight by the number of items, or average the raw values.</li>
+          <li>Claiming a cause from a pattern. "Happened together" is correlation; proving cause needs an experiment.</li>
+          <li>Reporting a finding from tiny data as if it were certain — always say how many examples you had.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — one session had a freak score of 5,000. Which number barely changes?</p>
+        <button class="quiz-btn" data-correct="false">The mean</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the median only cares about the middle position, so one extreme value hardly moves it. The mean gets dragged up a lot.">The median</button>
+        <button class="quiz-btn" data-correct="false">Both change equally</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const DATA = `GAME_LOG = [
+    {"day": 1, "game": "Rocket Run", "minutes": 30, "score": 120},
+    {"day": 1, "game": "Star Puzzle", "minutes": 20, "score": 80},
+    {"day": 2, "game": "Code Quest", "minutes": 45, "score": 150},
+    {"day": 2, "game": "Rocket Run", "minutes": 25, "score": 110},
+    {"day": 3, "game": "Star Puzzle", "minutes": 15, "score": 95},
+    {"day": 3, "game": "Code Quest", "minutes": 40, "score": 160},
+    {"day": 4, "game": "Rocket Run", "minutes": 35, "score": 140},
+    {"day": 4, "game": "Star Puzzle", "minutes": 30, "score": 70},
+    {"day": 5, "game": "Code Quest", "minutes": 50, "score": 175},
+    {"day": 5, "game": "Rocket Run", "minutes": 20, "score": 90},
+    {"day": 6, "game": "Star Puzzle", "minutes": 25, "score": 85},
+    {"day": 6, "game": "Code Quest", "minutes": 35, "score": 145},
+]
+`;
+
+  const STARTER = DATA + `
+# Twelve sessions — try me, then hit RUN
+print(len(GAME_LOG), "sessions logged")
+scores = [s["score"] for s in GAME_LOG]
+print("All scores:", scores)`;
+
+  const EXAMPLE_MINMAX = DATA + `
+scores = [s["score"] for s in GAME_LOG]
+print("Lowest score:", min(scores))
+print("Highest score:", max(scores))
+best = max(GAME_LOG, key=lambda s: s["score"])
+print("Best session:", best["game"], "on day", best["day"])`;
+
+  const EXAMPLE_COUNT = DATA + `
+sessions_per_game = {}
+for s in GAME_LOG:
+    sessions_per_game[s["game"]] = sessions_per_game.get(s["game"], 0) + 1
+print(sessions_per_game)`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_MINMAX },
+        { btnId: "btnExample2", code: EXAMPLE_COUNT },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

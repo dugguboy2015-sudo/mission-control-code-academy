@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 0.4: Learning How to Learn — Getting Unstuck Like a Pro | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .scenario { border: 1px solid var(--border-glow); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; background: var(--bg-panel-alt); }
+  .scenario.solved { border-color: var(--success); }
+  .scenario .sc-num { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.12em; color: var(--accent); }
+  .scenario p { margin: 6px 0 10px; color: var(--text-primary); font-size: 15px; }
+  .scenario .sc-why { font-size: 13.5px; margin-top: 8px; min-height: 18px; }
+  .meter { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+  @media (max-width: 600px) { .meter { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .meter div { border: 1px solid var(--border-glow); border-radius: 10px; padding: 10px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
+  .meter div strong { display: block; font-family: var(--font-display); font-size: 11px; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .meter div.on { border-color: var(--success); color: var(--success); background: rgba(77,255,180,0.06); }
+  #helpRequest, .log-field textarea { width: 100%; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 10px; color: var(--text-primary); font-family: var(--font-body); font-size: 14px; padding: 12px 14px; resize: vertical; }
+  #helpRequest { min-height: 150px; }
+  .help-score { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.06em; color: var(--text-secondary); }
+  .log-field { margin-bottom: 12px; }
+  .log-field label { display: block; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; }
+  .log-field textarea { min-height: 60px; }
+  .log-saved { font-size: 12.5px; color: var(--text-muted); min-height: 18px; }
+  .ladder { counter-reset: step; list-style: none; padding: 0; margin: 12px 0; }
+  .ladder li { counter-increment: step; position: relative; padding: 10px 14px 10px 48px; border-left: 2px solid var(--border-glow); margin-left: 16px; color: var(--text-secondary); font-size: 14.5px; }
+  .ladder li::before { content: counter(step); position: absolute; left: -15px; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg-panel-alt); border: 1px solid var(--accent); color: var(--accent); font-family: var(--font-display); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .ladder li strong { color: var(--text-primary); }
+</style>
+</head>
+<body class="accent-cyan" data-mission-id="s0-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 0</div>
+    <h1>MISSION 0.4: LEARNING HOW TO LEARN</h1>
+    <div class="subtitle">Getting Unstuck Like a Pro</div>
+    <p class="briefing-line">Every programmer gets stuck — the beginners and the people who built the apps on your phone. The difference isn't that experts know everything. It's that they have a <em>routine</em> for not knowing: how to read an error, how to shrink a problem, how to ask a question that gets a useful answer, and how to make what they learn actually stick. This mission gives you that routine before you write a single line of real code.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-cadet">🟢 CADET LEVEL</span>
+      <span class="badge">⏱ ~30 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Being stuck feels like failing. It isn't — it's the normal state of building anything new. Professional developers spend a big part of every day not knowing the answer <em>yet</em>. What they've learned is to treat "stuck" as a problem with steps, instead of a feeling.</p>
+      <p>Three habits matter more than anything else in this academy: <strong>read what the computer is telling you</strong>, <strong>ask for help in a way people (and AIs) can actually answer</strong>, and <strong>practice a little, often</strong> instead of a lot, rarely.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>The Stuck Protocol</h3>
+        <p>Work down this ladder in order. Most problems are solved by step 3.</p>
+        <ol class="ladder">
+          <li><strong>Read the error message — slowly, all of it.</strong> It usually names the problem and the line. "undefined is not a function on line 12" is a clue, not an insult.</li>
+          <li><strong>Make it smaller.</strong> Comment out half the code, or test one piece on its own. Find the smallest thing that still breaks.</li>
+          <li><strong>Explain it out loud</strong> — to a rubber duck, a pet, or a wall. Saying "this line should…" is often when you hear your own mistake. (Programmers really call this <em>rubber-duck debugging</em>.)</li>
+          <li><strong>Search or ask an AI — with details.</strong> Paste the exact error and the few lines around it, and say what you expected.</li>
+          <li><strong>Take a real break.</strong> Ten minutes away from the screen lets your brain keep working in the background. Fresh eyes spot what tired eyes skip.</li>
+          <li><strong>Ask a person</strong>, using the help-request recipe below.</li>
+        </ol>
+      </div>
+
+      <div class="subsection">
+        <h3>The Help-Request Recipe</h3>
+        <p>"It doesn't work" can't be answered by anyone — human or AI. A great question has four parts:</p>
+        <div class="code-block">
+          <div class="code-tab"><span>EXAMPLE HELP REQUEST</span><button class="copy-btn" data-copy="I'm trying to make my button change the page title when clicked.&#10;When I click it, nothing happens and the console says: TypeError: Cannot set properties of null.&#10;I already checked the button's id and added a console.log inside the click handler — it never prints.&#10;Here's my code: document.querySelector(&quot;#tittle&quot;).textContent = &quot;Hi&quot;;">COPY</button></div>
+          <pre><code><span class="comment">GOAL</span>       I'm trying to make my button change the page title when clicked.
+<span class="comment">WHAT HAPPENS</span> When I click it, nothing happens and the console says:
+             TypeError: Cannot set properties of null.
+<span class="comment">WHAT I TRIED</span> I already checked the button's id and added a console.log —
+             it never prints.
+<span class="comment">THE DETAILS</span>  Here's my code: document.querySelector("#tittle").textContent = "Hi";</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Anyone reading this can spot the typo (<code>#tittle</code>) in five seconds — because the question included the goal, the exact error, what was already ruled out, and the code. Writing a question this way often makes <em>you</em> spot the answer before you even send it.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Making It Stick</h3>
+        <p>Your brain keeps what it <strong>uses</strong>, not what it reads. Three proven tricks:</p>
+        <ul style="color:var(--text-secondary);font-size:14.5px;">
+          <li><strong>Little and often</strong> — 25 focused minutes on four days beats one long weekend session.</li>
+          <li><strong>Test yourself</strong> — try to write it from memory before looking it up. Struggling to remember is what builds the memory. (That's why every mission has a quiz.)</li>
+          <li><strong>Teach it back</strong> — explain today's idea to someone in two sentences. If you can't, you've found exactly what to review.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <div class="subsection">
+        <h3>Trainer 1 — What's Your Next Move?</h3>
+        <p>Five real "stuck" moments. Pick the best next step from the Stuck Protocol.</p>
+        <div id="scenarios"></div>
+      </div>
+
+      <div class="subsection">
+        <h3>Trainer 2 — Help-Request Builder</h3>
+        <p>Imagine you're stuck on something (real or made up). Write the help request you'd send to a teacher or an AI. The meter lights up as you include each part of the recipe.</p>
+        <textarea id="helpRequest" spellcheck="true" placeholder="I'm trying to…"></textarea>
+        <div class="meter" id="helpMeter">
+          <div data-part="goal"><strong>GOAL</strong>what you're trying to do</div>
+          <div data-part="happened"><strong>WHAT HAPPENS</strong>the error or wrong result</div>
+          <div data-part="tried"><strong>WHAT I TRIED</strong>what you've ruled out</div>
+          <div data-part="details"><strong>DETAILS</strong>code, error text or a line number</div>
+        </div>
+        <div class="help-score" id="helpScore">0 / 4 parts · 0 words</div>
+      </div>
+
+      <div class="subsection">
+        <h3>Trainer 3 — Learning Log</h3>
+        <p>Thirty seconds at the end of every session. It's saved in this browser, so you can come back to it.</p>
+        <div class="log-field"><label for="logLearned">TODAY I LEARNED…</label><textarea id="logLearned"></textarea></div>
+        <div class="log-field"><label for="logConfused">I'M STILL CONFUSED ABOUT…</label><textarea id="logConfused"></textarea></div>
+        <div class="log-field"><label for="logNext">NEXT TIME I'LL TRY…</label><textarea id="logNext"></textarea></div>
+        <div class="log-saved" id="logSaved" role="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Build the habits now, while the stakes are low.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Get all five Trainer 1 scenarios right</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Write a help request that lights up all four parts of the meter (at least 30 words)</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Fill in all three lines of your Learning Log with real sentences</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Plan your week: pick 3–4 short coding sessions (about 25 minutes each) and tell a parent when they are
+          <span class="sub">Little and often beats long and rare</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">Teach it back: explain the Stuck Protocol to someone in your family in under a minute</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>The meter looks for phrases like "I'm trying to…", "but", "error" or "instead", "I tried / I already…", and some code-looking text, quotes or a line number. Real detail, not magic words, is the point.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Next time you're genuinely stuck in a later mission, use the help-request recipe to ask an AI assistant — and notice how much better the answer is than "why doesn't my code work".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>1. Read the error</code><span>It names the problem and the line</span></div>
+        <div class="cheat-card"><code>2. Make it smaller</code><span>Find the smallest thing that still breaks</span></div>
+        <div class="cheat-card"><code>3. Rubber duck</code><span>Explain it out loud, line by line</span></div>
+        <div class="cheat-card"><code>4. Search / ask AI</code><span>With the exact error and code</span></div>
+        <div class="cheat-card"><code>5. Real break</code><span>Ten minutes away from the screen</span></div>
+        <div class="cheat-card"><code>6. Ask a person</code><span>Goal · what happens · what I tried · details</span></div>
+        <div class="cheat-card"><code>Little and often</code><span>Short sessions, many days</span></div>
+        <div class="cheat-card"><code>Test yourself</code><span>Recall first, then look it up</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Skipping the error message and guessing — the answer was usually written right there.</li>
+          <li>Changing five things at once, so you never learn which change mattered.</li>
+          <li>Asking "it doesn't work, help?" — nobody can answer that, including AI.</li>
+          <li>Pasting an AI's answer without understanding it (Mission 0.3) — you just postpone being stuck.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — your code crashes with a red error in the console. What should you do FIRST?</p>
+        <button class="quiz-btn" data-correct="false">Delete the code and start over</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — the error message usually tells you what went wrong and on which line. Always start there.">Read the whole error message carefully</button>
+        <button class="quiz-btn" data-correct="false">Ask someone immediately</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Trainer 1: scenarios ---------------- */
+  const SCENARIOS = [
+    { text: "Your page is blank and the console shows a red error you haven't read yet.",
+      options: ["Rewrite the whole file", "Read the full error message and find the line it names", "Ask an AI \"why is my page blank\"", "Restart the computer"], answer: 1,
+      why: "Step 1 — the error usually says what broke and where. Everything else is guessing." },
+    { text: "You read the error but your 60-line script is confusing. You can't tell which part is wrong.",
+      options: ["Comment out half the code to see which half still breaks", "Add more code", "Give up for today", "Change ten things at once"], answer: 0,
+      why: "Make it smaller — halving the problem repeatedly finds the broken part fast." },
+    { text: "You've found the five lines that break, and they look fine to you.",
+      options: ["Explain each line out loud, as if teaching a rubber duck", "Delete them", "Copy random code from a website", "Stare harder"], answer: 0,
+      why: "Explaining forces you to read what the code says, not what you meant — that's when mistakes jump out." },
+    { text: "You've tried for 40 minutes, you're frustrated, and you keep re-reading the same lines.",
+      options: ["Keep going for another hour", "Take a 10-minute break away from the screen", "Delete the project", "Type faster"], answer: 1,
+      why: "Tired eyes skip mistakes. A real break lets your brain reset — many bugs get solved right after one." },
+    { text: "You decide to ask an AI assistant for help.",
+      options: ["\"my code doesnt work fix it\"", "Paste the exact error, the few lines around it, what you expected, and what you tried", "Paste your whole project with no question", "Ask it to write a new project instead"], answer: 1,
+      why: "Specific questions get specific answers — the help-request recipe works on AIs too." },
+  ];
+
+  const host = document.getElementById("scenarios");
+  SCENARIOS.forEach((s, i) => {
+    const card = document.createElement("div");
+    card.className = "scenario";
+    card.innerHTML = '<div class="sc-num">SCENARIO ' + (i + 1) + '</div><p></p><div class="sc-opts"></div><div class="sc-why" role="status"></div>';
+    card.querySelector("p").textContent = s.text;
+    const opts = card.querySelector(".sc-opts");
+    const why = card.querySelector(".sc-why");
+    s.options.forEach((o, j) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "quiz-btn";
+      b.textContent = o;
+      b.addEventListener("click", () => {
+        opts.querySelectorAll(".quiz-btn").forEach((x) => x.classList.remove("correct", "wrong"));
+        const ok = j === s.answer;
+        b.classList.add(ok ? "correct" : "wrong");
+        why.textContent = ok ? s.why : "Not the best next step — think about which rung of the ladder comes first.";
+        why.style.color = ok ? "var(--success)" : "var(--danger)";
+        card.classList.toggle("solved", ok);
+      });
+      opts.appendChild(b);
+    });
+    host.appendChild(card);
+  });
+
+  /* ---------------- Trainer 2: help-request meter ---------------- */
+  const PARTS = {
+    goal: /\b(i'?m trying to|i am trying to|i want to|i'?d like to|my goal|i need to|trying to)\b/i,
+    happened: /\b(error|instead|but|nothing happens|doesn'?t|does not|crash|wrong|undefined|null|says|shows)\b/i,
+    tried: /\b(i tried|i'?ve tried|i have tried|i already|already tried|i checked|i added|i changed|i searched)\b/i,
+    details: /[(){};=<>"`]|line \d+|\bline\b \d|\w+\.\w+\(/i,
+  };
+  const helpBox = document.getElementById("helpRequest");
+  function scoreHelp() {
+    const text = helpBox.value;
+    let n = 0;
+    Object.keys(PARTS).forEach((k) => {
+      const on = PARTS[k].test(text);
+      document.querySelector('#helpMeter [data-part="' + k + '"]').classList.toggle("on", on);
+      if (on) n++;
+    });
+    const words = (text.match(/\S+/g) || []).length;
+    document.getElementById("helpScore").textContent = n + " / 4 parts · " + words + " words";
+  }
+  helpBox.addEventListener("input", scoreHelp);
+  scoreHelp();
+
+  /* ---------------- Trainer 3: learning log (this browser) ---------------- */
+  const LOG_KEY = "mcca_learning_log";
+  const fields = ["logLearned", "logConfused", "logNext"];
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LOG_KEY)) || {}; } catch (e) {}
+  fields.forEach((id) => {
+    const el = document.getElementById(id);
+    el.value = saved[id] || "";
+    el.addEventListener("input", () => {
+      saved[id] = el.value;
+      saved.updatedAt = new Date().toISOString();
+      try { localStorage.setItem(LOG_KEY, JSON.stringify(saved)); } catch (e) {}
+      document.getElementById("logSaved").textContent = "Saved in this browser.";
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
