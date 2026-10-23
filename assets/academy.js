@@ -180,10 +180,7 @@
     }
     function checkAllComplete() {
       const allChecked = Array.from(boxes).every((b) => b.checked);
-      if (allChecked) {
-        setMissionComplete(missionId, true);
-        updateStamp(missionId);
-      }
+      if (allChecked && !getProgress()[missionId]) completeMission(missionId);
     }
 
     const state = load();
@@ -211,22 +208,62 @@
     stamp.classList.toggle("not-complete", !complete);
   }
 
+  // The single path to "complete": persists, updates the stamp, plays the pop,
+  // and hands off to the engagement layer (XP toast, badges, rank-ups).
+  function completeMission(missionId) {
+    const engage = window.MCCA.engage;
+    const before = engage ? engage.computeStats() : null;
+    setMissionComplete(missionId, true);
+    updateStamp(missionId);
+    // Only the moment of actually completing gets the celebratory pop —
+    // never replayed just from reloading an already-completed mission.
+    const stamp = document.getElementById("missionStamp");
+    if (stamp) {
+      stamp.classList.remove("just-completed");
+      void stamp.offsetWidth; // restart the animation even on rapid re-clicks
+      stamp.classList.add("just-completed");
+    }
+    if (engage) engage.onMissionComplete(missionId, before);
+  }
+
   function initStamp(missionId) {
     const stamp = document.getElementById("missionStamp");
     if (!stamp || !missionId) return;
     updateStamp(missionId);
     stamp.addEventListener("click", () => {
-      const nowComplete = !getProgress()[missionId];
-      setMissionComplete(missionId, nowComplete);
-      updateStamp(missionId);
-      // Only the moment of actually completing gets the celebratory pop —
-      // never replayed just from reloading an already-completed mission.
-      if (nowComplete) {
-        stamp.classList.remove("just-completed");
-        void stamp.offsetWidth; // restart the animation even on rapid re-clicks
-        stamp.classList.add("just-completed");
+      if (getProgress()[missionId]) {
+        setMissionComplete(missionId, false);
+        updateStamp(missionId);
+        return;
       }
+      // Completion is earned through the Mission Challenge, not a free click.
+      const boxes = Array.from(document.querySelectorAll(".checklist input[type='checkbox']"));
+      const left = boxes.filter((b) => !b.checked).length;
+      if (left > 0) {
+        showStampNote(stamp, left === 1
+          ? "1 objective left in the Mission Challenge — finish it first."
+          : left + " objectives left in the Mission Challenge — finish them first.");
+        const list = document.querySelector(".checklist");
+        if (list) list.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      completeMission(missionId);
     });
+  }
+
+  function showStampNote(stamp, text) {
+    let note = document.getElementById("missionStampNote");
+    if (!note) {
+      note = document.createElement("div");
+      note.id = "missionStampNote";
+      note.className = "stamp-note";
+      note.setAttribute("role", "status");
+      stamp.insertAdjacentElement("afterend", note);
+    }
+    note.textContent = text;
+    note.classList.remove("show");
+    void note.offsetWidth;
+    note.classList.add("show");
   }
 
   /* ---------------- Dynamic prev/next nav ---------------- */
@@ -334,6 +371,7 @@
       + `<a class="mcca-home" href="../dashboard.html">◈ MISSION CONTROL</a>`
       + `<button class="mcca-theme-toggle" data-theme-toggle aria-label="Toggle theme"></button>`
       + `</div>`
+      + `<div class="mcca-sidebar-hud"></div>`
       + `<div class="mcca-sidebar-progress"><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="lbl">${done} / ${total} MISSIONS COMPLETE</div></div>`
       + `<nav class="mcca-nav">${navHtml}</nav>`
       + `<div class="mcca-resize-handle" title="Drag to resize"></div>`;
@@ -341,6 +379,7 @@
     document.body.appendChild(hamburger);
     document.body.appendChild(aside);
     applyTheme(getTheme());
+    if (window.MCCA.engage) window.MCCA.engage.mountHud(aside.querySelector(".mcca-sidebar-hud"));
 
     function setOpen(open) {
       aside.classList.toggle("open", open);
@@ -448,8 +487,11 @@
       initStamp(missionId);
       initMissionNav(missionId);
       buildSidebar(missionId);
+      if (window.MCCA.engage) await window.MCCA.engage.bootMission(missionId);
     } else {
       injectFloatingThemeToggle();
+      if (window.MCCA.engage) await window.MCCA.engage.bootPage();
     }
+    document.dispatchEvent(new CustomEvent("mcca:ready"));
   });
 })();

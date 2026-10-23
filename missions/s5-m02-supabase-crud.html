@@ -320,6 +320,7 @@
 <script src="../assets/auth-guard.js"></script>
 <script src="../assets/missions-data.js"></script>
 <script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
 <script src="../assets/sandbox.js"></script>
 <script>
 (function() {
@@ -393,11 +394,18 @@ SELECT * FROM crew;`;
       sqlOutput.innerHTML = '<div class="out-status">Database still loading, try again in a moment…</div>';
       return;
     }
+    let failed = false;
     try {
       const results = db.exec(sqlEditor.value);
       renderResults(results);
     } catch (err) {
+      failed = true;
       sqlOutput.innerHTML = `<div class="out-error">⚠ ${err.message}</div>`;
+    }
+    // Feed the auto-checked objectives (see assets/sandbox.js → mccaReportRun).
+    if (typeof mccaReportRun === 'function') {
+      const cfg = { starter: STARTER, examples: [{ code: EXAMPLE_JOIN }, { code: EXAMPLE_INSERT }] };
+      mccaReportRun({ kind: 'sql', code: sqlEditor.value, error: failed, authored: mccaIsAuthored(sqlEditor.value, cfg), outputEl: sqlOutput }, cfg);
     }
   }
 

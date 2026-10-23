@@ -315,3 +315,120 @@ grant execute on function child_get_theme(uuid, uuid) to anon;
 grant execute on function child_set_theme(uuid, uuid, text) to anon;
 grant execute on function child_get_checklist(uuid, uuid, text) to anon;
 grant execute on function child_set_checklist(uuid, uuid, text, text, boolean) to anon;
+
+-- ============================================================
+-- ENGAGEMENT LAYER (XP, ranks, streaks, badges, quizzes, AI quota)
+--
+-- Added with the engagement overhaul. Like everything above, safe to
+-- re-run. Until this section has been run, the site keeps working —
+-- assets/engagement.js logs activity to localStorage first and
+-- backfills it here automatically the first time these tables exist.
+-- ============================================================
+
+-- One row per meaningful learning event. XP, rank, streaks and badges
+-- are all COMPUTED from this log (plus `progress`), never stored, so
+-- there is exactly one source of truth.
+--   kind       what happened
+--   ref        what it happened to, e.g. 's5-m01/ch2', 's5-m01/q3',
+--              'sq-fizzbuzz', 'badge:liftoff', 's7-m03' (for hints)
+--   correct    quiz only — was the FIRST attempt right?
+--   xp         points awarded for this event (0 for wrong answers/hints)
+create table if not exists activity (
+  id bigint generated always as identity primary key,
+  child_id uuid not null references children(id) on delete cascade,
+  kind text not null check (kind in ('objective', 'quiz', 'sidequest', 'badge', 'hint', 'ai')),
+  ref text not null,
+  correct boolean,
+  xp integer not null default 0 check (xp between 0 and 500),
+  created_at timestamptz not null default now()
+);
+-- Every event counts at most once per child: a quiz question's FIRST
+-- attempt, an objective's first pass, a badge's first unlock.
+create unique index if not exists activity_once_idx on activity (child_id, kind, ref);
+create index if not exists activity_child_time_idx on activity (child_id, created_at desc);
+
+alter table activity enable row level security;
+
+drop policy if exists "own activity" on activity;
+create policy "own activity" on activity
+  for all
+  using (exists (
+    select 1 from children c where c.id = activity.child_id and c.parent_id = auth.uid()
+  ))
+  with check (exists (
+    select 1 from children c where c.id = activity.child_id and c.parent_id = auth.uid()
+  ));
+
+-- Child-link mode (no auth.uid()) — same (child_id, access_token) check
+-- as every other child_* RPC above.
+create or replace function child_log_activity(
+  p_child_id uuid, p_access_token uuid, p_kind text, p_ref text, p_correct boolean, p_xp integer
+)
+returns void as $$
+begin
+  if not exists (select 1 from children where id = p_child_id and access_token = p_access_token) then
+    raise exception 'invalid child session';
+  end if;
+  insert into activity (child_id, kind, ref, correct, xp)
+  values (p_child_id, p_kind, p_ref, p_correct, greatest(0, least(coalesce(p_xp, 0), 500)))
+  on conflict (child_id, kind, ref) do nothing;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+create or replace function child_get_activity(p_child_id uuid, p_access_token uuid)
+returns table(kind text, ref text, correct boolean, xp integer, created_at timestamptz) as $$
+  select a.kind, a.ref, a.correct, a.xp, a.created_at
+  from activity a
+  where a.child_id = p_child_id
+    and exists (select 1 from children c where c.id = p_child_id and c.access_token = p_access_token)
+  order by a.created_at;
+$$ language sql security definer set search_path = public;
+
+grant execute on function child_log_activity(uuid, uuid, text, text, boolean, integer) to anon;
+grant execute on function child_get_activity(uuid, uuid) to anon;
+
+-- ------------------------------------------------------------
+-- Live AI quota (used by the /api/ai Cloudflare Pages Function)
+-- ------------------------------------------------------------
+-- A hard daily cap per child on calls to the real language model, so an
+-- AI feature can never run up a bill or be abused through a shared link.
+create table if not exists ai_usage (
+  child_id uuid not null references children(id) on delete cascade,
+  day date not null default current_date,
+  calls integer not null default 0,
+  primary key (child_id, day)
+);
+alter table ai_usage enable row level security;
+
+drop policy if exists "own ai usage (read)" on ai_usage;
+create policy "own ai usage (read)" on ai_usage
+  for select
+  using (exists (
+    select 1 from children c where c.id = ai_usage.child_id and c.parent_id = auth.uid()
+  ));
+
+-- Called by the server function, never trusted from the browser alone:
+-- verifies the child's (id, token) pair, counts the call, and returns how
+-- many calls are LEFT today (0 or more), or -1 once the cap is exceeded,
+-- or -2 if the (id, token) pair is invalid. The cap lives HERE, not in a
+-- parameter, so nobody can raise their own limit by calling this directly.
+create or replace function consume_ai_quota(p_child_id uuid, p_access_token uuid)
+returns integer as $$
+declare
+  daily_limit constant integer := 40;
+  used integer;
+begin
+  if not exists (select 1 from children where id = p_child_id and access_token = p_access_token) then
+    return -2;
+  end if;
+  insert into ai_usage (child_id, day, calls) values (p_child_id, current_date, 1)
+  on conflict (child_id, day) do update set calls = ai_usage.calls + 1
+  returning calls into used;
+  if used > daily_limit then
+    return -1;
+  end if;
+  return daily_limit - used;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+grant execute on function consume_ai_quota(uuid, uuid) to anon;

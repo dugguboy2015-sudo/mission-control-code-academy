@@ -78,6 +78,22 @@
     </div>
   </header>
 
+  <!-- Command deck: rank / XP / streak, "continue", sector map, badges (filled by renderDeck) -->
+  <section class="deck" id="deck" aria-label="Your progress">
+    <div class="deck-top">
+      <div class="deck-card deck-rank" id="deckRank"></div>
+      <a class="deck-card deck-continue" id="deckContinue" href="#"></a>
+    </div>
+    <div class="deck-card deck-map">
+      <div class="deck-label"><span>SECTOR MAP</span><span id="sectorsCleared"></span></div>
+      <div class="sector-map" id="sectorMap"></div>
+    </div>
+    <div class="deck-card deck-badges">
+      <div class="deck-label"><span>BADGES</span><span id="badgeCount"></span></div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+  </section>
+
   <div class="legend">
     <span><span class="dot" style="background:var(--success)"></span> Live &amp; ready</span>
     <span><span class="dot" style="background:var(--text-muted)"></span> Planned</span>
@@ -95,6 +111,7 @@
 <script src="assets/auth-guard.js"></script>
 <script src="assets/missions-data.js"></script>
 <script src="assets/academy.js"></script>
+<script src="assets/engagement.js"></script>
 <script>
 (function () {
   "use strict";
@@ -283,7 +300,86 @@
 
     document.getElementById("overallFill").style.width = Math.round((totalDone / totalMissions) * 100) + "%";
     document.getElementById("overallLabel").textContent = `${totalDone} / ${totalMissions} MISSIONS COMPLETE`;
+    renderDeck();
   }
+
+  /* ---------------- Command deck (engagement.js) ---------------- */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // Where to pick up: the last mission opened (if unfinished), otherwise the
+  // next unfinished mission after it, otherwise the first unfinished one.
+  function nextMission(progress) {
+    const list = window.MCCA.flattenMissions().filter((m) => m.status !== "planned");
+    const last = window.MCCA.engage.lastMission();
+    const at = list.findIndex((m) => m.id === last);
+    if (at !== -1 && !progress[list[at].id]) return { m: list[at], resume: true };
+    const after = list.slice(at + 1).find((m) => !progress[m.id]);
+    const any = after || list.find((m) => !progress[m.id]);
+    return any ? { m: any, resume: false } : null;
+  }
+
+  function renderDeck() {
+    const engage = window.MCCA.engage;
+    if (!engage) { document.getElementById("deck").hidden = true; return; }
+    const s = engage.computeStats();
+    const progress = window.MCCA.getProgress();
+
+    document.getElementById("deckRank").innerHTML = engage.hudHtml(s)
+      + `<div class="deck-stats"><span><strong>${s.completed}</strong> missions</span><span><strong>${s.objectives}</strong> objectives verified</span>`
+      + `<span><strong>${s.quizFirstTry}</strong> first-try answers</span><span><strong>${s.longestStreak}</strong> best streak</span></div>`;
+
+    const cont = document.getElementById("deckContinue");
+    const next = nextMission(progress);
+    if (next) {
+      cont.href = next.m.file;
+      cont.innerHTML = `<div class="deck-label">${next.resume ? "PICK UP WHERE YOU LEFT OFF" : (s.completed ? "NEXT MISSION" : "START YOUR FIRST MISSION")}</div>`
+        + `<div class="continue-title">MISSION ${escapeHtml(next.m.num)}: ${escapeHtml(next.m.title)}</div>`
+        + `<div class="continue-sub">${escapeHtml(next.m.sectorName)}${next.m.capstone ? " · CAPSTONE" : ""}</div>`
+        + `<span class="continue-btn">${next.resume ? "CONTINUE" : "LAUNCH"} ▸</span>`;
+    } else {
+      cont.href = "#";
+      cont.innerHTML = '<div class="deck-label">ALL MISSIONS COMPLETE</div><div class="continue-title">Graduate status reached 🎓</div>'
+        + '<div class="continue-sub">Revisit any mission to sharpen your quiz record.</div>';
+    }
+
+    const map = document.getElementById("sectorMap");
+    map.innerHTML = "";
+    window.MISSION_MANIFEST.sectors.forEach((sec, i) => {
+      const done = sec.missions.filter((m) => progress[m.id]).length;
+      const pct = sec.missions.length ? Math.round((done / sec.missions.length) * 100) : 0;
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = "map-node accent-" + sec.accent + (pct === 100 ? " cleared" : done ? " started" : "");
+      node.style.setProperty("--pct", pct);
+      node.setAttribute("aria-label", `Sector ${sec.num}: ${sec.name} — ${done} of ${sec.missions.length} missions complete`);
+      node.title = sec.name;
+      node.innerHTML = `<span class="map-ring"><span>S${sec.num}</span></span><span class="map-name">${escapeHtml(sec.name)}</span>`;
+      node.addEventListener("click", () => {
+        const card = document.querySelectorAll(".sector-card")[i];
+        if (!card) return;
+        card.classList.add("open");
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      map.appendChild(node);
+    });
+
+    document.getElementById("sectorsCleared").textContent = s.sectorsCleared.length + " / " + window.MISSION_MANIFEST.sectors.length + " cleared";
+
+    // Sector-cleared badges show up as filled rings on the map above, not here.
+    const all = engage.BADGES().filter((b) => !/^sector-/.test(b.id));
+    const grid = document.getElementById("badgeGrid");
+    grid.innerHTML = all.map((b) => {
+      const got = s.badges.has(b.id);
+      return `<div class="badge${got ? " earned" : ""}" title="${escapeHtml(b.desc)}">`
+        + `<span class="badge-icon" aria-hidden="true">${got ? b.icon : "🔒"}</span>`
+        + `<span class="badge-name">${escapeHtml(b.name)}</span>`
+        + `<span class="sr-only">${got ? "Earned" : "Locked"}: ${escapeHtml(b.desc)}</span></div>`;
+    }).join("");
+    document.getElementById("badgeCount").textContent = all.filter((b) => s.badges.has(b.id)).length + " / " + all.length;
+  }
+  document.addEventListener("mcca:stats", () => { if (document.querySelector(".sector-card")) renderDeck(); });
 
   function withTimeout(promise, ms, label) {
     return Promise.race([
