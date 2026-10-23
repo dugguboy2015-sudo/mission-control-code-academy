@@ -84,6 +84,7 @@
       <div class="deck-card deck-rank" id="deckRank"></div>
       <a class="deck-card deck-continue" id="deckContinue" href="#"></a>
     </div>
+    <a class="deck-card deck-quests" href="side-quests.html" id="deckQuests"></a>
     <div class="deck-card deck-map">
       <div class="deck-label"><span>SECTOR MAP</span><span id="sectorsCleared"></span></div>
       <div class="sector-map" id="sectorMap"></div>
@@ -343,6 +344,10 @@
       cont.innerHTML = '<div class="deck-label">ALL MISSIONS COMPLETE</div><div class="continue-title">Graduate status reached 🎓</div>'
         + '<div class="continue-sub">Revisit any mission to sharpen your quiz record.</div>';
     }
+
+    const questsDone = engage.store.load().filter((a) => a.kind === "sidequest" && !/^daily:/.test(a.ref)).length;
+    document.getElementById("deckQuests").innerHTML = '<span class="dq-icon" aria-hidden="true">⚔️</span><span><strong>SIDE QUESTS</strong>'
+      + '<span class="dq-sub">Short puzzles + a new daily quest · ' + questsDone + ' / ' + engage.SIDE_QUEST_TOTAL + ' done</span></span><span class="dq-go">PLAY ▸</span>';
 
     const map = document.getElementById("sectorMap");
     map.innerHTML = "";

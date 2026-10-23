@@ -764,3 +764,13 @@ details p, details ul { color: var(--text-secondary); font-size: 14px; }
 .live-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
 .live-note strong { color: var(--accent-yellow); }
 .log-line.live-notice { color: var(--accent-yellow); }
+
+/* ---------- Side quests entry points ---------- */
+.deck-quests { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--text-primary); border-color: var(--accent-yellow); }
+.deck-quests:hover { box-shadow: var(--glow-shadow); }
+.deck-quests .dq-icon { font-size: 26px; }
+.deck-quests strong { display: block; font-family: var(--font-display); font-size: 14px; letter-spacing: 0.08em; color: var(--accent-yellow); }
+.deck-quests .dq-sub { font-size: 13px; color: var(--text-secondary); }
+.deck-quests .dq-go { margin-left: auto; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.1em; color: var(--accent-yellow); white-space: nowrap; }
+.mcca-sidebar-quests { display: block; padding: 9px 16px; border-bottom: 1px solid var(--border-glow); font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--accent-yellow); text-decoration: none; }
+.mcca-sidebar-quests:hover { background: rgba(127,127,127,0.06); }

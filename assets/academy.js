@@ -119,6 +119,16 @@
       resizeCanvas();
       initStars();
     });
+    // Pages that render their content after load (dashboard, side quests)
+    // grow taller than the canvas was sized for — keep the stars covering it.
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        if (Math.abs(canvas.height - document.documentElement.scrollHeight) > 40) {
+          resizeCanvas();
+          initStars();
+        }
+      }).observe(document.body);
+    }
   }
 
   /* ---------------- Copy buttons ---------------- */
@@ -372,6 +382,7 @@
       + `<button class="mcca-theme-toggle" data-theme-toggle aria-label="Toggle theme"></button>`
       + `</div>`
       + `<div class="mcca-sidebar-hud"></div>`
+      + `<a class="mcca-sidebar-quests" href="../side-quests.html">⚔️ SIDE QUESTS ▸</a>`
       + `<div class="mcca-sidebar-progress"><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="lbl">${done} / ${total} MISSIONS COMPLETE</div></div>`
       + `<nav class="mcca-nav">${navHtml}</nav>`
       + `<div class="mcca-resize-handle" title="Drag to resize"></div>`;

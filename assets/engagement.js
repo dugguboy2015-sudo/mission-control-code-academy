@@ -27,6 +27,7 @@
 
   /* ---------------- tuning ---------------- */
   const XP = { objective: 20, quizFirstTry: 10, mission: 50, capstone: 150, sidequest: 40 };
+  const SIDE_QUEST_TOTAL = 12;     // keep in sync with side-quests.html
   const ESCAPE_AFTER_MS = 120000; // "mark it myself" appears after 3 tries AND 2 minutes
 
   const RANKS = [
@@ -201,8 +202,9 @@
       objectives: acts.filter((a) => a.kind === "objective").length,
       quizFirstTry: acts.filter((a) => a.kind === "quiz" && a.correct).length,
       quizAnswered: acts.filter((a) => a.kind === "quiz").length,
-      sidequests: acts.filter((a) => a.kind === "sidequest").length,
-      sidequestTotal: (window.MCCA_SIDE_QUEST_COUNT || 0),
+      // "daily:<date>" entries are the daily-quest bonus, not separate quests.
+      sidequests: acts.filter((a) => a.kind === "sidequest" && !/^daily:/.test(a.ref)).length,
+      sidequestTotal: SIDE_QUEST_TOTAL,
       aiCalls: acts.filter((a) => a.kind === "ai").length,
       soloFlights,
       sectorsCleared,
@@ -684,7 +686,7 @@
   }
 
   M.engage = {
-    XP, RANKS, BADGES: allBadges,
+    XP, RANKS, BADGES: allBadges, SIDE_QUEST_TOTAL,
     computeStats, log, sync, mountHud, toast, onMissionComplete,
     bootMission, bootPage, store, hudHtml,
     remoteState: () => remoteState,

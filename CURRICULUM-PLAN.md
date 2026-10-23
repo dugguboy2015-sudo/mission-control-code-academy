@@ -172,7 +172,10 @@ _(Python introduced here because it is the language of AI work ahead.)_
 - 6.1 Python fundamentals `[HAVE M05]`
 - 6.2 Lists, dicts & Python data structures `[NEW]`
 - 6.3 Files, loops & working with data `[NEW]`
-- 6.4 🏁 Capstone: a data-crunching Python mini-project `[NEW]`
+- 6.4 Python meets the internet (APIs, JSON, requests) `[NEW]`
+- 6.5 Analyzing data (mean, median, group-by, text charts) `[NEW]`
+- 6.6 How machines learn (k-nearest neighbours from scratch) `[NEW]`
+- 6.7 🏁 Capstone: a data-crunching Python mini-project `[NEW]`
 
 ### SECTOR 7 — AI-**Enabled** Applications · the pivot  🔴
 - 7.1 What AI/ML/LLMs actually are — mental models (tokens, prediction, no magic) `[NEW]`

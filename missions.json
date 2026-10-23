@@ -11,7 +11,8 @@
       "missions": [
         { "id": "s0-m01", "num": "0.1", "title": "How Computers & Code Think", "subtitle": "Input, Process, Output", "file": "missions/s0-m01-computers-and-code.html", "status": "live", "difficulty": "cadet", "estMinutes": 30 },
         { "id": "s0-m02", "num": "0.2", "title": "How the Web Works", "subtitle": "Browser, Server, HTTP, URL, DNS", "file": "missions/s0-m02-how-the-web-works.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 },
-        { "id": "s0-m03", "num": "0.3", "title": "Your Workshop", "subtitle": "Editor, Files, Running Things, DevTools — and Your AI Co-Pilot", "file": "missions/s0-m03-your-workshop.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 }
+        { "id": "s0-m03", "num": "0.3", "title": "Your Workshop", "subtitle": "Editor, Files, Running Things, DevTools — and Your AI Co-Pilot", "file": "missions/s0-m03-your-workshop.html", "status": "live", "difficulty": "cadet", "estMinutes": 35 },
+        { "id": "s0-m04", "num": "0.4", "title": "Learning How to Learn", "subtitle": "Getting Unstuck Like a Pro", "file": "missions/s0-m04-learning-how-to-learn.html", "status": "live", "difficulty": "cadet", "estMinutes": 30 }
       ]
     },
     {
@@ -61,7 +62,8 @@
       "missions": [
         { "id": "s3-m01", "num": "3.1", "title": "Git & GitHub Fundamentals", "subtitle": "Commits, Branching, Merging, Remotes", "file": "missions/s3-m01-git-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 70, "source": "mission-01-git-branching.html", "note": "currently a broad single mission covering the log/staging/branching/merging/remotes together; splitting into 3.2 (dedicated branching/merging deep-dive) and 3.3 (GitHub/PRs deep-dive) is still planned" },
         { "id": "s3-m02", "num": "3.2", "title": "Branching & Merging Deep-Dive", "subtitle": "Parallel Timelines, Conflict Resolution", "file": "missions/s3-m02-branching-merging.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
-        { "id": "s3-m03", "num": "3.3", "title": "GitHub, Remotes & Pull Requests", "subtitle": "Syncing with Mission Control", "file": "missions/s3-m03-github-pull-requests.html", "status": "live", "difficulty": "officer", "estMinutes": 45 }
+        { "id": "s3-m03", "num": "3.3", "title": "GitHub, Remotes & Pull Requests", "subtitle": "Syncing with Mission Control", "file": "missions/s3-m03-github-pull-requests.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s3-m04", "num": "3.4", "title": "Code Review & Teamwork", "subtitle": "Building Software Together", "file": "missions/s3-m04-code-review-teamwork.html", "status": "live", "difficulty": "officer", "estMinutes": 35 }
       ]
     },
     {
@@ -105,7 +107,10 @@
         { "id": "s6-m01", "num": "6.1", "title": "Python Fundamentals", "subtitle": "Second Language, Same Universe", "file": "missions/s6-m01-python-fundamentals.html", "status": "live", "difficulty": "officer", "estMinutes": 60, "source": "mission-05-python-fundamentals.html" },
         { "id": "s6-m02", "num": "6.2", "title": "Lists, Dicts & Data Structures", "subtitle": "Python's Arrays and Objects", "file": "missions/s6-m02-python-data-structures.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
         { "id": "s6-m03", "num": "6.3", "title": "Files, Loops & Working with Data", "subtitle": "Reading Real Files in Python", "file": "missions/s6-m03-python-files-and-data.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
-        { "id": "s6-m04", "num": "6.4", "title": "Capstone: Data-Crunching Mini-Project", "subtitle": "A Real Python Analysis Tool", "file": "missions/s6-m04-capstone-python-data.html", "status": "live", "difficulty": "officer", "estMinutes": 80, "capstone": true }
+        { "id": "s6-m05", "num": "6.4", "title": "Python Meets the Internet", "subtitle": "APIs, JSON & requests", "file": "missions/s6-m05-python-and-the-internet.html", "status": "live", "difficulty": "officer", "estMinutes": 45 },
+        { "id": "s6-m06", "num": "6.5", "title": "Analyzing Data", "subtitle": "Finding the Story in the Numbers", "file": "missions/s6-m06-analyzing-data.html", "status": "live", "difficulty": "officer", "estMinutes": 50 },
+        { "id": "s6-m07", "num": "6.6", "title": "How Machines Learn", "subtitle": "Build a Classifier From Scratch", "file": "missions/s6-m07-how-machines-learn.html", "status": "live", "difficulty": "officer", "estMinutes": 55 },
+        { "id": "s6-m04", "num": "6.7", "title": "Capstone: Data-Crunching Mini-Project", "subtitle": "A Real Python Analysis Tool", "file": "missions/s6-m04-capstone-python-data.html", "status": "live", "difficulty": "officer", "estMinutes": 80, "capstone": true }
       ]
     },
     {

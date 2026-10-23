@@ -85,8 +85,8 @@
       </div>
 
       <div class="subsection">
-        <h3>One Function, One Job (Recap from Mission 6.4)</h3>
-        <p>A function handling five unrelated responsibilities is hard to test, hard to reuse, and hard to change safely — exactly Mission 6.4's function-decomposition lesson, now framed as a general refactoring target. If a function's name needs the word "and" to describe what it does (<code>validateAndSaveAndEmail</code>), it's very likely doing too much.</p>
+        <h3>One Function, One Job (Recap from Mission 6.7)</h3>
+        <p>A function handling five unrelated responsibilities is hard to test, hard to reuse, and hard to change safely — exactly Mission 6.7's function-decomposition lesson, now framed as a general refactoring target. If a function's name needs the word "and" to describe what it does (<code>validateAndSaveAndEmail</code>), it's very likely doing too much.</p>
       </div>
 
       <div class="subsection">
@@ -239,7 +239,7 @@
     const functionBodies = sourceCode.match(/function[^{]*\{[\s\S]*?\n\}/g) || [];
     functionBodies.forEach((body) => {
       const bodyLines = body.split("\n").filter((l) => l.trim());
-      if (bodyLines.length > 12) smells.push("A function is " + bodyLines.length + " lines long — consider splitting it (Mission 6.4).");
+      if (bodyLines.length > 12) smells.push("A function is " + bodyLines.length + " lines long — consider splitting it (Mission 6.7).");
     });
 
     if (el) {

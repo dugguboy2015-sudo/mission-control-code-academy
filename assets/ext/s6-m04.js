@@ -1,4 +1,4 @@
-/* Mission 6.4 — Capstone: Python Data Analyzer: auto-checks + quiz bank
+/* Mission 6.7 — Capstone: Python Data Analyzer: auto-checks + quiz bank
    (The starter already demonstrates items 2–3; item 5 happens on your own computer.) */
 MCCA.ext("s6-m04", {
   objectives: {

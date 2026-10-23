@@ -698,6 +698,102 @@ const check = runFinalReadinessCheck(homeworkHelper);
 console.log(check.passCount + " / " + check.total + " ready");`,
   },
 
+  /* ---------------- Phase 3 missions ---------------- */
+  "s0-m04": {
+    setup: async () => {
+      // Trainer 1: click the right option in every scenario (answers: 1, 0, 0, 1, 1).
+      [1, 0, 0, 1, 1].forEach((a, i) => document.querySelectorAll(".scenario")[i].querySelectorAll(".quiz-btn")[a].click());
+      const type = (id, v) => { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event("input")); };
+      type("helpRequest", "I'm trying to make my score go up when I click the star. When I click it nothing happens and the console says TypeError: star is null on line 4. I already checked the id and added a console.log in the handler. Here is my code: const star = document.querySelector(\"#starr\");");
+      type("logLearned", "how to read error messages properly");
+      type("logConfused", "when to use a break versus asking");
+      type("logNext", "the rubber duck method first");
+    },
+  },
+  "s3-m04": {
+    setup: async () => {
+      const comment = (line, cat, text) => {
+        document.querySelector('.rd-line[data-line="' + line + '"] .add-c').click();
+        const form = document.querySelector('.rd-thread[data-line="' + line + '"] .rc-form');
+        form.querySelector("select").value = cat;
+        form.querySelector("textarea").value = text;
+        form.querySelector(".rc-save").click();
+      };
+      comment(3, "security", "This live API key would ship to every visitor, so anyone could copy it. Could we move it to a server-side proxy instead?");
+      comment(5, "bug", "Using = assigns instead of comparing, so every score becomes the best. Could we change it to score > best?");
+      document.querySelector('input[name="verdict"][value="request"]').click();
+      document.getElementById("submitReview").click();
+    },
+  },
+  "s6-m05": {
+    ed: "pyEditor", run: "runBtn",
+    setup: async () => {
+      const ed = document.getElementById("pyEditor");
+      const data = ed.value.split("# WEATHER stands in")[0];
+      ed.value = data + `print(WEATHER["location"]["name"], WEATHER["current"]["temp_c"])
+for day in WEATHER["forecast"]:
+    print(day["day"], day["high"], day["low"], "alert:", day.get("alert", "none"))
+warmest = max(WEATHER["forecast"], key=lambda d: d["high"])
+print("Warmest:", warmest["day"], warmest["high"])`;
+      document.getElementById("runBtn").click();
+    },
+  },
+  "s6-m06": {
+    ed: "pyEditor", run: "runBtn",
+    setup: async () => {
+      const ed = document.getElementById("pyEditor");
+      const data = ed.value.split("# Twelve sessions")[0];
+      ed.value = data + `def mean(values):
+    return sum(values) / len(values)
+
+def median(values):
+    s = sorted(values)
+    m = len(s) // 2
+    if len(s) % 2 == 1:
+        return s[m]
+    return (s[m - 1] + s[m]) / 2
+
+scores = [s["score"] for s in GAME_LOG]
+print("mean", round(mean(scores), 1), "median", median(scores))
+minutes = {}
+by_game = {}
+for s in GAME_LOG:
+    minutes[s["game"]] = minutes.get(s["game"], 0) + s["minutes"]
+    by_game.setdefault(s["game"], []).append(s["score"])
+for game, total in minutes.items():
+    print(game, total, "#" * (total // 10))
+best = max(by_game, key=lambda g: mean(by_game[g]))
+print("Best average:", best, mean(by_game[best]))
+# Code Quest has the best average score of 157.5 but we only have 4 sessions per game`;
+      document.getElementById("runBtn").click();
+    },
+  },
+  "s6-m07": {
+    ed: "pyEditor", run: "runBtn",
+    setup: async () => {
+      const ed = document.getElementById("pyEditor");
+      const data = ed.value.split("def distance")[0];
+      ed.value = data + `def distance(a, b):
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+
+def predict(point, k=3):
+    nearest = sorted(TRAIN, key=lambda ex: distance(point, ex))[:k]
+    return Counter(ex[2] for ex in nearest).most_common(1)[0][0]
+
+print("distance test:", distance((0, 0), (3, 4)))
+for ex in sorted(TRAIN, key=lambda ex: distance((4, 1), ex))[:3]:
+    print(ex)
+print("mystery fruit (4, 1) is a", predict((4, 1)))
+correct = 0
+for size, sweetness, truth in TEST:
+    if predict((size, sweetness)) == truth:
+        correct += 1
+print("Accuracy:", correct * 100 // len(TEST), "%")
+# The big sweet apple sits next to the oranges because no training apple was that large`;
+      document.getElementById("runBtn").click();
+    },
+  },
+
   /* ---------------- Sector 2 ---------------- */
   "s2-m01": {
     ed: "jsEditor", run: "runBtn",

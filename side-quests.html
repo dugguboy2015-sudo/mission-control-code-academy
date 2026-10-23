@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Side Quests — Mission Control Code Academy</title>
+<link rel="stylesheet" href="assets/academy.css">
+<style>
+  .sq-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 760px) { .sq-top { grid-template-columns: minmax(0, 1fr); } }
+  .sq-daily { border-color: var(--accent-yellow); }
+  .sq-daily .deck-label { color: var(--accent-yellow); }
+  .sq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .sq-card { text-align: left; background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 14px 16px; cursor: pointer; color: var(--text-primary); font-family: var(--font-body); transition: border-color 0.15s ease, transform 0.15s ease; }
+  .sq-card:hover, .sq-card:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+  .sq-card.done { border-color: var(--success); }
+  .sq-card.active { border-color: var(--accent); box-shadow: var(--glow-shadow); }
+  .sq-card .sq-name { font-family: var(--font-display); font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+  .sq-card .sq-blurb { color: var(--text-secondary); font-size: 13px; margin-top: 6px; line-height: 1.4; }
+  .sq-card .sq-tags { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .sq-tag { font-family: var(--font-display); font-size: 9.5px; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--text-muted); }
+  .sq-tag.daily { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+  .sq-tag.ok { border-color: var(--success); color: var(--success); }
+  .sq-workbench { margin-top: 22px; }
+  .sq-workbench h2 { margin: 0 0 6px; font-size: 20px; }
+  .sq-brief { color: var(--text-secondary); font-size: 14.5px; }
+  .sq-brief code { color: var(--accent); }
+  .sq-examples { font-family: var(--font-code); font-size: 13px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 10px 14px; margin: 10px 0 14px; white-space: pre-wrap; color: var(--text-secondary); }
+  #sqEditor { min-height: 260px; }
+  .sq-results { font-family: var(--font-code); font-size: 13px; min-height: 260px; max-height: 360px; overflow: auto; }
+  .sq-results .pass { color: var(--success); }
+  .sq-results .fail { color: var(--danger); }
+  .sq-results .sum { margin-top: 10px; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.06em; }
+</style>
+</head>
+<body class="accent-yellow">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <header class="dashboard-hero" style="padding-bottom:24px;">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY</div>
+    <h1>SIDE QUESTS</h1>
+    <p class="briefing-line">Twelve short coding puzzles you can do in any order, any day. Each one is checked by real tests — pass them all and the quest is yours (+40 XP). A new <strong>Daily Quest</strong> is picked every day for bonus XP.</p>
+    <p style="margin-top:14px;"><a href="dashboard.html" style="color:var(--accent);font-family:var(--font-display);font-size:12px;letter-spacing:0.08em;text-decoration:none;">◂ BACK TO MISSION INDEX</a></p>
+  </header>
+
+  <div class="sq-top">
+    <div class="deck-card" id="sqHud"></div>
+    <button type="button" class="deck-card deck-continue sq-daily" id="sqDaily" style="text-align:left;cursor:pointer;font-family:var(--font-body);"></button>
+  </div>
+
+  <div class="sq-grid" id="sqGrid"></div>
+
+  <section class="card sq-workbench" id="sqBench" hidden aria-live="polite">
+    <h2 id="sqTitle"></h2>
+    <p class="sq-brief" id="sqBrief"></p>
+    <div class="sq-examples" id="sqExamples"></div>
+    <div class="sandbox-grid">
+      <div class="sandbox-pane">
+        <div class="pane-header"><span>QUEST.JS</span><button class="run-btn" id="sqRun">▶ RUN TESTS</button></div>
+        <label class="sr-only" for="sqEditor">Your solution</label>
+        <textarea id="sqEditor" class="sandbox-editor" spellcheck="false"></textarea>
+      </div>
+      <div class="sandbox-pane">
+        <div class="pane-header"><span>TEST RESULTS</span><span>●</span></div>
+        <div id="sqResults" class="sandbox-output sq-results"><div class="out-status">Write your function, then hit RUN TESTS.</div></div>
+      </div>
+    </div>
+    <div class="console-controls">
+      <button class="console-btn" id="sqReset" type="button">reset to starter</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/auth-guard.js"></script>
+<script src="assets/missions-data.js"></script>
+<script src="assets/academy.js"></script>
+<script src="assets/engagement.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* Each quest: a function to write, a few visible examples, and hidden
+     tests [args, expected]. Results are compared as JSON, so arrays and
+     objects work too. Keep the count in sync with SIDE_QUEST_TOTAL in
+     assets/engagement.js. */
+  const QUESTS = [
+    { id: "shout", name: "Mission Control Shout", level: "cadet", fn: "shout", params: "text",
+      brief: "Return the text in CAPITAL letters with an exclamation mark on the end.",
+      examples: 'shout("launch") → "LAUNCH!"',
+      tests: [[["launch"], "LAUNCH!"], [["go for orbit"], "GO FOR ORBIT!"], [[""], "!"]] },
+    { id: "vowels", name: "Vowel Counter", level: "cadet", fn: "countVowels", params: "text",
+      brief: "Count how many vowels (a, e, i, o, u — upper or lower case) are in the text.",
+      examples: 'countVowels("Rocket") → 2\ncountVowels("SKY") → 0',
+      tests: [[["Rocket"], 2], [["SKY"], 0], [["Aeiou"], 5], [["Mission Control"], 5]] },
+    { id: "palindrome", name: "Mirror Words", level: "cadet", fn: "isPalindrome", params: "text",
+      brief: "Return true if the text reads the same backwards — ignoring spaces and capital letters.",
+      examples: 'isPalindrome("Racecar") → true\nisPalindrome("never odd or even") → true\nisPalindrome("rocket") → false',
+      tests: [[["Racecar"], true], [["never odd or even"], true], [["rocket"], false], [["a"], true]] },
+    { id: "fizzbuzz", name: "FizzBuzz Countdown", level: "cadet", fn: "fizzBuzz", params: "n",
+      brief: "Return an array from 1 to n where multiples of 3 become \"Fizz\", multiples of 5 become \"Buzz\", and multiples of both become \"FizzBuzz\".",
+      examples: 'fizzBuzz(5) → [1, 2, "Fizz", 4, "Buzz"]',
+      tests: [[[5], [1, 2, "Fizz", 4, "Buzz"]], [[15], [1, 2, "Fizz", 4, "Buzz", "Fizz", 7, 8, "Fizz", "Buzz", 11, "Fizz", 13, 14, "FizzBuzz"]], [[1], [1]]] },
+    { id: "biggest", name: "Biggest Reading", level: "cadet", fn: "biggest", params: "nums",
+      brief: "Return the largest number in the array WITHOUT using Math.max. Return null for an empty array.",
+      examples: "biggest([3, 9, 2]) → 9\nbiggest([]) → null",
+      tests: [[[[3, 9, 2]], 9], [[[-5, -2, -9]], -2], [[[]], null], [[[7]], 7]], forbid: /Math\.max/ },
+    { id: "titlecase", name: "Title Case Station", level: "officer", fn: "titleCase", params: "text",
+      brief: "Capitalize the first letter of every word and make the rest lower case.",
+      examples: 'titleCase("hELLO mission control") → "Hello Mission Control"',
+      tests: [[["hELLO mission control"], "Hello Mission Control"], [["a"], "A"], [["ground   school"], "Ground   School"]] },
+    { id: "dedupe", name: "Duplicate Detector", level: "officer", fn: "removeDuplicates", params: "items",
+      brief: "Return a new array with duplicates removed, keeping the FIRST time each value appears, in order.",
+      examples: 'removeDuplicates([1, 2, 1, 3, 2]) → [1, 2, 3]',
+      tests: [[[[1, 2, 1, 3, 2]], [1, 2, 3]], [[["a", "a", "b"]], ["a", "b"]], [[[]], []]] },
+    { id: "caesar", name: "Secret Transmission", level: "officer", fn: "caesar", params: "text, shift",
+      brief: "Shift every letter forward in the alphabet by shift places, wrapping z → a. Keep capitals as capitals; leave spaces and punctuation alone.",
+      examples: 'caesar("abc", 1) → "bcd"\ncaesar("Zoo!", 2) → "Bqq!"',
+      tests: [[["abc", 1], "bcd"], [["Zoo!", 2], "Bqq!"], [["Hello, World", 13], "Uryyb, Jbeyq"], [["xyz", 3], "abc"]] },
+    { id: "digits", name: "Digit Sum", level: "cadet", fn: "sumDigits", params: "n",
+      brief: "Add up all the digits of a whole number.",
+      examples: "sumDigits(2087) → 17",
+      tests: [[[2087], 17], [[5], 5], [[0], 0], [[99999], 45]] },
+    { id: "missing", name: "Missing Crew Number", level: "officer", fn: "missingNumber", params: "nums",
+      brief: "The array holds the numbers 1 to n with exactly ONE missing, in any order. Return the missing number.",
+      examples: "missingNumber([3, 1, 4]) → 2",
+      tests: [[[[3, 1, 4]], 2], [[[1, 2, 3, 5]], 4], [[[2]], 1], [[[1, 2]], 3]] },
+    { id: "anagram", name: "Anagram Scanner", level: "officer", fn: "isAnagram", params: "a, b",
+      brief: "Return true if the two texts use exactly the same letters (ignoring spaces and capitals).",
+      examples: 'isAnagram("Listen", "Silent") → true\nisAnagram("moon", "mono") → true\nisAnagram("star", "rats!") → false',
+      tests: [[["Listen", "Silent"], true], [["moon", "mono"], true], [["dormitory", "dirty room"], true], [["star", "stars"], false]] },
+    { id: "fuel", name: "Fleet Fuel Report", level: "officer", fn: "fuelReport", params: "missions",
+      brief: "Given an array of {name, fuel} objects, return {total, hungriest}: the total fuel and the name of the mission that used the most.",
+      examples: 'fuelReport([{name: "Luna", fuel: 40}, {name: "Mars", fuel: 90}])\n  → { total: 130, hungriest: "Mars" }',
+      tests: [[[[{ name: "Luna", fuel: 40 }, { name: "Mars", fuel: 90 }]], { total: 130, hungriest: "Mars" }], [[[{ name: "Solo", fuel: 5 }]], { total: 5, hungriest: "Solo" }]] },
+  ];
+
+  const engage = window.MCCA.engage;
+  const DAILY_XP = 20;
+  const today = (() => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+  const dailyIdx = Math.floor(new Date(today + "T00:00:00Z").getTime() / 86400000) % QUESTS.length;
+  const daily = QUESTS[dailyIdx];
+  let current = null;
+
+  const isDone = (q) => engage.store.has("sidequest", q.id);
+  const codeKey = (q) => "mcca_sq_code_" + q.id;
+  const starter = (q) => "function " + q.fn + "(" + q.params + ") {\n  // your code here\n}\n";
+
+  function renderHud() {
+    const s = engage.computeStats();
+    const done = QUESTS.filter(isDone).length;
+    document.getElementById("sqHud").innerHTML = engage.hudHtml(s)
+      + '<div class="deck-stats" style="grid-template-columns:repeat(2,1fr);"><span><strong>' + done + " / " + QUESTS.length + '</strong> quests done</span>'
+      + "<span><strong>" + (engage.store.has("sidequest", "daily:" + today) ? "✓" : "—") + "</strong> today's daily</span></div>";
+    const d = document.getElementById("sqDaily");
+    const dailyDone = engage.store.has("sidequest", "daily:" + today);
+    d.innerHTML = '<div class="deck-label">DAILY QUEST · ' + today + "</div>"
+      + '<div class="continue-title"></div><div class="continue-sub"></div>'
+      + '<span class="continue-btn">' + (dailyDone ? "DONE TODAY ✓" : "+" + DAILY_XP + " BONUS XP ▸") + "</span>";
+    d.querySelector(".continue-title").textContent = daily.name;
+    d.querySelector(".continue-sub").textContent = daily.brief;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById("sqGrid");
+    grid.innerHTML = "";
+    QUESTS.forEach((q) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "sq-card" + (isDone(q) ? " done" : "") + (current === q ? " active" : "");
+      b.innerHTML = '<div class="sq-name"><span></span><span aria-hidden="true">' + (isDone(q) ? "✓" : "") + '</span></div><div class="sq-blurb"></div><div class="sq-tags"></div>';
+      b.querySelector(".sq-name span").textContent = q.name;
+      b.querySelector(".sq-blurb").textContent = q.brief;
+      const tags = b.querySelector(".sq-tags");
+      tags.innerHTML = '<span class="sq-tag">' + (q.level === "cadet" ? "🟢 CADET" : "🟡 OFFICER") + "</span>"
+        + (q === daily ? '<span class="sq-tag daily">DAILY</span>' : "")
+        + (isDone(q) ? '<span class="sq-tag ok">COMPLETE</span>' : "");
+      b.setAttribute("aria-label", q.name + (isDone(q) ? " — complete" : ""));
+      b.addEventListener("click", () => open(q));
+      grid.appendChild(b);
+    });
+  }
+
+  function open(q) {
+    current = q;
+    document.getElementById("sqBench").hidden = false;
+    document.getElementById("sqTitle").textContent = q.name + (q === daily ? " · DAILY QUEST" : "");
+    document.getElementById("sqBrief").innerHTML = "";
+    document.getElementById("sqBrief").append("Write ", Object.assign(document.createElement("code"), { textContent: q.fn + "(" + q.params + ")" }), ". " + q.brief);
+    document.getElementById("sqExamples").textContent = q.examples;
+    let saved = null;
+    try { saved = localStorage.getItem(codeKey(q)); } catch (e) {}
+    document.getElementById("sqEditor").value = saved || starter(q);
+    document.getElementById("sqResults").innerHTML = '<div class="out-status">Write your function, then hit RUN TESTS.' + (isDone(q) ? " (You've already completed this one — practice away!)" : "") + "</div>";
+    renderGrid();
+    document.getElementById("sqBench").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function line(cls, text) {
+    const d = document.createElement("div");
+    d.className = cls;
+    d.textContent = text;
+    document.getElementById("sqResults").appendChild(d);
+  }
+
+  function runTests() {
+    const q = current;
+    if (!q) return;
+    const code = document.getElementById("sqEditor").value;
+    try { localStorage.setItem(codeKey(q), code); } catch (e) {}
+    const out = document.getElementById("sqResults");
+    out.innerHTML = "";
+    if (q.forbid && q.forbid.test(code)) { line("fail", "✗ This quest asks you to solve it without " + String(q.forbid.source).replace(/\\/g, "") + "."); return; }
+    let fn;
+    try {
+      fn = new Function(code + "\n;return typeof " + q.fn + " === 'function' ? " + q.fn + " : null;")();
+    } catch (err) {
+      line("fail", "⚠ Your code has an error: " + err.message);
+      return;
+    }
+    if (!fn) { line("fail", "⚠ Couldn't find a function called " + q.fn + " — keep that exact name."); return; }
+    let passed = 0;
+    q.tests.forEach(([args, expected]) => {
+      const call = q.fn + "(" + args.map((a) => JSON.stringify(a)).join(", ") + ")";
+      let got, ok = false;
+      try {
+        got = fn(...JSON.parse(JSON.stringify(args)));
+        ok = JSON.stringify(got) === JSON.stringify(expected);
+      } catch (err) { got = "error: " + err.message; }
+      if (ok) passed++;
+      line(ok ? "pass" : "fail", (ok ? "✓ " : "✗ ") + call + " → " + JSON.stringify(got) + (ok ? "" : "   (expected " + JSON.stringify(expected) + ")"));
+    });
+    const all = passed === q.tests.length;
+    line("sum " + (all ? "pass" : "fail"), passed + " / " + q.tests.length + " TESTS PASSED" + (all ? " — QUEST COMPLETE!" : ""));
+    if (all) {
+      engage.log("sidequest", q.id, { xp: engage.XP.sidequest, label: "Side quest · " + q.name });
+      if (q === daily) engage.log("sidequest", "daily:" + today, { xp: DAILY_XP, label: "Daily quest bonus" });
+      renderGrid();
+      renderHud();
+    }
+  }
+
+  document.getElementById("sqRun").addEventListener("click", runTests);
+  document.getElementById("sqReset").addEventListener("click", () => { if (current) document.getElementById("sqEditor").value = starter(current); });
+  document.getElementById("sqDaily").addEventListener("click", () => open(daily));
+  document.addEventListener("mcca:stats", renderHud);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderHud();
+    renderGrid();
+  });
+})();
+</script>
+
+</body>
+</html>

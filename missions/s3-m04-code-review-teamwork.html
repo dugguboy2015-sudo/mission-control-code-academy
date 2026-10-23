@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 3.4: Code Review & Teamwork — Building Software Together | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .pr-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; margin-bottom: 10px; }
+  .pr-head h3 { margin: 0; font-size: 16px; }
+  .pr-head .pr-meta { color: var(--text-muted); font-size: 13px; }
+  .pr-desc { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+  .review-diff { border: 1px solid var(--border-glow); border-radius: 10px; overflow: hidden; font-family: var(--font-code); font-size: 13px; }
+  .review-diff .file { background: var(--bg-panel-alt); padding: 8px 12px; color: var(--text-secondary); border-bottom: 1px solid var(--border-glow); }
+  .rd-line { display: grid; grid-template-columns: 34px 36px minmax(0, 1fr); align-items: center; background: rgba(77,255,180,0.05); border-bottom: 1px solid rgba(127,127,127,0.08); }
+  .rd-line .ln { color: var(--text-muted); text-align: right; padding-right: 8px; font-size: 12px; }
+  .rd-line .add-c { width: 26px; height: 22px; border-radius: 6px; border: 1px solid var(--border-glow); background: var(--bg-panel); color: var(--accent); cursor: pointer; font-size: 13px; line-height: 1; }
+  .rd-line .add-c:hover, .rd-line .add-c:focus-visible { border-color: var(--accent); }
+  .rd-line code { white-space: pre; overflow-x: auto; padding: 5px 8px; color: var(--text-primary); background: none; }
+  .rd-line.has-comment { background: rgba(78,225,255,0.07); }
+  .rc-form, .rc-item { margin: 0 10px 10px 70px; padding: 10px 12px; border: 1px solid var(--border-glow); border-radius: 10px; background: var(--bg-panel); font-family: var(--font-body); font-size: 14px; }
+  @media (max-width: 600px) { .rc-form, .rc-item { margin-left: 10px; } }
+  .rc-form select, .rc-form textarea { width: 100%; background: var(--bg-void); color: var(--text-primary); border: 1px solid var(--border-glow); border-radius: 8px; padding: 8px 10px; font-family: var(--font-body); font-size: 14px; margin-bottom: 8px; }
+  .rc-form textarea { min-height: 70px; resize: vertical; }
+  .rc-item .rc-cat { font-family: var(--font-display); font-size: 10px; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-glow); color: var(--accent); margin-right: 8px; }
+  .rc-item .rc-del { float: right; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; }
+  .verdict-row { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 16px 0 10px; font-size: 14px; color: var(--text-secondary); }
+  .verdict-row label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  #reviewResult { margin-top: 12px; font-size: 14px; min-height: 20px; }
+</style>
+</head>
+<body class="accent-orange" data-mission-id="s3-m04">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 3</div>
+    <h1>MISSION 3.4: CODE REVIEW &amp; TEAMWORK</h1>
+    <div class="subtitle">Building Software Together</div>
+    <p class="briefing-line">Mission 3.3 got your code into a Pull Request. Now comes the part that makes teams great: someone else reads it before it ships. Code review catches bugs and security holes, spreads knowledge, and — done kindly — makes everyone better. In this mission you'll review a real-looking Pull Request, write feedback a teammate would actually thank you for, and decide whether it's ready to merge.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~35 MIN</span>
+      <span class="badge">🛠 BROWSER ONLY</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>Almost no professional code reaches users without a second pair of eyes. The author opens a Pull Request; a reviewer reads the diff line by line, leaves comments, and finally chooses <strong>Approve</strong>, <strong>Comment</strong>, or <strong>Request changes</strong>. The goal isn't to prove you're smarter — it's that the <em>team's</em> code gets better, and the author learns something rather than feeling attacked.</p>
+      <p>With AI writing more and more code, reviewing has become one of the most important skills a developer has: reading code critically is how you catch what the machine (or your tired self) got wrong.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>What a Reviewer Looks For — in This Order</h3>
+        <ol style="color:var(--text-secondary);font-size:14.5px;">
+          <li><strong>Correctness</strong> — does it do what the PR says? Any bugs or missing edge cases?</li>
+          <li><strong>Security</strong> — secrets in code, untrusted input used unsafely, data leaking? (Sector 9 goes deep.)</li>
+          <li><strong>Clarity</strong> — can the next person understand it? Clear names, no mystery numbers, no dead code.</li>
+          <li><strong>Nits</strong> — tiny style preferences. Label them "nit:" so nobody mistakes them for blockers.</li>
+        </ol>
+      </div>
+
+      <div class="subsection">
+        <h3>Feedback People Can Use: Kind, Specific, Actionable</h3>
+        <div class="code-block">
+          <div class="code-tab"><span>REVIEW COMMENTS</span><button class="copy-btn" data-copy="✗  This is wrong.&#10;✗  Why would you do this??&#10;&#10;✓  Line 5 uses = (assignment) instead of &gt; — so every score overwrites the best one.&#10;   Could we change it to `if (score &gt; best)`?&#10;✓  nit: `x` could be called `previousBest` so it's clear what it holds.&#10;✓  Really nice idea to save the best score locally — players will love it.">COPY</button></div>
+          <pre><code><span class="comment">✗</span>  This is wrong.
+<span class="comment">✗</span>  Why would you do this??
+
+<span class="str">✓</span>  Line 5 uses = (assignment) instead of &gt; — so every score overwrites the best one.
+   Could we change it to `if (score &gt; best)`?
+<span class="str">✓</span>  nit: `x` could be called `previousBest` so it's clear what it holds.
+<span class="str">✓</span>  Really nice idea to save the best score locally — players will love it.</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          Good comments say <strong>where</strong> (the line), <strong>what</strong> goes wrong and <strong>why</strong>, then <strong>suggest</strong> a fix as a question ("Could we…?"). They comment on the code, never the person. And they include genuine praise — reviews aren't only for problems.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Being Reviewed</h3>
+        <p>Every developer, at every level, gets review comments. Treat them as free lessons. Say thanks, ask if something is unclear, fix it or explain your reasoning — and remember the comment is about the code, not about you. Small PRs get faster, better reviews than giant ones.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Other Ways Teams Build Together</h3>
+        <ul style="color:var(--text-secondary);font-size:14.5px;">
+          <li><strong>Issues</strong> — a written to-do for one bug or feature, so work can be split up and tracked.</li>
+          <li><strong>Pair programming</strong> — two people, one keyboard: a "driver" types while a "navigator" thinks ahead. Then swap.</li>
+          <li><strong>Agreeing on style</strong> — a formatter like Prettier settles spacing arguments automatically, so reviews focus on what matters.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <div class="pr-head">
+        <h3>#14 · Save the player's high score</h3>
+        <span class="pr-meta">opened by <strong>kip-codes</strong> · wants to merge <code>feature/high-score</code> into <code>main</code></span>
+      </div>
+      <div class="pr-desc">"Adds high-score saving so players can see their best run. Also posts the score to the leaderboard. Tested by playing twice. Ready to merge!"</div>
+
+      <div class="review-diff" id="reviewDiff">
+        <div class="file">game.js · +11 lines</div>
+      </div>
+
+      <div class="verdict-row" role="radiogroup" aria-label="Review decision">
+        <label><input type="radio" name="verdict" value="approve"> Approve</label>
+        <label><input type="radio" name="verdict" value="comment"> Comment only</label>
+        <label><input type="radio" name="verdict" value="request"> Request changes</label>
+      </div>
+      <button class="console-btn" id="submitReview" type="button">SUBMIT REVIEW</button>
+      <div id="reviewResult" role="status"></div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Review PR #14 above. Click the <strong>+</strong> beside any line to leave a comment on it.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Find the security problem and comment on that line with the <strong>security</strong> category</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Find the bug that makes every score count as a new best, and comment on it with the <strong>bug</strong> category</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Write at least one comment that's kind, specific and actionable: at least 12 words, explains why, suggests a fix — no put-downs</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Submit your review with the right decision for a PR containing a leaked key and a bug</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">For real: review a piece of code from a friend or family member (or have them review one of your projects) and leave at least one compliment and one suggestion</label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Look for something that should never be written into front-end code (Mission 7.3 will tell you why), and for a <code>=</code> where a comparison belongs.</p>
+      </details>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Leave a <strong>praise</strong> comment on something the author did well, and a <strong>nit</strong> about naming. Great reviewers notice the good parts too.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>Approve</code><span>Ready to merge as-is</span></div>
+        <div class="cheat-card"><code>Comment</code><span>Thoughts, but not blocking</span></div>
+        <div class="cheat-card"><code>Request changes</code><span>Must be fixed before merging</span></div>
+        <div class="cheat-card"><code>nit:</code><span>A tiny, optional style point</span></div>
+        <div class="cheat-card"><code>Where · what · why · fix</code><span>The shape of a useful comment</span></div>
+        <div class="cheat-card"><code>"Could we…?"</code><span>Suggest, don't command</span></div>
+        <div class="cheat-card"><code>Small PRs</code><span>Faster, better reviews</span></div>
+        <div class="cheat-card"><code>Driver / navigator</code><span>Pair programming roles</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Approving without actually reading the diff ("looks good to me" on code you skimmed).</li>
+          <li>Commenting on the person ("you always…") instead of the code.</li>
+          <li>Blocking a PR over nits while missing the real bug.</li>
+          <li>Taking review comments personally — they're free lessons from someone who read your work carefully.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — which review comment is the most useful?</p>
+        <button class="quiz-btn" data-correct="false">"This is bad."</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — it points at the line, explains the problem and suggests a fix, all about the code.">"Line 5 overwrites the best score every time because = assigns. Could we use > instead?"</button>
+        <button class="quiz-btn" data-correct="false">"LGTM" without reading it</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const LINES = [
+    "function saveHighScore(score) {",
+    "  // TODO: tidy this up later",
+    "  const API_KEY = \"sk-live-9f8e7d6c5b4a3210\";",
+    "  let best = Number(localStorage.getItem(\"best\")) || 0;",
+    "  if (score = best) {",
+    "    localStorage.setItem(\"best\", score);",
+    "    sendToLeaderboard(score, API_KEY);",
+    "  }",
+    "  let x = best;",
+    "  return x;",
+    "}",
+  ];
+  const CATEGORIES = ["bug", "security", "readability", "nit", "praise"];
+
+  const diff = document.getElementById("reviewDiff");
+
+  LINES.forEach((text, i) => {
+    const n = i + 1;
+    const row = document.createElement("div");
+    row.className = "rd-line";
+    row.dataset.line = n;
+    row.innerHTML = '<span class="ln">' + n + '</span><button type="button" class="add-c" aria-label="Comment on line ' + n + '">+</button><code></code>';
+    row.querySelector("code").textContent = "+ " + text;
+    const thread = document.createElement("div");
+    thread.className = "rd-thread";
+    thread.dataset.line = n;
+    row.querySelector(".add-c").addEventListener("click", () => openForm(n, thread));
+    diff.appendChild(row);
+    diff.appendChild(thread);
+  });
+
+  function openForm(n, thread) {
+    if (thread.querySelector(".rc-form")) { thread.querySelector("textarea").focus(); return; }
+    const form = document.createElement("div");
+    form.className = "rc-form";
+    form.innerHTML = '<label class="sr-only" for="cat' + n + '">Category</label><select id="cat' + n + '">'
+      + CATEGORIES.map((c) => '<option value="' + c + '">' + c + "</option>").join("") + "</select>"
+      + '<label class="sr-only" for="txt' + n + '">Comment on line ' + n + '</label><textarea id="txt' + n + '" placeholder="Where · what · why · suggested fix"></textarea>'
+      + '<button type="button" class="console-btn rc-save">ADD COMMENT</button> <button type="button" class="console-btn rc-cancel">CANCEL</button>';
+    form.querySelector(".rc-cancel").addEventListener("click", () => form.remove());
+    form.querySelector(".rc-save").addEventListener("click", () => {
+      const text = form.querySelector("textarea").value.trim();
+      if (!text) { form.querySelector("textarea").focus(); return; }
+      addComment(n, thread, form.querySelector("select").value, text);
+      form.remove();
+    });
+    thread.appendChild(form);
+    form.querySelector("textarea").focus();
+  }
+
+  function addComment(n, thread, cat, text) {
+    const item = document.createElement("div");
+    item.className = "rc-item";
+    item.dataset.line = n;
+    item.dataset.cat = cat;
+    item.innerHTML = '<button type="button" class="rc-del" aria-label="Delete comment">✕</button><span class="rc-cat"></span><span class="rc-text"></span>';
+    item.querySelector(".rc-cat").textContent = cat.toUpperCase();
+    item.querySelector(".rc-text").textContent = text;
+    item.querySelector(".rc-del").addEventListener("click", () => {
+      item.remove();
+      markLine(n);
+    });
+    thread.appendChild(item);
+    markLine(n);
+  }
+
+  function markLine(n) {
+    const row = diff.querySelector('.rd-line[data-line="' + n + '"]');
+    row.classList.toggle("has-comment", !!diff.querySelector('.rc-item[data-line="' + n + '"]'));
+  }
+
+  document.getElementById("submitReview").addEventListener("click", () => {
+    const picked = document.querySelector('input[name="verdict"]:checked');
+    const out = document.getElementById("reviewResult");
+    if (!picked) { out.textContent = "Pick a decision first."; out.style.color = "var(--warning)"; return; }
+    out.dataset.verdict = picked.value;
+    const comments = diff.querySelectorAll(".rc-item").length;
+    if (picked.value === "request") {
+      out.textContent = "✓ Changes requested with " + comments + " comment(s). Kip will fix the leaked key and the comparison before this merges — exactly right for a PR with a security hole and a bug.";
+      out.style.color = "var(--success)";
+    } else if (picked.value === "approve") {
+      out.textContent = "✗ Approved — this would ship a live API key to every visitor and a high score that never works. Look at lines 3 and 5 again.";
+      out.style.color = "var(--danger)";
+    } else {
+      out.textContent = "Hmm — comment-only lets it merge as-is. Are the problems you found safe to ship?";
+      out.style.color = "var(--warning)";
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

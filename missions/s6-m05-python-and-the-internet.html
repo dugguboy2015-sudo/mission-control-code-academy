@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{visibility:hidden}</style>
+<title>Mission 6.4: Python Meets the Internet — APIs, JSON & requests | Mission Control Code Academy</title>
+<link rel="stylesheet" href="../assets/academy.css">
+<style>
+  .terminal-callout {
+    background: #05070d; border: 1px solid var(--border-glow); border-left: 3px solid var(--accent-green);
+    border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-family: var(--font-code); font-size: 13px;
+  }
+  .terminal-callout .tc-label { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.1em; color: var(--accent-green); margin-bottom: 8px; display: block; }
+  .terminal-callout .tc-line { color: var(--text-secondary); margin-bottom: 3px; }
+  .terminal-callout .tc-prompt { color: var(--accent-green); }
+  .map-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+  .map-table th, .map-table td { border: 1px solid var(--border-glow); padding: 8px 12px; text-align: left; }
+  .map-table th { background: var(--bg-panel-alt); color: var(--accent); font-family: var(--font-display); font-size: 12px; letter-spacing: 0.05em; }
+  .map-table code { color: var(--text-primary); }
+  #pyEditor { min-height: 340px; tab-size: 4; }
+  #pyOutput { min-height: 340px; max-height: 420px; white-space: pre-wrap; }
+</style>
+</head>
+<body class="accent-purple" data-mission-id="s6-m05">
+
+<canvas id="starfield"></canvas>
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="mission-tag">MISSION CONTROL CODE ACADEMY · SECTOR 6</div>
+    <h1>MISSION 6.4: PYTHON MEETS THE INTERNET</h1>
+    <div class="subtitle">APIs, JSON &amp; requests</div>
+    <p class="briefing-line">In Mission 4.3 your JavaScript asked a real API for data and got JSON back. Python does exactly the same job — and it's the language most AI and data work happens in. This mission is about the part that matters most once the data arrives: digging through nested dictionaries and lists to find the one number you actually need, without crashing when something is missing.</p>
+    <div class="hero-meta">
+      <span class="badge difficulty-officer">🟡 OFFICER LEVEL</span>
+      <span class="badge">⏱ ~45 MIN</span>
+      <span class="badge">🛠 BROWSER + TERMINAL</span>
+    </div>
+  </header>
+
+  <!-- ================= BRIEFING ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">1</span><h2>Briefing</h2></div>
+    <div class="card">
+      <p>An <strong>API</strong> answers a request with text formatted as <strong>JSON</strong>. Python's <code>requests</code> library turns that text into ordinary Python <strong>dictionaries and lists</strong> with one call: <code>response.json()</code>. From that moment on it's just the data-structure skills from Mission 6.2.</p>
+      <p>One honest limitation: the in-browser Python below can't make network requests. So the Command Console is preloaded with <code>WEATHER</code> — a dictionary shaped <em>exactly</em> like what <code>response.json()</code> returns from a real weather API. Everything you practice on it works unchanged on live data, and the Mission Challenge ends with you calling a real API from your own computer.</p>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MANUAL ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">2</span><h2>Field Manual</h2></div>
+    <div class="card">
+
+      <div class="subsection">
+        <h3>Calling an API with requests</h3>
+        <p><code>requests</code> isn't built into Python — install it once with <code>pip install requests</code> — but it's the standard way Python talks to the web.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="import requests&#10;&#10;url = &quot;https://api.open-meteo.com/v1/forecast&quot;&#10;params = {&quot;latitude&quot;: 51.5, &quot;longitude&quot;: -0.12, &quot;current&quot;: &quot;temperature_2m&quot;}&#10;&#10;response = requests.get(url, params=params, timeout=10)&#10;response.raise_for_status()   # stop here if the server said 4xx/5xx&#10;&#10;data = response.json()        # JSON text  →  Python dict&#10;print(data[&quot;current&quot;][&quot;temperature_2m&quot;])">COPY</button></div>
+          <pre><code><span class="kw">import</span> requests
+
+url = <span class="str">"https://api.open-meteo.com/v1/forecast"</span>
+params = {<span class="str">"latitude"</span>: <span class="num">51.5</span>, <span class="str">"longitude"</span>: <span class="num">-0.12</span>, <span class="str">"current"</span>: <span class="str">"temperature_2m"</span>}
+
+response = requests.<span class="fn">get</span>(url, params=params, timeout=<span class="num">10</span>)
+response.<span class="fn">raise_for_status</span>()   <span class="comment"># stop here if the server said 4xx/5xx</span>
+
+data = response.<span class="fn">json</span>()        <span class="comment"># JSON text  →  Python dict</span>
+<span class="fn">print</span>(data[<span class="str">"current"</span>][<span class="str">"temperature_2m"</span>])</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>params</code> builds the <code>?latitude=51.5&amp;longitude=-0.12…</code> part of the URL for you — no string gluing. <code>timeout=10</code> means "give up after 10 seconds" instead of hanging forever. <code>raise_for_status()</code> is Python's version of checking <code>response.ok</code> from Mission 4.3: a 404 or 500 becomes a clear error instead of a confusing crash three lines later.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>JSON Becomes Dictionaries and Lists</h3>
+        <p>JSON and Python look almost identical, with a few spelling differences:</p>
+        <table class="map-table">
+          <tr><th>JSON</th><th>PYTHON</th></tr>
+          <tr><td><code>{ "temp": 21 }</code> object</td><td><code>{"temp": 21}</code> dict</td></tr>
+          <tr><td><code>[1, 2, 3]</code> array</td><td><code>[1, 2, 3]</code> list</td></tr>
+          <tr><td><code>true</code> / <code>false</code></td><td><code>True</code> / <code>False</code></td></tr>
+          <tr><td><code>null</code></td><td><code>None</code></td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Navigating Nested Data</h3>
+        <p>Real responses are nested: dictionaries inside dictionaries, lists of dictionaries inside those. Read them one level at a time, left to right.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="city = WEATHER[&quot;location&quot;][&quot;name&quot;]&#10;now = WEATHER[&quot;current&quot;][&quot;temp_c&quot;]&#10;print(f&quot;{city}: {now}°C right now&quot;)&#10;&#10;for day in WEATHER[&quot;forecast&quot;]:&#10;    print(day[&quot;day&quot;], day[&quot;high&quot;], day[&quot;low&quot;])">COPY</button></div>
+          <pre><code>city = WEATHER[<span class="str">"location"</span>][<span class="str">"name"</span>]
+now = WEATHER[<span class="str">"current"</span>][<span class="str">"temp_c"</span>]
+<span class="fn">print</span>(<span class="str">f"{city}: {now}°C right now"</span>)
+
+<span class="kw">for</span> day <span class="kw">in</span> WEATHER[<span class="str">"forecast"</span>]:
+    <span class="fn">print</span>(day[<span class="str">"day"</span>], day[<span class="str">"high"</span>], day[<span class="str">"low"</span>])</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>WEATHER["current"]</code> is itself a dictionary, so <code>["temp_c"]</code> reaches one level deeper. <code>WEATHER["forecast"]</code> is a <em>list</em> of dictionaries — loop over it and each <code>day</code> is one dictionary. When you're lost in a big response, print one level at a time: <code>print(WEATHER.keys())</code>, then go deeper.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Missing Keys and Failed Requests</h3>
+        <p>APIs leave fields out when they don't apply — a day with no weather alert simply has no <code>"alert"</code> key. And networks fail. Plan for both.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="for day in WEATHER[&quot;forecast&quot;]:&#10;    alert = day.get(&quot;alert&quot;, &quot;none&quot;)   # no KeyError if it's missing&#10;    print(day[&quot;day&quot;], &quot;alert:&quot;, alert)&#10;&#10;try:&#10;    response = requests.get(url, timeout=10)&#10;    response.raise_for_status()&#10;except requests.exceptions.RequestException as err:&#10;    print(&quot;Couldn't reach the weather service:&quot;, err)">COPY</button></div>
+          <pre><code><span class="kw">for</span> day <span class="kw">in</span> WEATHER[<span class="str">"forecast"</span>]:
+    alert = day.<span class="fn">get</span>(<span class="str">"alert"</span>, <span class="str">"none"</span>)   <span class="comment"># no KeyError if it's missing</span>
+    <span class="fn">print</span>(day[<span class="str">"day"</span>], <span class="str">"alert:"</span>, alert)
+
+<span class="kw">try</span>:
+    response = requests.<span class="fn">get</span>(url, timeout=<span class="num">10</span>)
+    response.<span class="fn">raise_for_status</span>()
+<span class="kw">except</span> requests.exceptions.RequestException <span class="kw">as</span> err:
+    <span class="fn">print</span>(<span class="str">"Couldn't reach the weather service:"</span>, err)</code></pre>
+        </div>
+        <div class="whatjusthappened">
+          <strong>WHAT JUST HAPPENED</strong>
+          <code>day["alert"]</code> would crash with a <code>KeyError</code> on every calm day; <code>day.get("alert", "none")</code> quietly hands back the default instead. <code>RequestException</code> catches every way a request can fail — no connection, timeout, bad status — so your program can explain the problem instead of dumping a traceback.
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Finding "the Best" Item with max()</h3>
+        <p><code>max()</code> with a <code>key</code> function (you'll lean on it again in the Sector 6 capstone) returns the whole item that wins, not just the winning number.</p>
+        <div class="code-block">
+          <div class="code-tab"><span>PYTHON</span><button class="copy-btn" data-copy="windiest = max(WEATHER[&quot;forecast&quot;], key=lambda d: d[&quot;wind_kph&quot;])&#10;print(f&quot;Windiest day: {windiest['day']} ({windiest['wind_kph']} km/h)&quot;)">COPY</button></div>
+          <pre><code>windiest = <span class="fn">max</span>(WEATHER[<span class="str">"forecast"</span>], key=<span class="kw">lambda</span> d: d[<span class="str">"wind_kph"</span>])
+<span class="fn">print</span>(<span class="str">f"Windiest day: {windiest['day']} ({windiest['wind_kph']} km/h)"</span>)</code></pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= COMMAND CONSOLE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">3</span><h2>Command Console</h2></div>
+    <div class="card">
+      <p>Real Python, preloaded with <code>WEATHER</code> — a five-day forecast for a Mars colony, shaped exactly like a real API's <code>response.json()</code>. Explore it.</p>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>SCRIPT.PY</span><button class="run-btn" id="runBtn">▶ RUN</button></div>
+          <textarea id="pyEditor" class="sandbox-editor" spellcheck="false"></textarea>
+        </div>
+        <div class="sandbox-pane">
+          <div class="pane-header"><span>OUTPUT</span><span>●</span></div>
+          <div id="pyOutput" class="sandbox-output"><div class="out-status">Loading Python interpreter…</div></div>
+        </div>
+      </div>
+
+      <div class="console-controls">
+        <button class="console-btn" id="btnReset">reset starter code</button>
+        <button class="console-btn" id="btnExample1">try: explore the keys</button>
+        <button class="console-btn" id="btnExample2">try: windiest day with max()</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MISSION CHALLENGE ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">4</span><h2>Mission Challenge</h2></div>
+    <div class="card">
+      <p>Use the Command Console to pull real answers out of <code>WEATHER</code> — then call a live API for real on your own computer.</p>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="ch1"><label for="ch1">Print the colony's name AND the current temperature, reaching into the nested dictionaries
+          <span class="sub">Keep the WEATHER data at the top of the script exactly as it is</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch2"><label for="ch2">Loop over the forecast and print every day's name with its high and low</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch3"><label for="ch3">Use <code>max()</code> with a <code>key</code> to find and print the WARMEST day (highest <code>high</code>)</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch4"><label for="ch4">Print each day's alert using <code>.get()</code> so calm days show <code>none</code> instead of crashing</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ch5"><label for="ch5">On your own computer: <code>pip install requests</code>, call the free Open-Meteo API from the Field Manual for your own city, and print today's temperature
+          <span class="sub">No API key needed — try changing latitude/longitude to where you live</span></label>
+        </li>
+      </ul>
+
+      <details>
+        <summary>▸ HINT</summary>
+        <p>Inside <code>max(..., key=lambda d: d["high"])</code>, <code>d</code> is one day's dictionary. And <code>"WEATHER" → "forecast"</code> is a list, so loop it with <code>for day in WEATHER["forecast"]:</code>.</p>
+      </details>
+
+      <div class="terminal-callout">
+        <span class="tc-label">RUN IT FOR REAL — IN YOUR TERMINAL</span>
+        <div class="tc-line"><span class="tc-prompt">$</span> pip install requests</div>
+        <div class="tc-line"><span class="tc-prompt">$</span> python3 weather.py</div>
+      </div>
+
+      <div class="bonus-box">
+        <strong>BONUS OBJECTIVE</strong>
+        <p style="margin-bottom:0;color:var(--text-secondary);font-size:14px;">Turn off your Wi-Fi and run your real script again. Wrap the request in <code>try</code>/<code>except requests.exceptions.RequestException</code> so it prints a friendly message instead of a traceback.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEBRIEF ================= -->
+  <section class="panel">
+    <div class="section-label"><span class="num">5</span><h2>Debrief / Cheat Sheet</h2></div>
+    <div class="card">
+      <div class="cheat-grid">
+        <div class="cheat-card"><code>requests.get(url, params=..., timeout=10)</code><span>Ask an API for data</span></div>
+        <div class="cheat-card"><code>response.raise_for_status()</code><span>Turn 4xx/5xx into a clear error</span></div>
+        <div class="cheat-card"><code>response.json()</code><span>JSON text → dicts and lists</span></div>
+        <div class="cheat-card"><code>data["a"]["b"]</code><span>Walk down nested dictionaries</span></div>
+        <div class="cheat-card"><code>d.get("key", default)</code><span>Read a key that might be missing</span></div>
+        <div class="cheat-card"><code>max(items, key=lambda x: x["n"])</code><span>The whole item with the biggest n</span></div>
+        <div class="cheat-card"><code>data.keys()</code><span>See what's at this level</span></div>
+        <div class="cheat-card"><code>except requests.exceptions.RequestException</code><span>Catch any failed request</span></div>
+      </div>
+
+      <div class="mistakes-box">
+        <h4>⚠ COMMON MISTAKES</h4>
+        <ul>
+          <li>Treating a list like a dictionary: <code>WEATHER["forecast"]["high"]</code> fails — the forecast is a list, so pick a day first or loop.</li>
+          <li>Using <code>d["alert"]</code> on data where the key is sometimes missing — use <code>.get()</code>.</li>
+          <li>Forgetting <code>timeout=</code>, so a slow server freezes your script forever.</li>
+          <li>Putting an API key straight into a script you then share or commit (Mission 7.3 explains the safe way).</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:24px;">
+        <p style="margin-bottom:10px;color:var(--text-secondary);font-size:14px;">Quick check — in Python, what does <code>response.json()</code> give you back?</p>
+        <button class="quiz-btn" data-correct="false">A string of JSON text you still have to parse</button>
+        <button class="quiz-btn" data-correct="true" data-feedback="Correct — it parses the JSON for you and returns ordinary Python dictionaries and lists.">Python dictionaries and lists</button>
+        <button class="quiz-btn" data-correct="false">A web page</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mission-footer">
+    <button class="stamp" id="missionStamp"></button>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Log this mission in your training record before advancing.</p>
+    <div class="nav-links" id="missionNav"></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/auth-guard.js"></script>
+<script src="../assets/missions-data.js"></script>
+<script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
+<script src="../assets/sandbox.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Exactly the shape a real weather API's response.json() returns.
+  const WEATHER = `WEATHER = {
+    "location": {"name": "Kepler City", "region": "Mars Colony 3"},
+    "current": {"temp_c": -12, "condition": "Dust haze", "wind_kph": 48},
+    "forecast": [
+        {"day": "Mon", "high": -5, "low": -30, "wind_kph": 20, "condition": "Clear"},
+        {"day": "Tue", "high": -2, "low": -28, "wind_kph": 35, "condition": "Clear"},
+        {"day": "Wed", "high": -9, "low": -35, "wind_kph": 80, "condition": "Dust storm", "alert": "Dust storm warning"},
+        {"day": "Thu", "high": 1, "low": -25, "wind_kph": 15, "condition": "Clear"},
+        {"day": "Fri", "high": -4, "low": -31, "wind_kph": 60, "condition": "Windy", "alert": "High winds"},
+    ],
+}
+`;
+
+  const STARTER = WEATHER + `
+# WEATHER stands in for requests.get(...).json() — try me, then hit RUN
+print(WEATHER["location"]["name"])`;
+
+  const EXAMPLE_KEYS = WEATHER + `
+# Lost in a big response? Print one level at a time.
+print(WEATHER.keys())
+print(WEATHER["current"].keys())
+print(len(WEATHER["forecast"]), "days in the forecast")
+print(WEATHER["forecast"][0])`;
+
+  const EXAMPLE_WINDIEST = WEATHER + `
+windiest = max(WEATHER["forecast"], key=lambda d: d["wind_kph"])
+print(f"Windiest day: {windiest['day']} ({windiest['wind_kph']} km/h)")`;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initPythonSandbox({
+      editorId: "pyEditor",
+      outputId: "pyOutput",
+      runBtnId: "runBtn",
+      resetBtnId: "btnReset",
+      starter: STARTER,
+      examples: [
+        { btnId: "btnExample1", code: EXAMPLE_KEYS },
+        { btnId: "btnExample2", code: EXAMPLE_WINDIEST },
+      ],
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
