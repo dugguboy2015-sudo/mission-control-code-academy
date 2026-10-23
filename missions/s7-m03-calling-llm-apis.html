@@ -164,7 +164,9 @@
       <div class="console-controls">
         <button class="console-btn" id="btnReset">reset starter code</button>
         <button class="console-btn" id="btnSteal">try: attempt to read the secret key</button>
+        <button class="console-btn live-btn" id="btnLive">⚡ try: the LIVE model</button>
       </div>
+      <p class="live-note">⚡ <strong>LIVE model:</strong> that button calls a real AI model through this academy's own proxy (a Cloudflare Pages Function with a daily limit per cadet). If it can't be reached — on a local copy, offline, or after today's calls are used up — you get this mission's practice model instead, clearly labelled.</p>
     </div>
   </section>
 
@@ -238,7 +240,9 @@
 <script src="../assets/auth-guard.js"></script>
 <script src="../assets/missions-data.js"></script>
 <script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
 <script src="../assets/sandbox.js"></script>
+<script src="../assets/live-ai.js"></script>
 <script>
 (function () {
   "use strict";
@@ -290,6 +294,23 @@ console.log(result.note);`;
 console.log("SECRET_KEY as seen from client code:", FakeLLMProxy.SECRET_KEY);
 console.log("It's undefined — the closure genuinely hides it, just like a real env var does from outside the server.");`;
 
+  const EXAMPLE_LIVE = `// The real thing: this academy's proxy at /api/ai (a Cloudflare Pages Function).
+// Open DevTools > Network and look at the request: there is NO API key in it.
+// The proxy reaches the model through a Workers AI binding, checks who you
+// are, and enforces a daily limit — exactly the architecture above.
+async function main() {
+  const reply = await LiveAI.chat(
+    "You are a cheerful mission control assistant.",
+    "In one sentence, why should an API key never be in front-end code?"
+  );
+  console.log(reply);
+  console.log("Model:", LiveAI.last.model, "| live calls left today:", LiveAI.last.remaining);
+}
+main();`;
+
+  // Practice model the live client falls back to when /api/ai isn't reachable.
+  if (window.LiveAI) window.LiveAI.setFallback((s, u) => FakeLLMProxy.callChat([{ role: "system", content: s }, { role: "user", content: u }]).reply);
+
   document.addEventListener("DOMContentLoaded", function () {
     initJsSandbox({
       editorId: "jsEditor",
@@ -301,6 +322,7 @@ console.log("It's undefined — the closure genuinely hides it, just like a real
       displayResetText: "STATUS: STANDBY",
       examples: [
         { btnId: "btnSteal", code: EXAMPLE_STEAL },
+        { btnId: "btnLive", code: EXAMPLE_LIVE },
       ],
     });
   });

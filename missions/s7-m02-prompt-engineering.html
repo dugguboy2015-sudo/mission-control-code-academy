@@ -129,7 +129,9 @@ Now convert: <span class="str">"They build a robot."</span></code></pre>
         <button class="console-btn" id="btnReset">reset starter (vague prompt)</button>
         <button class="console-btn" id="btnSpecific">try: a specific prompt</button>
         <button class="console-btn" id="btnPersona">try: a system-prompt persona</button>
+        <button class="console-btn live-btn" id="btnLive">⚡ try: the LIVE model</button>
       </div>
+      <p class="live-note">⚡ <strong>LIVE model:</strong> that button calls a real AI model through this academy's own proxy (a Cloudflare Pages Function with a daily limit per cadet). If it can't be reached — on a local copy, offline, or after today's calls are used up — you get this mission's practice model instead, clearly labelled.</p>
     </div>
   </section>
 
@@ -206,7 +208,9 @@ Now convert: <span class="str">"They build a robot."</span></code></pre>
 <script src="../assets/auth-guard.js"></script>
 <script src="../assets/missions-data.js"></script>
 <script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
 <script src="../assets/sandbox.js"></script>
+<script src="../assets/live-ai.js"></script>
 <script>
 (function () {
   "use strict";
@@ -287,6 +291,23 @@ const reply = FakePromptLLM.chat(
 );
 console.log(reply);`;
 
+  const EXAMPLE_LIVE = `// A REAL model, through this academy's own proxy. Same prompts as above —
+// compare how a real model responds to vague vs. specific prompting.
+async function main() {
+  const vague = await LiveAI.chat("", "Tell me about dogs.");
+  console.log("VAGUE →", vague);
+  const specific = await LiveAI.chat(
+    "You are a friendly robot.",
+    "List 3 bullet points about dog breeds for small apartments, under 50 words."
+  );
+  console.log("SPECIFIC + PERSONA →", specific);
+  console.log("Answered by:", LiveAI.last.model);
+}
+main();`;
+
+  // Practice model the live client falls back to when /api/ai isn't reachable.
+  if (window.LiveAI) window.LiveAI.setFallback((s, u) => FakePromptLLM.chat(s, u));
+
   document.addEventListener("DOMContentLoaded", function () {
     initJsSandbox({
       editorId: "jsEditor",
@@ -299,6 +320,7 @@ console.log(reply);`;
       examples: [
         { btnId: "btnSpecific", code: EXAMPLE_SPECIFIC },
         { btnId: "btnPersona", code: EXAMPLE_PERSONA },
+        { btnId: "btnLive", code: EXAMPLE_LIVE },
       ],
     });
   });

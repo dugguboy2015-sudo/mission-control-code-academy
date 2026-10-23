@@ -132,7 +132,9 @@
         <button class="console-btn" id="btnReset">reset starter (normal chat)</button>
         <button class="console-btn" id="btnBadInput">try: a message that trips the guardrail</button>
         <button class="console-btn" id="btnFailover">try: primary model fails, fallback saves it</button>
+        <button class="console-btn live-btn" id="btnLive">⚡ try: the LIVE model</button>
       </div>
+      <p class="live-note">⚡ <strong>LIVE model:</strong> that button calls a real AI model through this academy's own proxy (a Cloudflare Pages Function with a daily limit per cadet). If it can't be reached — on a local copy, offline, or after today's calls are used up — you get this mission's practice model instead, clearly labelled.</p>
     </div>
   </section>
 
@@ -209,7 +211,9 @@
 <script src="../assets/auth-guard.js"></script>
 <script src="../assets/missions-data.js"></script>
 <script src="../assets/academy.js"></script>
+<script src="../assets/engagement.js"></script>
 <script src="../assets/sandbox.js"></script>
+<script src="../assets/live-ai.js"></script>
 <script>
 (function () {
   "use strict";
@@ -312,6 +316,21 @@ const result = FakeAIApp.chat("Give me a full diagnostic report.", { forceFail: 
 console.log("Used fallback:", result.usedFallback);
 console.log("Reply:", result.reply);`;
 
+  const EXAMPLE_LIVE = `// Your capstone's architecture, for real: browser → your proxy → model.
+async function main() {
+  const reply = await LiveAI.chat(
+    "You are a helpful mission control assistant.",
+    "Give me one tip for staying focused while coding."
+  );
+  console.log("Reply:", reply);
+  console.log("Model:", LiveAI.last.model, "| live:", LiveAI.last.live, "| calls left today:", LiveAI.last.remaining);
+  console.log("The real proxy does what FakeAIApp simulates: guardrails, a quota and a fallback model.");
+}
+main();`;
+
+  // Practice model the live client falls back to when /api/ai isn't reachable.
+  if (window.LiveAI) window.LiveAI.setFallback((s, u) => "(practice) A focused tip about: " + u);
+
   document.addEventListener("DOMContentLoaded", function () {
     initJsSandbox({
       editorId: "jsEditor",
@@ -324,6 +343,7 @@ console.log("Reply:", result.reply);`;
       examples: [
         { btnId: "btnBadInput", code: EXAMPLE_BAD_INPUT },
         { btnId: "btnFailover", code: EXAMPLE_FAILOVER },
+        { btnId: "btnLive", code: EXAMPLE_LIVE },
       ],
     });
   });
