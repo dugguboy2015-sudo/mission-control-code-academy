@@ -65,6 +65,29 @@
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
   .modal-actions button { flex: 1; }
   .modal-msg { margin-top: 12px; font-size: 13px; color: var(--danger); min-height: 18px; }
+
+  /* ---------- Insights ---------- */
+  .insights-toggle { margin-top: 14px; width: 100%; justify-content: center; }
+  .insights { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-glow); }
+  .ins-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .ins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .ins-stat { background: var(--bg-panel-alt); border: 1px solid var(--border-glow); border-radius: 10px; padding: 10px 12px; }
+  .ins-stat strong { display: block; font-family: var(--font-display); font-size: 18px; color: var(--text-primary); }
+  .ins-stat span { font-size: 11.5px; color: var(--text-muted); }
+  .ins-h { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.12em; color: var(--text-muted); margin: 16px 0 8px; }
+  .week-strip { display: flex; gap: 6px; }
+  .week-day { flex: 1; text-align: center; font-size: 11px; color: var(--text-muted); }
+  .week-day i { display: block; height: 26px; border-radius: 6px; background: var(--bg-panel-alt); border: 1px solid var(--border-glow); margin-bottom: 4px; }
+  .week-day.on i { background: var(--accent); border-color: var(--accent); }
+  .ins-list { list-style: none; padding: 0; margin: 0; font-size: 14px; color: var(--text-secondary); }
+  .ins-list li { padding: 7px 0; border-bottom: 1px solid var(--border-glow); }
+  .ins-list li:last-child { border-bottom: none; }
+  .ins-list .q { color: var(--text-primary); }
+  .ins-empty { font-size: 13.5px; color: var(--text-muted); }
+  .ins-note { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: rgba(255,207,77,0.08); border: 1px solid rgba(255,207,77,0.35); color: var(--warning); margin-bottom: 12px; }
+  .summary-box { width: 100%; min-height: 170px; background: var(--bg-void); border: 1px solid var(--border-glow); border-radius: 10px; color: var(--text-primary); font-family: var(--font-body); font-size: 13.5px; padding: 12px 14px; resize: vertical; }
+  .summary-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .summary-actions .why { font-size: 12px; color: var(--text-muted); flex: 1; min-width: 200px; }
 </style>
 </head>
 <body class="accent-cyan">
@@ -119,12 +142,127 @@
 <script src="assets/config.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/auth-guard.js"></script>
+<script src="assets/missions-data.js"></script>
+<script src="assets/academy.js"></script>
+<script src="assets/engagement.js"></script>
 <script>
 (function () {
   "use strict";
 
   const AVATARS = ["🚀", "👾", "🛰️", "🪐", "👨‍🚀", "👩‍🚀", "🤖", "⭐", "🌌", "🔭"];
   let editingChildId = null;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  /* ---------------- Per-child insights ----------------
+     Everything is computed from three tables the parent can already read
+     under RLS (progress, checklist_state, activity) — nothing new is
+     collected. XP/rank/streak use the same engagement.js maths the cadet
+     sees, so both sides always agree. */
+  const DAY = 86400000;
+  const dayKey = (d) => { const x = new Date(d); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
+  const fmtDay = (d) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+  async function renderInsights(child, panel) {
+    const data = await window.Academy.insights.forChild(child.id);
+    const engage = window.MCCA && window.MCCA.engage;
+    const missions = window.MCCA.flattenMissions();
+    const byId = Object.fromEntries(missions.map((m) => [m.id, m]));
+    const progressMap = Object.fromEntries(data.progress.map((p) => [p.mission_id, true]));
+    const acts = data.activity || [];
+    const stats = engage.computeStats(acts, progressMap);
+
+    const now = Date.now();
+    const weekStart = now - 7 * DAY;
+    const inWeek = (t) => new Date(t).getTime() >= weekStart;
+
+    // --- this week ---
+    const weekActs = acts.filter((a) => inWeek(a.created_at) && a.kind !== "badge" && a.kind !== "hint");
+    const activeDays = new Set(weekActs.map((a) => dayKey(a.created_at)));
+    data.progress.filter((p) => inWeek(p.completed_at)).forEach((p) => activeDays.add(dayKey(p.completed_at)));
+    const doneThisWeek = data.progress.filter((p) => inWeek(p.completed_at)).sort((a, b) => a.completed_at.localeCompare(b.completed_at));
+    const weekQuiz = weekActs.filter((a) => a.kind === "quiz");
+    const weekQuizRight = weekQuiz.filter((a) => a.correct).length;
+    const weekObjectives = weekActs.filter((a) => a.kind === "objective").length;
+
+    // --- possibly stuck: started (checklist ticks or logged work) but not finished ---
+    const lastTouch = {};
+    const touch = (id, t) => { if (byId[id] && !progressMap[id] && (!lastTouch[id] || t > lastTouch[id])) lastTouch[id] = t; };
+    data.checklist.filter((c) => c.checked).forEach((c) => touch(c.mission_id, c.updated_at));
+    acts.filter((a) => a.kind === "objective" || a.kind === "quiz" || a.kind === "hint").forEach((a) => touch(a.ref.split("/")[0], a.created_at));
+    const stuck = Object.entries(lastTouch).sort((a, b) => b[1].localeCompare(a[1])).slice(0, 3);
+
+    // --- quiz questions missed on the first try (most recent first) ---
+    const missed = acts.filter((a) => a.kind === "quiz" && a.correct === false).slice(-6).reverse();
+    const questionText = {};
+    await Promise.all([...new Set(missed.map((a) => a.ref.split("/")[0]))].map(async (id) => {
+      const def = await engage.loadExt(id);
+      ((def && def.quiz) || []).forEach((q, i) => { questionText[id + "/" + (q.id || "q" + (i + 1))] = q.q; });
+    }));
+
+    // --- next mission ---
+    const next = missions.find((m) => m.status !== "planned" && !progressMap[m.id]);
+
+    // --- weekly summary (plain text a parent can paste anywhere) ---
+    const lines = [];
+    lines.push(`${child.name}'s week at Mission Control Code Academy (${fmtDay(weekStart + DAY)} – ${fmtDay(now)})`);
+    lines.push("");
+    lines.push(`• Active on ${activeDays.size} of the last 7 days${stats.streak ? ` (current streak: ${stats.streak} day${stats.streak === 1 ? "" : "s"})` : ""}`);
+    lines.push(doneThisWeek.length
+      ? `• Completed ${doneThisWeek.length} mission${doneThisWeek.length === 1 ? "" : "s"}: ` + doneThisWeek.map((p) => byId[p.mission_id] ? `${byId[p.mission_id].num} ${byId[p.mission_id].title}` : p.mission_id).join(", ")
+      : "• No missions completed this week");
+    if (data.activity) {
+      lines.push(`• Verified ${weekObjectives} objective${weekObjectives === 1 ? "" : "s"} by running real code`);
+      if (weekQuiz.length) lines.push(`• Quiz: ${weekQuizRight} of ${weekQuiz.length} questions right on the first try (${Math.round((weekQuizRight / weekQuiz.length) * 100)}%)`);
+      lines.push(`• Rank: ${stats.rank.name} — ${stats.xp.toLocaleString()} XP` + (stats.next ? ` (${(stats.next.min - stats.xp).toLocaleString()} XP to ${stats.next.name})` : ""));
+    }
+    lines.push(`• Overall: ${stats.completed} of ${stats.totalMissions} missions complete`);
+    if (stuck.length) lines.push(`• Might need a hand with: ` + stuck.map(([id, t]) => `${byId[id].num} ${byId[id].title} (last worked on ${fmtDay(t)})`).join("; "));
+    if (missed.length) lines.push(`• Worth a chat: ${missed.length} quiz question${missed.length === 1 ? "" : "s"} missed on the first try recently — see the family dashboard for which ones`);
+    if (next) lines.push(`• Up next: Mission ${next.num} — ${next.title}`);
+    const summary = lines.join("\n");
+
+    // --- render ---
+    const days = Array.from({ length: 7 }, (_, i) => now - (6 - i) * DAY);
+    panel.innerHTML =
+      (data.activity ? "" : '<div class="ins-note">Detailed activity (objectives, quizzes, streaks, XP) needs the latest <code>supabase/schema.sql</code> — re-run it in the Supabase SQL Editor. Mission progress below is already accurate.</div>')
+      + '<div class="ins-grid">'
+      + `<div class="ins-stat"><strong>${stats.completed} / ${stats.totalMissions}</strong><span>missions complete</span></div>`
+      + `<div class="ins-stat"><strong>${escapeHtml(stats.rank.name)}</strong><span>${stats.xp.toLocaleString()} XP</span></div>`
+      + `<div class="ins-stat"><strong>🔥 ${stats.streak}</strong><span>day streak (best ${stats.longestStreak})</span></div>`
+      + `<div class="ins-stat"><strong>${stats.quizAnswered ? Math.round((stats.quizFirstTry / stats.quizAnswered) * 100) + "%" : "—"}</strong><span>quiz first-try accuracy</span></div>`
+      + "</div>"
+      + '<div class="ins-h">LAST 7 DAYS</div><div class="week-strip">'
+      + days.map((d) => `<div class="week-day${activeDays.has(dayKey(d)) ? " on" : ""}"><i></i>${new Date(d).toLocaleDateString(undefined, { weekday: "short" })}</div>`).join("")
+      + "</div>"
+      + '<div class="ins-h">MIGHT NEED A HAND</div>'
+      + (stuck.length
+        ? '<ul class="ins-list">' + stuck.map(([id, t]) => `<li><span class="q">${escapeHtml(byId[id].num + " " + byId[id].title)}</span> — started, not finished · last worked on ${fmtDay(t)}</li>`).join("") + "</ul>"
+        : '<div class="ins-empty">Nothing looks stuck — every started mission is finished.</div>')
+      + '<div class="ins-h">QUIZ QUESTIONS MISSED ON THE FIRST TRY</div>'
+      + (missed.length
+        ? '<ul class="ins-list">' + missed.map((a) => {
+            const id = a.ref.split("/")[0];
+            const text = questionText[a.ref] || (a.ref.endsWith("/q0") ? "the mission's main quick-check question" : "a quiz question");
+            return `<li><span class="q">${escapeHtml(text)}</span> — ${escapeHtml(byId[id] ? "Mission " + byId[id].num : id)}, ${fmtDay(a.created_at)}</li>`;
+          }).join("") + "</ul>"
+        : '<div class="ins-empty">' + (data.activity ? "None yet — first-try answers are all correct, or no quizzes taken." : "Available once the activity schema is installed.") + "</div>")
+      + '<div class="ins-h">WEEKLY SUMMARY</div>'
+      + `<textarea class="summary-box" readonly aria-label="Weekly summary for ${escapeHtml(child.name)}"></textarea>`
+      + '<div class="summary-actions"><button class="copy-icon-btn" type="button">COPY SUMMARY</button>'
+      + '<span class="why">Automatic weekly emails need an email-sending service this site doesn\'t have yet — copy this into a message, or check back here any time; it\'s always up to date.</span></div>';
+    panel.querySelector(".summary-box").value = summary;
+    const copyBtn = panel.querySelector(".summary-actions .copy-icon-btn");
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(summary).then(() => {
+        copyBtn.textContent = "COPIED";
+        copyBtn.classList.add("copied");
+        setTimeout(() => { copyBtn.textContent = "COPY SUMMARY"; copyBtn.classList.remove("copied"); }, 1400);
+      });
+    });
+  }
 
   async function renderChildren() {
     const list = document.getElementById("childList");
@@ -161,8 +299,31 @@
             <button class="copy-icon-btn" data-copy="${c.username || ""}">COPY</button>
           </div>
         </div>
+        <button class="fam-btn insights-toggle" data-insights="${c.id}" aria-expanded="false">📊 SHOW ${escapeHtml(c.name).toUpperCase()}'S INSIGHTS</button>
+        <div class="insights" hidden></div>
       `;
       list.appendChild(card);
+    });
+
+    list.querySelectorAll("[data-insights]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const panel = btn.nextElementSibling;
+        const child = children.find((c) => c.id === btn.getAttribute("data-insights"));
+        const open = panel.hidden;
+        panel.hidden = !open;
+        btn.setAttribute("aria-expanded", String(open));
+        btn.textContent = (open ? "📊 HIDE " : "📊 SHOW ") + child.name.toUpperCase() + "'S INSIGHTS";
+        if (open && !panel.dataset.loaded) {
+          panel.innerHTML = '<div class="ins-empty">Loading…</div>';
+          try {
+            await renderInsights(child, panel);
+            panel.dataset.loaded = "1";
+          } catch (err) {
+            console.error("[family] insights failed:", err);
+            panel.innerHTML = '<div class="ins-note">Couldn\'t load insights right now (' + escapeHtml(err.message || String(err)) + ').</div>';
+          }
+        }
+      });
     });
 
     list.querySelectorAll("[data-edit]").forEach((btn) => {

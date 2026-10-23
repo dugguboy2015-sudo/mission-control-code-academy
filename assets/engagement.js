@@ -688,7 +688,7 @@
   M.engage = {
     XP, RANKS, BADGES: allBadges, SIDE_QUEST_TOTAL,
     computeStats, log, sync, mountHud, toast, onMissionComplete,
-    bootMission, bootPage, store, hudHtml,
+    bootMission, bootPage, store, hudHtml, loadExt,
     remoteState: () => remoteState,
     lastMission: () => { try { return localStorage.getItem("mcca_last_mission_" + childKey()); } catch (e) { return null; } },
   };
